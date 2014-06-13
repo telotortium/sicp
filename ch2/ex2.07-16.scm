@@ -262,8 +262,8 @@
 ;;;;
 
 ;; From Taylor expanding around $ra = 0$, one can obtain
-;; $1 / (a + ra * a) = (1 / a) (1 - ra)$. Thus, assuming the tolerances are
-;; small compared to the resistances
+;; $1 / (a \pm ra * a) = (1 / a) (1 \mp ra)$ for small tolerances relative to
+;; resistances:
 ;;
 ;; \begin{equation}
 ;; 1 / R_1 + 1 / R_2 = (1 / R_1 + 1 / R_2) \pm ((1 / R_1) * R_1 * (1 + %R_1)
@@ -278,5 +278,47 @@
 ;; R_1 + R_2 = Result \pm (R_1 * %R_1 + R_2 * %R_2)
 ;; \end{equation}
 
+;; }}}
+
+;; # Exercise 2.15. {{{
+;;
+;; Eva Lu Ator, another user, has also noticed the different intervals computed
+;; by different but algebraically equivalent expressions. She says that
+;; a formula to compute with intervals using Alyssa's system will produce
+;; tighter error bounds if it can be written in such a form that no variable
+;; that represents an uncertain number is repeated. Thus, she says, par2 is
+;; a ``better'' program for parallel resistances than par1. Is she right? Why?
+
+;;;;
+
+;; It seems so. Evaluating par2 results in
+;;
+;; \begin{equation}
+;; \frac{1}{R^{-1}(1 \pm p_1) + R^{-2}(1 \pm p_1)} =
+;; \frac{R_1 R_2}{R_1 + R_2} \left( \frac{R_1 + R_2 \pm (p_1 R_2 + p_2
+;; R_1)}{R_1 + R_2} \right)^{-1}
+;; \end{equation}
+;;
+;; while evaluating par1 results in
+;;
+;; \begin{equation}
+;; \frac{R_1(1 \pm p_1) R_2(1 \pm p_2)}{R_1(1 \pm p_1) + R_2(1 \pm p_2)} =
+;; \frac{R_1 R_2}{R_1 + R_2} \left(1 \mp (p_1 + p_2) \right)
+;;     \left( \frac{R_1 + R_2 \pm (p_1 R_2 + p_2 R_1)}{R_1 + R_2} \right)^{-1}
+;; \end{equation}
+;;
+;; with extra imprecision from the $1 \mp (p_1 + p_2)$, which results directly
+;; from the uncertainty in the numerator.
+
+;; }}}
+
+;; # Exercise 2.16. {{{
+;;
+;; Explain, in general, why equivalent algebraic expressions may lead to
+;; different answers. Can you devise an interval-arithmetic package that does
+;; not have this shortcoming, or is this task impossible? (Warning: This
+;; problem is very difficult.)
+
+;;;;
 
 ;; }}}
