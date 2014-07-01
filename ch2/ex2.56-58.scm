@@ -94,4 +94,41 @@
 
 ;;;;
 
+(define (make-sum a . as)
+  (if (null? as)
+    a
+    (let ((a1 a)
+          (a2 (car as))
+          (arest (cdr as)))
+      (cond ((=number? a1 0)
+             (apply make-sum a2 arest))
+            ((=number? a2 0)
+             (apply make-sum a1 arest))
+            ((and (number? a) (number? a2))
+             (apply make-sum (+ a1 a2) arest))
+            (else (append (list '+ a1)
+                          (let ((res (apply make-sum a2 arest)))
+                           (if (pair? res) res (list res)))))))))
+(define (make-product m . ms)
+  (if (null? ms)
+    m
+    (let ((m1 m)
+          (m2 (car ms))
+          (mrest (cdr ms)))
+      (cond ((=number? m1 1)
+             (apply make-product m2 mrest))
+            ((=number? m2 1)
+             (apply make-product m1 mrest))
+            ((and (number? m) (number? m2))
+             (apply make-product (* m m2) mrest))
+            (else (append (list '* m)
+                          (let ((res (apply make-product m2 mrest)))
+                           (if (pair? res)
+                             res
+                             (list res)))))))))
+(define (addend s) (cadr s))
+(define (augend s) (cddr s))
+(define (multiplier p) (cadr p))
+(define (multiplicand p) (cddr p))
+
 ;;; }}}
