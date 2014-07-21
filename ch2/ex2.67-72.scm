@@ -1,3 +1,4 @@
+(use sicp test)
 ;;; Huffman coding
 
 ;;; Auxiliary functions {{{
@@ -71,8 +72,8 @@
 
 ;;; Use the decode procedure to decode the message, and give the result.
 
-(decode sample-message sample-tree)
-; => (a d a b b c a)
+(test '(A D A B B C A)
+      (decode sample-message sample-tree))
 
 ;;; }}}
 
@@ -109,6 +110,9 @@
           (else
             (error "Symbol not in tree")))))
 
+(test sample-message
+      (encode (decode sample-message sample-tree) sample-tree))
+
 ;;; }}}
 
 ;;; Exercise 2.69 {{{
@@ -130,13 +134,13 @@
 ;;; advantage of the fact that we are using an ordered set representation.)
 
 (define (successive-merge leaf-set)
-  (let proc ((tree-set leaf-set))
-   (if (or (null? tree-set) (null? (cdr tree-set)))
-     tree-set
-     (let ((min1 (car tree-set))
-           (min2 (cadr tree-set))
-           (rest (cddr tree-set)))
-       (proc (adjoin-set (make-code-tree min1 min2) rest))))))
+  (car (let proc ((tree-set leaf-set))
+        (if (or (null? tree-set) (null? (cdr tree-set)))
+          tree-set
+          (let ((min1 (car tree-set))
+                (min2 (cadr tree-set))
+                (rest (cddr tree-set)))
+            (proc (adjoin-set (make-code-tree min1 min2) rest)))))))
 
 ;;; }}}
 
@@ -183,13 +187,14 @@
                            SHA BOOM))
 
 (define rock-encoded (encode rock-message rock-tree))
-; => (0 1 1 1 1 1 0 1 1 0 0 0 1 1 1 1 0 0 1 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 1 1 1 1 0 1 1 0 0 0 1 1 1 1 0 0 1 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 1 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 1 1 0 0 1 1 0 1 1)
+(test '(1 1 1 1 1 1 1 0 0 1 1 1 1 0 1 1 1 0 0 0 0 0 0 0 0 0 1 1 1 1 1 1 1 0 0 1 1 1 1 0 1 1 1 0 0 0 0 0 0 0 0 0 1 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 1 1 0 1 1 0 1 1)
+      rock-encoded)
 
-(length rock-encoded)
-; => 120
+(test 84
+      (length rock-encoded))
 
-(* 3 (length rock-message))
-; => 108
+(test 108
+      (* 3 (length rock-message)))
 
 ;;; }}}
 
@@ -199,6 +204,12 @@
 ;;; relative frequencies of the symbols are 1, 2, 4, ..., 2n-1. Sketch the tree
 ;;; for n=5; for n=10. In such a tree (for general n) how many bits are
 ;;; required to encode the most frequent symbol? the least frequent symbol?
+
+;; After the initial pair, 1 and 2, which together occupy one bit, each
+;; additional doubling in the frequency list requires an additional bit in the
+;; final encoding. However, since more frequent symbols require fewer bits, the
+;; most frequent symbol requires 1 bit and the least frequent
+;; $\lfloor \lg{2n - 1} \rfloor$ bits.
 
 ;;; }}}
 
