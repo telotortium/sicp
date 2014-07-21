@@ -95,37 +95,48 @@
 ;;;;
 
 (define (make-sum a . as)
-  (if (null? as)
-    a
-    (let ((a1 a)
-          (a2 (car as))
-          (arest (cdr as)))
-      (cond ((=number? a1 0)
-             (apply make-sum a2 arest))
-            ((=number? a2 0)
-             (apply make-sum a1 arest))
-            ((and (number? a) (number? a2))
-             (apply make-sum (+ a1 a2) arest))
-            (else (append (list '+ a1)
-                          (let ((res (apply make-sum a2 arest)))
-                           (if (pair? res) res (list res)))))))))
+  (define (rec a as)
+    (if (null? as)
+      (list a)
+      (let ((a1 a)
+            (a2 (car as))
+            (arest (cdr as)))
+        (cond ((=number? a1 0)
+               (rec a2 arest))
+              ((=number? a2 0)
+               (rec a1 arest))
+              ((and (number? a1) (number? a2))
+               (rec (+ a1 a2) arest))
+              (else
+                (cons a1 (rec a2 arest)))))))
+  (let ((val (rec a as)))
+   (if (and (pair? val) (pair? (cdr val)))
+     (cons '+ val)
+     (car val))))
 (define (make-product m . ms)
-  (if (null? ms)
-    m
-    (let ((m1 m)
-          (m2 (car ms))
-          (mrest (cdr ms)))
-      (cond ((=number? m1 1)
-             (apply make-product m2 mrest))
-            ((=number? m2 1)
-             (apply make-product m1 mrest))
-            ((and (number? m) (number? m2))
-             (apply make-product (* m m2) mrest))
-            (else (append (list '* m)
-                          (let ((res (apply make-product m2 mrest)))
-                           (if (pair? res)
-                             res
-                             (list res)))))))))
+  (define (rec m ms)
+    (if (null? ms)
+      (list m)
+      (let ((m1 m)
+            (m2 (car ms))
+            (mrest (cdr ms)))
+        (cond ((or (=number? m1 0) (=number? m2 0))
+               (list 0))
+              ((=number? m1 1)
+               (rec m2 mrest))
+              ((=number? m2 1)
+               (rec m1 mrest))
+              ((and (number? m1) (number? m2))
+               (rec (* m1 m2) mrest))
+              (else
+                (let ((val (rec m2 mrest)))
+                 (if (=number? (car val) 0)
+                   (list 0)
+                   (cons m1 val))))))))
+  (let ((val (rec m ms)))
+   (if (and (pair? val) (pair? (cdr val)))
+     (cons '* val)
+     (car val))))
 (define (addend s) (cadr s))
 (define (augend s)
   (if (null? (cdddr s))
@@ -137,6 +148,26 @@
     (caddr s)
     (cons '* (cddr s))))
 
+(test 0
+      (make-sum 0 0 0 0 0 0))
+(test 'x
+      (make-sum (make-sum 'x)))
+(test '(+ x 3)
+      (make-sum 'x 3))
+(test '(+ (+ x 3) (+ y 2))
+      (make-sum (make-sum 'x 3)
+                (make-sum 'y 2)))
+(test 0
+      (make-product 'x 'y 'z 0))
+(test 1
+      (make-product 1 1 1 1 1 1))
+(test 'x
+      (make-product (make-product 'x)))
+(test '(* x 3)
+      (make-product 'x 3))
+(test '(* (* x 3) (* y 2))
+      (make-product (make-product 'x 3)
+                (make-product 'y 2)))
 ;;; }}}
 
 ;;; Exercise 2.58 {{{
@@ -232,13 +263,11 @@
 
 (define expr '(x + 3 * (x + y + 2)))
 
-(deriv expr 'x)
-; => 4
-
-(deriv expr 'y)
-; => 3
-
-(deriv expr 'z)
-; => 0
+(test 4
+      (deriv expr 'x))
+(test 3
+      (deriv expr 'y))
+(test 0
+      (deriv expr 'z))
 
 ;;; }}}
