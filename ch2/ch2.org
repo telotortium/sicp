@@ -1,0 +1,309 @@
+#+BEGIN_SRC scheme
+  (use sicp test)
+#+END_SRC
+
+* Chapter 2
+
+** 2.4: Multiple Representations for Abstract Data
+
+#+BEGIN_SRC scheme
+  ;; Operation, type -> procedure dispatch table.
+  (define *op-table* (make-hash-table equal?))
+  (define (put op type proc)
+    (hash-table-set! *op-table* (list op type) proc))
+  (define (get op type)
+    (hash-table-ref *op-table* (list op type)))
+
+  (define (attach-tag type-tag contents)
+    (cons type-tag contents))
+  (define (type-tag datum)
+    (if (pair? datum)
+        (car datum)
+        (error "Bad tagged datum -- TYPE-TAG" datum)))
+  (define (contents datum)
+    (if (pair? datum)
+        (cdr datum)
+        (error "Bad tagged datum -- CONTENTS" datum)))
+
+  (define (apply-generic op . args)
+    (let ((type-tags (map type-tag args)))
+      (let ((proc (get op type-tags)))
+        (if proc
+            (apply proc (map contents args))
+            (error
+             "No method for these types -- APPLY-GENERIC"
+             (list op type-tags))))))
+#+END_SRC
+
+*** 2.4.1: Representations for Complex Numbers
+
+No exercises.
+
+*** 2.4.2: Tagged data
+
+No exercises.
+
+*** 2.4.3: Data-Directed Programming and Additivity
+
+Section 2.3.2 described a program that performs symbolic differentiation:
+
+#+BEGIN_SRC scheme
+  (define (deriv exp var)
+    (cond ((number? exp) 0)
+          ((variable? exp) (if (same-variable? exp var) 1 0))
+          ((sum? exp)
+           (make-sum (deriv (addend exp) var)
+                     (deriv (augend exp) var)))
+          ((product? exp)
+           (make-sum
+             (make-product (multiplier exp)
+                           (deriv (multiplicand exp) var))
+             (make-product (deriv (multiplier exp) var)
+                           (multiplicand exp))))
+          <more rules can be added here>
+          (else (error "unknown expression type -- DERIV" exp))))
+#+END_SRC
+
+We can regard this program as performing a dispatch on the type of the
+expression to be differentiated. In this situation the ``type tag'' of the
+datum is the algebraic operator symbol (such as ~+~) and the operation being
+performed is ~deriv~. We can transform this program into data-directed style by
+rewriting the basic derivative procedure as
+
+#+BEGIN_SRC scheme
+  (define (deriv exp var)
+     (cond ((number? exp) 0)
+           ((variable? exp) (if (same-variable? exp var) 1 0))
+           (else ((get 'deriv (operator exp)) (operands exp)
+                                              var))))
+  (define (operator exp) (car exp))
+  (define (operands exp) (cdr exp))
+#+END_SRC
+
+a.  Explain what was done above. Why can't we assimilate the predicates
+    ~number?~ and ~same-variable?~ into the data-directed dispatch?
+
+b.  Write the procedures for derivatives of sums and products, and the
+    auxiliary code required to install them in the table used by the program
+    above.
+
+c.  Choose any additional differentiation rule that you like, such as the one
+    for exponents (exercise 2.56), and install it in this data-directed system.
+
+d.  In this simple algebraic manipulator the type of an expression is the
+    algebraic operator that binds it together. Suppose, however, we indexed the
+    procedures in the opposite way, so that the dispatch line in ~deriv~ looked
+    like
+
+    #+BEGIN_SRC scheme
+    ((get (operator exp) 'deriv) (operands exp) var)
+    #+END_SRC
+
+    What corresponding changes to the derivative system are required?
+
+***** Solution
+
+a. We dispatch to an implementation of differentiation based on the operator of
+   an expression, which indicates whether it's a sum, product, etc. Since
+   numbers and variables are not operators, we cannot dispatch into the table
+   based on them and must handle them specially.
+
+b. Code:
+
+   #+BEGIN_SRC scheme
+     (define (install-deriv-package)
+       ;; internal procedures
+       (define (make-sum a1 a2) (list '+ a1 a2))
+       (define (addend s) (car s))
+       (define (augend s) (cadr s))
+
+       (define (make-product m1 m2) (list '* m1 m2))
+       (define (multiplier p) (car p))
+       (define (multiplicand p) (cadr p))
+
+       (define (deriv-sum exp var)
+         (make-sum (deriv (addend exp) var)
+                   (deriv (augend exp) var)))
+
+       (define (deriv-product exp var)
+         (make-sum
+           (make-product (multiplier exp)
+                         (deriv (multiplicand  exp) var))
+           (make-product (deriv (multiplier  exp) var)
+                         (multiplicand exp))))
+
+       ;; interface to the rest of the system
+       (put 'deriv '+ deriv-sum)
+       (put 'deriv '* deriv-product))
+     (install-deriv-package)
+
+   #+END_SRC
+
+c. Here is an implementation for exponentiation:
+
+   #+BEGIN_SRC scheme
+     (define (make-exponentiation base power)
+       (list '** base power))
+     (define (base s) (car s))
+     (define (exponent s) (cadr s))
+
+     (define (deriv-exponentiation operands var)
+       (make-product
+         (make-product
+           (exponent exp)
+           (make-exponentiation
+             (base exp)
+             (- (exponent exp) 1)))
+         (deriv (base exp) var)))
+     (put 'deriv '** deriv-exponentiation)
+
+   #+END_SRC
+
+d. It is only necessary to change the places where the ~get~ or ~put~
+   procedures are actually invoked. In my implementation above, since the only
+   place these procedures are invoked besides in the definition of ~deriv~ is
+   when registering the operator-specific commands, the order of the arguments
+   to the ~put~ calls is the only thing to change.
+
+**** Exercise 2.74.
+
+Insatiable Enterprises, Inc., is a highly decentralized conglomerate company
+consisting of a large number of independent divisions located all over the
+world. The company's computer facilities have just been interconnected by means
+of a clever network-interfacing scheme that makes the entire network appear to
+any user to be a single computer. Insatiable's president, in her first attempt
+to exploit the ability of the network to extract administrative information
+from division files, is dismayed to discover that, although all the division
+files have been implemented as data structures in Scheme, the particular data
+structure used varies from division to division. A meeting of division managers
+is hastily called to search for a strategy to integrate the files that will
+satisfy headquarters' needs while preserving the existing autonomy of the
+divisions.
+
+Show how such a strategy can be implemented with data-directed programming. As
+an example, suppose that each division's personnel records consist of a single
+file, which contains a set of records keyed on employees' names. The structure
+of the set varies from division to division. Furthermore, each employee's
+record is itself a set (structured differently from division to division) that
+contains information keyed under identifiers such as ~address~ and ~salary~. In
+particular:
+
+a.  Implement for headquarters a ~get-record~ procedure that retrieves a
+    specified employee's record from a specified personnel file. The procedure
+    should be applicable to any division's file. Explain how the individual
+    divisions' files should be structured. In particular, what type information
+    must be supplied?
+
+b.  Implement for headquarters a ~get-salary~ procedure that returns the salary
+    information from a given employee's record from any division's personnel
+    file. How should the record be structured in order to make this operation
+    work?
+
+c.  Implement for headquarters a ~find-employee-record~ procedure. This should
+    search all the divisions' files for the record of a given employee and
+    return the record. Assume that this procedure takes as arguments an
+    employee's name and a list of all the divisions' files.
+
+d.  When Insatiable takes over a new company, what changes must be made in
+    order to incorporate the new personnel information into the central system?
+
+***** Solution
+
+a. Assume that a procedure ~file-type~ can extract the type of a file without
+   knowing the detailed structure of the file. For example, the first element
+   of the file data structure always holds the type.
+
+   The ~find-in-set~ procedure takes the set first and the key second.
+
+   #+BEGIN_SRC scheme
+     (define (get-record file employee-name)
+       ((get (file-type file) 'find-in-set) file employee-name))
+   #+END_SRC
+
+b. Again, assume that the type of the record can be extracted without
+   a detailed knowledge of the structure.
+
+   Note that file and employee record types are in the same namespace so that
+   the ~find-in-set~ procedure can easily be used for either.
+
+   #+BEGIN_SRC scheme
+     (define (get-salary record)
+       ((get (record-type record) 'find-in-set) record 'salary))
+   #+END_SRC
+
+c. Note that this is abstracted away from the representation of the files and
+   records -- everything is implemented in terms of the lower-level procedures
+   given above.
+
+   #+BEGIN_SRC scheme
+     (define (find-employee-record files employee-name)
+       (if (null? files)
+         #f
+         (let ((record (get-record (car files) employee-name)))
+          (if record
+            record
+            (find-employee-record (cdr files) employee-name)))))
+   #+END_SRC
+
+d. Each file and employee record must be modified to place the type information
+   in a place where ~file-type~ and ~record-type~ can extract it, and the
+   primitive type-dependent procedures must be defined and put into the
+   dispatch table.
+
+**** Exercise 2.75.
+
+Implement the constructor ~make-from-mag-ang~ in message-passing style. This
+procedure should be analogous to the ~make-from-real-imag~ procedure given
+above.
+
+***** Solution
+
+#+BEGIN_SRC scheme
+  (define (make-from-mag-ang mag ang)
+    (define (dispatch op)
+      (cond ((eq? op 'magnitude) mag)
+            ((eq? op 'angle) ang)
+            ((eq? op 'real-part)
+             (* mag (cos ang)))
+            ((eq? op 'imag-part)
+             (* mag (sin ang)))
+            (else
+             (error "Unknown op -- MAKE-FROM-MAG-ANG" op))))
+    dispatch)
+
+  (define pi (* 2 (asin 1)))
+  (define z (make-from-mag-ang 1 (/ pi 4)))
+  (test 1
+        (z 'magnitude))
+  (test (/ pi 4)
+        (z 'angle))
+  (test (/ (sqrt 2) 2)
+        (z 'real-part))
+  (test (/ (sqrt 2) 2)
+        (z 'imag-part))
+#+END_SRC
+
+**** Exercise 2.76.
+
+As a large system with generic operations evolves, new types of data objects or
+new operations may be needed. For each of the three strategies -- generic
+operations with explicit dispatch, data-directed style, and
+message-passing-style -- describe the changes that must be made to a system in
+order to add new types or new operations. Which organization would be most
+appropriate for a system in which new types must often be added? Which would be
+most appropriate for a system in which new operations must often be added?
+
+***** Solution
+
+Steps to add types or operations:
+
+- explicit dispatch :: Need to add an additional case in every operation when a
+     new type is added, and need to explicitly dispatch on all types when a new
+     operation is added.
+
+- data-directed style :: can add new types easily by implementing all the
+     operations in a package and then importing it.
+
+- message-passing style :: can add new operations easily defined for a type, it
+     can fall back to a default implementation or an error -- but adding new
+     operations requires modifying every type.
