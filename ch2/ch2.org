@@ -307,3 +307,922 @@ Steps to add types or operations:
 - message-passing style :: can add new operations easily defined for a type, it
      can fall back to a default implementation or an error -- but adding new
      operations requires modifying every type.
+
+
+** 2.5: Systems with Generic Operations
+
+#+NAME: generic-arithmetic-procedures
+#+BEGIN_SRC scheme
+  (define (add x y) (apply-generic 'add x y))
+  (define (sub x y) (apply-generic 'sub x y))
+  (define (mul x y) (apply-generic 'mul x y))
+  (define (div x y) (apply-generic 'div x y))
+#+END_SRC
+
+#+NAME: install-scheme-number-package
+#+BEGIN_SRC scheme
+  (define (install-scheme-number-package)
+    (define (tag x)
+      (attach-tag 'scheme-number x))
+    (put 'add '(scheme-number scheme-number)
+         (lambda (x y) (tag (+ x y))))
+    (put 'sub '(scheme-number scheme-number)
+         (lambda (x y) (tag (- x y))))
+    (put 'mul '(scheme-number scheme-number)
+         (lambda (x y) (tag (* x y))))
+    (put 'div '(scheme-number scheme-number)
+         (lambda (x y) (tag (/ x y))))
+    (put 'make 'scheme-number
+         (lambda (x) (tag x)))
+    'done)
+  (define (make-scheme-number n)
+    ((get 'make 'scheme-number) n))
+#+END_SRC
+
+*** 2.5.1: Generic Arithmetic Operations
+
+**** Exercise 2.77.
+
+Louis Reasoner tries to evaluate the expression ~(magnitude z)~ where ~z~ is
+the object shown in figure 2.24. To his surprise, instead of the answer 5 he
+gets an error message from ~apply-generic~, saying there is no method for the
+operation ~magnitude~ on the types ~(complex)~. He shows this interaction to
+Alyssa P. Hacker, who says ``The problem is that the complex-number selectors
+were never defined for ~complex~ numbers, just for ~polar~ and ~rectangular~
+numbers. All you have to do to make this work is add the following to the
+~complex~ package:''
+
+#+BEGIN_SRC scheme
+  (put 'real-part '(complex) real-part)
+  (put 'imag-part '(complex) imag-part)
+  (put 'magnitude '(complex) magnitude)
+  (put 'angle '(complex) angle)
+#+END_SRC
+
+Describe in detail why this works. As an example, trace through all the
+procedures called in evaluating the expression ~(magnitude z)~ where ~z~ is the
+object shown in figure 2.24. In particular, how many times is ~apply-generic~
+invoked? What procedure is dispatched to in each case?
+
+***** Solution
+
+The ~real-part~, etc. functions are in fact simple wrappers around the
+application of the corresponding generic operations:
+
+#+BEGIN_SRC scheme
+  (define (real-part z) (apply-generic 'real-part z))
+  (define (imag-part z) (apply-generic 'imag-part z))
+  (define (magnitude z) (apply-generic 'magnitude z))
+  (define (angle z) (apply-generic 'angle z))
+#+END_SRC
+
+The ~rectangular~ and ~polar~ packages define internal procedures to implement
+these generic operations. The generic operations defined for ~complex~ numbers
+just end up dispatching to the corresponding generic ~rectangular~ or ~polar~
+operations, only after which is the underlying internal function called.
+
+For example, calling ~(magnitude z)~, where ~z~ is a ~complex~ number, results
+in the following calls:
+
+#+BEGIN_SRC scheme
+  ;; Original application to complex type.
+  (magnitude z)
+  ;; Expansion from generic definition of magnitude.
+  (apply-generic 'magnitude z)
+  ;; Definition in this problem applies magnitude to contents of z (which may be
+  ;; rectangular or polar).
+  (magnitude (contents z))
+  ;; Again, expansion from generic definition of magnitude.
+  (apply-generic 'magnitude (contents z))
+  ;; Application of generic magnitude operation to numbers tagged rectangular or
+  ;; polar results in calling the implementation of magnitude internal to the
+  ;; package.
+  (internal-magnitude (contents (contents z)))
+#+END_SRC
+
+**** Exercise 2.78.
+The internal procedures in the scheme-number package are essentially nothing
+more than calls to the primitive procedures ~+~, ~-~, etc. It was not possible
+to use the primitives of the language directly because our type-tag system
+requires that each data object have a type attached to it. In fact, however,
+all Lisp implementations do have a type system, which they use
+internally. Primitive predicates such as ~symbol?~ and ~number?~ determine
+whether data objects have particular types. Modify the definitions of
+~type-tag~, ~contents~, and ~attach-tag~ from section 2.4.2 so that our generic
+system takes advantage of Scheme's internal type system. That is to say, the
+system should work as before except that ordinary numbers should be represented
+simply as Scheme numbers rather than as pairs whose ~car~ is the symbol
+~scheme-number~.
+
+***** Solution
+
+We special-case numbers to return ~scheme-number~ as their type tag and avoid
+adding the type tag to numbers that would otherwise be tagged with
+~scheme-number~.
+
+#+BEGIN_SRC scheme
+  (define (attach-tag type-tag contents)
+    (if (and (equal? type-tag 'scheme-number)
+             ;; Leave open the possibility to apply SCHEME-NUMBER to non-numbers.
+             (number? contents))
+        contents
+        (cons type-tag contents)))
+  (define (type-tag datum)
+    (cond ((number? datum) 'scheme-number)
+          ((pair? datum) (car datum))
+          (else error "Bad tagged datum -- TYPE-TAG" datum)))
+  (define (contents datum)
+    (cond ((number? datum) datum)
+          ((pair? datum) (cdr datum))
+          (else (error "Bad tagged datum -- CONTENTS" datum))))
+#+END_SRC
+
+**** Exercise 2.79.
+Define a generic equality predicate ~equ?~ that tests the equality of two
+numbers, and install it in the generic arithmetic package. This operation
+should work for ordinary numbers, rational numbers, and complex numbers.
+
+***** Solution
+
+We define the top-level generic function for convenience:
+
+#+BEGIN_SRC scheme
+  (define equ? (apply-generic 'equ? x y))
+#+END_SRC
+
+Install the following functions as implementations for ~equ?~ in the
+corresponding packages:
+
+#+BEGIN_SRC scheme
+  (define (equ?-scheme-number x y)
+    (= x y))
+  (put 'equ? 'scheme-number equ?-scheme-number)
+
+  (define (equ?-rat x y)
+    (and (= (numer x) (numer y))
+         (= (denom x) (denom y))))
+  (put 'equ? 'rational equ?-rat)
+
+  (define (equ?-complex x y)
+    (and (= (real-part x) (real-part y)
+            (imag-part x) (imag-part y))))
+  (put 'equ? 'complex equ?-complex)
+#+END_SRC
+
+**** Exercise 2.80.
+Define a generic predicate ~=zero?~ that tests if its argument is zero, and
+install it in the generic arithmetic package. This operation should work for
+ordinary numbers, rational numbers, and complex numbers.
+
+***** Solution
+
+We define the top-level generic function for convenience:
+
+#+BEGIN_SRC scheme
+  (define =zero? (lambda (x)  (apply-generic '=zero? x)))
+#+END_SRC
+
+Install the following functions as implementations for ~=zero?~ in the
+corresponding packages:
+
+#+BEGIN_SRC scheme
+  (define (=zero?-scheme-number x)
+    (= x 0))
+  (put '=zero? '(scheme-number) =zero?-scheme-number)
+
+  (define (=zero?-rat x y)
+    (and (= (numer x) 0)
+         ;; Denominator of 0 is undefined -- choose not to make such a number
+         ;; equal to 0 even if the numerator is 0.
+         (/= (denom x) 0)))
+  (put '=zero? '(rational) =zero?-rat)
+
+  (define (=zero?-complex x y)
+    (= (magnitude x) 0))
+  (put '=zero? '(complex) =zero?-complex)
+#+END_SRC
+
+One could also imagine defining ~=zero?~ as a generic function
+
+#+BEGIN_SRC scheme
+  (define (=zero? x)
+    (equ? x (zero x)))
+#+END_SRC
+
+where ~zero~ is a function that returns a zero value of the type of
+~x~. Assuming ~equ?~ properly equates zero values that have the same type but
+different representations (e.g., for ~rat~ and ~polar~ numbers), the above
+definition will work. However, this requires another operation to be defined
+anyway, and makes it harder to override the ~=zero?~ operation per-type in the
+event that such an override is desirable for efficiency or correctness.
+
+
+*** 2.5.2: Combining Data of Different Types
+
+**** Auxiliary definitions
+
+#+BEGIN_SRC scheme
+  (define *coercion-table* (make-hash-table equal?))
+
+  (define (put-coercion type-from type-to proc)
+    (hash-table-set!
+     *coercion-table*
+     (list type-from type-to)
+     proc))
+
+  (define (get-coercion type-from type-to)
+    (hash-table-ref
+     *coercion-table*
+     (list type-from type-to)))
+#+END_SRC
+
+**** Exercise 2.81.
+
+Louis Reasoner has noticed that ~apply-generic~ may try to coerce the arguments
+to each other's type even if they already have the same type. Therefore, he
+reasons, we need to put procedures in the coercion table to "coerce" arguments
+of each type to their own type. For example, in addition to the
+~scheme-number->complex~ coercion shown above, he would do:
+
+#+BEGIN_SRC scheme
+(define (scheme-number->scheme-number n) n)
+(define (complex->complex z) z)
+(put-coercion 'scheme-number 'scheme-number
+              scheme-number->scheme-number)
+(put-coercion 'complex 'complex complex->complex)
+#+END_SRC
+
+a. With Louis's coercion procedures installed, what happens if ~apply-generic~
+   is called with two arguments of type ~scheme-number~ or two arguments of
+   type ~complex~ for an operation that is not found in the table for those
+   types? For example, assume that we've defined a generic exponentiation
+   operation:
+
+   #+BEGIN_SRC scheme
+   (define (exp x y) (apply-generic 'exp x y))
+   #+END_SRC
+
+   and have put a procedure for exponentiation in the ~scheme-number~ package
+   but not in any other package:
+
+   #+BEGIN_SRC scheme
+   ;; following added to Scheme-number package
+   (put 'exp '(scheme-number scheme-number)
+        (lambda (x y) (tag (expt x y)))) ; using primitive expt
+   #+END_SRC scheme
+
+   What happens if we call ~exp~ with two ~complex~ numbers as arguments?
+
+b. Is Louis correct that something had to be done about coercion with arguments
+   of the same type, or does ~apply-generic~ work correctly as is?
+
+c. Modify ~apply-generic~ so that it doesn't try coercion if the two arguments
+   have the same type.
+
+***** Solution
+
+a. If ~exp~ is called with two ~complex~ numbers as arguments, ~apply-generic~
+   will fail to find an implementation of ~exp~ for the arguments. However, it
+   will then find a coercion ~complex->complex~ for ~t1->t2~ and then re-apply
+   the ~exp~ operation with ~t1->t2~ applied to the first argument. Since this
+   applies ~exp~ once again to two ~complex~ arguments, Louis' conversions
+   will lead to an infinite loop.
+
+b. Louis is not correct -- ~apply-generic~ works as is because it searches for
+   an implementation of the generic operation for the argument types given
+   before attempting coercion. If an implementation is found, coercion is
+   never attempted, so there is no need to provide a coercion operation from a
+   type to itself.
+
+c. From the above, it is clear that the only time ~apply-generic~ would look
+   for a conversion from a type to itself is when
+
+   - The two arguments have the same type.
+   - An implementation of the generic operation was not found.
+
+   Therefore, the only thing to do is to raise an error for the lack of an
+   implementation:
+
+   #+BEGIN_SRC scheme
+     (define (apply-generic op . args)
+       (define (no-method op type-tags)
+         (error "No method for these types"
+                (list op type-tags)))
+       (let ((type-tags (map type-tag args)))
+         (let ((proc (get op type-tags)))
+           (if proc
+               (apply proc (map contents args))
+               (if (= (length args) 2)
+                   (let ((type1 (car type-tags))
+                         (type2 (cadr type-tags))
+                         (a1 (car args))
+                         (a2 (cadr args)))
+                     (if (equal? type1 type2)
+                         (no-method op type-tags)
+                         (let ((t1->t2 (get-coercion type1 type2))
+                               (t2->t1 (get-coercion type2 type1)))
+                           (cond (t1->t2
+                                  (apply-generic op (t1->t2 a1) a2))
+                                 (t2->t1
+                                  (apply-generic op a1 (t2->t1 a2)))
+                                 (else
+                                  (no-method op type-tags))))))
+                   (no-method op type-tags))))))
+   #+END_SRC
+
+**** Exercise 2.82.
+
+Show how to generalize ~apply-generic~ to handle coercion in the general case
+of multiple arguments. One strategy is to attempt to coerce all the arguments
+to the type of the first argument, then to the type of the second argument, and
+so on. Give an example of a situation where this strategy (and likewise the
+two-argument version given above) is not sufficiently general. (Hint: Consider
+the case where there are some suitable mixed-type operations present in the
+table that will not be tried.)
+
+***** Solution
+
+Here's the steps:
+
+- First, test if the args are the proper types already for the operation. If
+  so, apply the op and return the result.
+- Else, we'll want to keep the list of arguments, as well as keep an index to
+  the current argument, whose type we want to coerce all the other arguments
+  to.
+#+BEGIN_SRC scheme
+  (define (apply-generic op . args)
+    (define (no-method op type-tags)
+      (error "No method for these types"
+             (list op type-tags)))
+    (define (attempt-coercion tried to-try)
+      (if (null? to-try)
+          (no-method op (map type-tag tried))
+          (letrec ((current-arg (car to-try))
+                   (current-type (type-tag current-arg))
+                   (coerce-to-current
+                    (lambda (x)
+                      ((get-coercion (type-tag x) current-type) x)))
+                   (coerced-args
+                    (append (map coerce-to-current tried)
+                            (list current-arg)
+                            (map coerce-to-current (cdr to-try)))))
+            (if (/= (length coerced-args)
+                   (length (append tried to-try)))
+                (attempt-coercion (append tried (list (car to-try)))
+                                  (cdr to-try))
+                (apply apply-generic op coerced-args)))))
+    (let ((type-tags (map type-tag args)))
+      (let ((proc (get op type-tags)))
+        (if proc
+            (apply proc (map contents args))
+            (attempt-coercion '() args)))))
+#+END_SRC
+
+This procedure works for some simple cases. However, if
+
+- the arguments to ~apply-generic~ are not of the appropriate type for ~op~,
+- one argument ~t1~ cannot be coerced to the type of another argument ~t2~,
+- a coercion for ~t1~ exists such that the argument list is valid for ~op~,
+
+an appropriate coercion will not be found even though it exists.
+
+**** Exercise 2.83.
+
+Suppose you are designing a generic arithmetic system for dealing with the
+tower of types shown in figure 2.25: integer, rational, real, complex. For each
+type (except complex), design a procedure that raises objects of that type one
+level in the tower. Show how to install a generic ~raise~ operation that will
+work for each type (except complex).
+
+***** Solution
+
+#+BEGIN_SRC scheme
+  ;; Install these in the corresponding packages to implement the generic RAISE
+  ;; operation.
+  (define (raise-integer->rational x)
+    (make-rat x 1))
+  (define (raise-rational->real x)
+    (/ (numer x) (denom x)))
+  (define (raise-real->complex x)
+    (make-from-real-imag x 0))
+
+  ;; Raise over any numeric type
+  (define (raise x) (apply-generic 'raise x))
+#+END_SRC
+
+**** Exercise 2.84.
+
+Using the ~raise~ operation of exercise 2.83, modify the ~apply-generic~
+procedure so that it coerces its arguments to have the same type by the method
+of successive raising, as discussed in this section. You will need to devise a
+way to test which of two types is higher in the tower. Do this in a manner that
+is ``compatible'' with the rest of the system and will not lead to problems in
+adding new levels to the tower.
+
+***** Solution
+
+For simplicity, use the earlier two-argument version of ~apply-generic~.
+
+One simple way to extend the earlier ~apply-generic~ procedure is to first
+attempt coercing the arguments as before
+
+#+BEGIN_SRC scheme
+  (define (apply-generic op . args)
+    (define (no-method op type-tags)
+      (error "No method for these types"
+             (list op type-tags)))
+    (let ((type-tags (map type-tag args)))
+      (let ((proc (get op type-tags)))
+        (if proc
+            (apply proc (map contents args))
+            (if (= (length args) 2)
+                (let ((type1 (car type-tags))
+                      (type2 (cadr type-tags))
+                      (a1 (car args))
+                      (a2 (cadr args)))
+                  (if (equal? type1 type2)
+                      (no-method op type-tags)
+                      (let ((t1->t2 (get-coercion type1 type2))
+                            (t2->t1 (get-coercion type2 type1)))
+                        (cond (t1->t2
+                               (apply-generic op (t1->t2 a1) a2))
+                              (t2->t1
+                               (apply-generic op a1 (t2->t1 a2)))
+                              (else
+                               (no-method op type-tags))))))
+                (no-method op type-tags))))))
+#+END_SRC
+
+*** 2.5.3: Example: Symbolic Algebra
+
+**** Auxiliary definitions
+
+#+BEGIN_SRC scheme
+  ;; <procedures same-variable? and variable? from section 2.3.2>
+  (define (variable? x) (symbol? x))
+  (define (same-variable? v1 v2)
+    (and (variable? v1) (variable? v2) (eq? v1 v2)))
+
+  (define (install-poly-sparse-package)
+    ;; internal procedures
+    ;; representation of poly
+    (define (make-poly-sparse variable term-list)
+      (cons variable term-list))
+    (define (variable p) (car p))
+    (define (term-list p) (cdr p))
+    ;; <procedures same-variable? and variable? from section 2.3.2>
+    (define (variable? x) (symbol? x))
+    (define (same-variable? v1 v2)
+      (and (variable? v1) (variable? v2) (eq? v1 v2)))
+    ;; representation of terms and term lists
+    ;; <procedures adjoin-term ...coeff from text below>
+    (define (adjoin-term term term-list)
+      (if (=zero? (coeff term))
+          term-list
+          (cons term term-list)))
+    (define (the-empty-termlist) '())
+    (define (first-term term-list) (car term-list))
+    (define (rest-terms term-list) (cdr term-list))
+    (define (empty-termlist? term-list) (null? term-list))
+    (define (make-term order coeff) (list order coeff))
+    (define (order term) (car term))
+    (define (coeff term) (cadr term))
+
+    (define (add-poly-sparse p1 p2)
+      (if (same-variable? (variable p1) (variable p2))
+          (make-poly-sparse (variable p1)
+                            (add-terms (term-list p1) (term-list p2)))
+          (error "ADD-POLY -- cannot add two polynomials with different variables")))
+    ;; <procedures used by add-poly>
+    (define (add-terms L1 L2)
+      (cond ((empty-termlist? L1) L2)
+            ((empty-termlist? L2) L1)
+            (else
+             (let ((t1 (first-term L1)) (t2 (first-term L2)))
+               (cond ((> (order t1) (order t2))
+                      (adjoin-term
+                       t1 (add-terms (rest-terms L1) L2)))
+                     ((< (order t1) (order t2))
+                      (adjoin-term
+                       t2 (add-terms L1 (rest-terms L2))))
+                     (else
+                      (adjoin-term
+                       (make-term (order t1)
+                                  (add (coeff t1) (coeff t2)))
+                       (add-terms (rest-terms L1)
+                                  (rest-terms L2)))))))))
+    (define (mul-poly-sparse p1 p2)
+      (if (same-variable? (variable p1) (variable p2))
+          (make-poly-sparse (variable p1)
+                            (mul-terms (term-list p1) (term-list p2)))
+          (error "MUL-POLY -- cannot multiply two polynomials with different variables")))
+    ;; <procedures used by mul-poly>
+    (define (mul-terms L1 L2)
+      (if (empty-termlist? L1)
+          (the-empty-termlist)
+          (add-terms (mul-term-by-all-terms (first-term L1) L2)
+                     (mul-terms (rest-terms L1) L2))))
+    (define (mul-term-by-all-terms t1 L)
+      (if (empty-termlist? L)
+          (the-empty-termlist)
+          (let ((t2 (first-term L)))
+            (adjoin-term
+             (make-term (+ (order t1) (order t2))
+                        (mul (coeff t1) (coeff t2)))
+             (mul-term-by-all-terms t1 (rest-terms L))))))
+    ;; interface to rest of the system
+    (define (tag p) (attach-tag 'poly-sparse p))
+    (put 'add '(poly-sparse poly-sparse)
+         (lambda (p1 p2) (tag (add-poly-sparse p1 p2))))
+    (put 'mul '(poly-sparse poly-sparse)
+         (lambda (p1 p2) (tag (mul-poly-sparse p1 p2))))
+    (put 'make 'poly-sparse
+         (lambda (var terms) (tag (make-poly-sparse var terms))))
+    'done)
+  (define (make-poly-sparse var terms)
+    ((get 'make 'poly-sparse) var terms))
+#+END_SRC
+
+
+**** Exercise 2.87.
+
+Install ~=zero?~ for polynomials in the generic arithmetic package. This will
+allow ~adjoin-term~ to work for polynomials with coefficients that are
+themselves polynomials.
+
+***** Solution
+
+#+BEGIN_SRC scheme
+  (define (=zero?-poly-sparse p)
+    (let =zero?-terms ((terms (term-list p)))
+      (or (empty-termlist? terms)
+          (and (=zero? (coeff (first-term terms)))
+               (=zero?-terms (rest-terms terms))))))
+  (put '=zero? 'poly-sparse =zero?-poly)
+#+END_SRC
+
+**** Exercise 2.88.
+
+Extend the polynomial system to include subtraction of polynomials. (Hint: You
+may find it helpful to define a generic negation operation.)
+
+***** Solution
+
+#+BEGIN_SRC scheme
+  ;; Negation
+  (define (neg-poly-sparse p)
+    (define (neg-terms terms)
+      (if (empty-termlist? terms)
+          (the-empty-termlist)
+          (adjoin-term (make-term (order (first-term terms))
+                                  (neg (coeff (first-term terms))))
+                       (rest-terms terms))))
+    (make-poly-sparse (variable p)
+               (neg-terms (term-list p))))
+  (define (neg-complex z)
+    (make-from-real-imag (- (real-part z))
+                         (- (imag-part z))))
+  (put 'neg 'polynomial neg-poly)
+  (put 'neg 'complex neg-complex)
+  (put 'neg 'scheme-number
+       (lambda (x) (attach-tag 'scheme-number (- x))))
+  (define (neg x) (apply-generic 'neg x))
+
+  ;; Subtraction in terms of negation
+  (define (sub-poly-sparse p1 p2)
+    (add p1 (neg p2)))
+  (put 'sub '(poly-sparse poly-sparse) sub-poly-sparse)
+#+END_SRC
+
+**** Exercise 2.89.
+
+Define procedures that implement the term-list representation described above
+as appropriate for dense polynomials.
+
+***** Solution
+
+#+BEGIN_SRC scheme
+  (define (install-poly-dense-package)
+    ;; internal procedures
+    ;; representation of poly
+    (define (make-poly variable term-list)
+      (cons variable term-list))
+    (define (variable p) (car p))
+    (define (term-list p) (cdr p))
+    ;; <procedures same-variable? and variable? from section 2.3.2>
+    (define (variable? x) (symbol? x))
+    (define (same-variable? v1 v2)
+      (and (variable? v1) (variable? v2) (eq? v1 v2)))
+    ;; representation of terms and term lists
+    ;; <procedures adjoin-term ...coeff from text below>
+    (define (adjoin-term term term-list)
+      (if (=zero? term)
+          term-list
+          (cons term term-list)))
+    (define (the-empty-termlist) '())
+    (define (first-term term-list) (car term-list))
+    (define (rest-terms term-list) (cdr term-list))
+    (define (empty-termlist? term-list) (null? term-list))
+
+    (define (add-poly p1 p2)
+      (if (same-variable? (variable p1) (variable p2))
+          (make-poly (variable p1)
+                     (add-terms (term-list p1) (term-list p2))))
+      (error "ADD-POLY -- cannot add two polynomials with different variables"))
+    ;; <procedures used by add-poly>
+    (define (add-terms L1 L2)
+      (let (rec (L1 L1)
+                (L2 L2)
+                (o1 (length L1))
+                (o2 (length L2)))
+        (cond ((empty-termlist? L1) L2)
+              ((empty-termlist? L2) L1)
+              ((> o1 o2)
+               (adjoin-term (first-term L1) (rec (rest-terms L1) L2 (- o1 1) o2)))
+              ((> o2 o1)
+               (adjoin-term (first-term L2) (rec L1 (rest-terms L2) o1 (- o2 1))))
+              (else
+               (adjoin-term (add (first-term L1)
+                                 (first-term L2))
+                            (rec (rest-terms L1) (rest-terms L2)
+                                 (- o1 1) (- o2 1)))))))
+    (define (mul-poly p1 p2)
+      (if (same-variable? (variable p1) (variable p2))
+          (make-poly (variable p1)
+                     (mul-terms (term-list p1) (term-list p2))))
+      (error "MUL-POLY -- cannot multiply two polynomials with different variables"))
+    ;; <procedures used by mul-poly>
+    (define (mul-terms L1 L2)
+      (let (rec ((L1 L1)
+                 (L2 L2)
+                 (o1 (- (length L1) 1)))
+                (if (empty-termlist? L1)
+                    (the-empty-termlist)
+                    (add-terms (mul-term-by-all-terms (first-term L1) o1 L2)
+                               (rec (rest-terms L1) L2 (- o1 1))))))
+      ;; c1, o1 -- coefficient, order of term to be multiplied by term list L
+      ;; First multiply terms by c1, then append a list of (+ o1 1) zeros to the
+      ;; end of L to represent the multiplication by the inderminate variable
+      ;; raised to the power of o1.
+      (define (mul-term-by-all-terms c1 o1 L)
+        (define (rec c1 o1 L)
+          (if (empty-termlist? L)
+              (the-empty-termlist)
+              (let ((t2 (first-term L)))
+                (adjoin-term
+                 (mul c1 t2)
+                 (rec c1 (- o1 1) (rest-terms L))))))
+        (append (rec t1 o1 L)
+                (repeat 0 (+ o1 1)))
+        ;; interface to rest of the system
+        (define (tag p) (attach-tag 'poly-dense p))
+        (put 'add '(poly-dense poly-dense)
+             (lambda (p1 p2) (tag (add-poly p1 p2))))
+        (put 'mul '(poly-dense poly-dense)
+             (lambda (p1 p2) (tag (mul-poly p1 p2))))
+        (put 'make 'poly-dense
+             (lambda (var terms) (tag (make-poly var terms))))
+        'done)
+#+END_SRC
+
+**** Exercise 2.90.
+
+Suppose we want to have a polynomial system that is efficient for both sparse
+and dense polynomials. One way to do this is to allow both kinds of term-list
+representations in our system. The situation is analogous to the complex-number
+example of section 2.4, where we allowed both rectangular and polar
+representations. To do this we must distinguish different types of term lists
+and make the operations on term lists generic. Redesign the polynomial system
+to implement this generalization. This is a major effort, not a local change.
+
+***** Solution
+
+We first want to define some coercions. I will use the ~get-coercion~ and
+~put-coercion~ interface for this.
+
+#+BEGIN_SRC scheme
+  (define (coerce-poly-sparse->poly-dense p)
+    (define (coeff t) (car t))
+    (define (order t) (cdr t))
+    (define (tag p) (attach-tag 'poly-dense p))
+    (let ((terms (cdr p))
+          (var (car p)))
+      (cons var
+            (list
+             (let (rec (terms terms)
+                       (o (order (car terms))))
+               (cond ((null? terms)
+                      '())
+                     ((> o (order (car terms)))
+                      (cons (attach-tag 'scheme-number 0)
+                            (rec terms (- o 1))))
+                     (else
+                      (cons (coeff (car terms))
+                            (rec terms (- o 1))))))))))
+  (define (coerce-poly-dense->poly-sparse p)
+    (define (make-term coeff order) (cons coeff order))
+    (define (tag p) (attach-tag 'poly-dense p))
+    (let ((terms (cdr p))
+          (var (car p)))
+      (cons var
+            (list
+             (let (rec (terms terms)
+                       (o (- (length terms) 1)))
+               (cond ((null? terms)
+                      '())
+                     ((=zero? (car terms))
+                      (rec (cdr terms) (- o 1)))
+                     (else
+                      (cons (make-term (car terms) o)
+                            (rec (cdr terms) (- o 1))))))))))
+  (put-coercion 'poly-sparse 'poly-dense coerce-poly-sparse->poly-dense)
+  (put-coercion 'poly-dense 'poly-sparse coerce-poly-dense->poly-sparse)
+#+END_SRC
+
+The idea here is to define a type ~poly-generic~, whose contents we assume are
+always another tagged value (of type ~poly-sparse~ or ~poly-dense~, or perhaps
+another representation that may be added in the future). Unfortunately, this
+design requires manually coercing a ~poly-generic~ value to the underlying
+representation, which is a major flaw the ~complex~ example doesn't have. This
+arises because, unlike ~complex~, there are no primitives provided for the
+polynomial types below ~add~, ~sub~, etc. with which these procedures can be
+implemented.
+
+#+BEGIN_SRC scheme
+  (define (install-poly-generic-package)
+    (define (tag x) (attach-tag 'poly-generic x))
+    (put 'neg '(poly-generic)
+         (lambda (p)
+           (tag (neg (contents p)))))
+    (put 'add '(poly-generic poly-generic)
+         (lambda (p1 p2)
+           (tag (add (contents p1) (contents p2)))))
+    (put 'sub '(poly-generic poly-generic)
+         (lambda (p1 p2)
+           (tag (sub (contents p1) (contents p2)))))
+    (put 'mul '(poly-generic poly-generic)
+         (lambda (p1 p2)
+           (tag (mul (contents p1) (contents p2)))))
+    (put 'make 'poly-generic
+         (lambda (var terms)
+           (tag ((get 'poly-sparse 'make) var terms))))
+    'done)
+#+END_SRC
+
+**** Exercise 2.91.
+
+A univariate polynomial can be divided by another one to produce a polynomial
+quotient and a polynomial remainder. For example,
+
+\begin{equation}
+\frac{x^5 - 1}{x^2 - 1} = x^3 + x, \ \textrm{remainder} \ x - 1
+\end{equation}
+
+Division can be performed via long division. That is, divide the highest-order
+term of the dividend by the highest-order term of the divisor. The result is
+the first term of the quotient. Next, multiply the result by the divisor,
+subtract that from the dividend, and produce the rest of the answer by
+recursively dividing the difference by the divisor. Stop when the order of the
+divisor exceeds the order of the dividend and declare the dividend to be the
+remainder. Also, if the dividend ever becomes zero, return zero as both
+quotient and remainder.
+
+We can design a ~div-poly~ procedure on the model of ~add-poly~ and
+~mul-poly~. The procedure checks to see if the two polys have the same
+variable. If so, ~div-poly~ strips off the variable and passes the problem to
+~div-terms~, which performs the division operation on term lists. ~div-poly~
+finally reattaches the variable to the result supplied by ~div-terms~. It is
+convenient to design ~div-terms~ to compute both the quotient and the remainder
+of a division. ~div-terms~ can take two term lists as arguments and return a
+list of the quotient term list and the remainder term list.
+
+Complete the following definition of ~div-terms~ by filling in the missing
+expressions. Use this to implement ~div-poly~, which takes two polys as
+arguments and returns a list of the quotient and remainder polys.
+
+***** Solution
+
+#+NAME: ex-2-91-sparse
+#+BEGIN_SRC scheme
+  (define (make-poly-sparse variable term-list)
+    (cons variable term-list))
+  (define (variable p) (car p))
+  (define (term-list p) (cdr p))
+  ;; <procedures same-variable? and variable? from section 2.3.2>
+  (define (variable? x) (symbol? x))
+  (define (same-variable? v1 v2)
+    (and (variable? v1) (variable? v2) (eq? v1 v2)))
+  ;; representation of terms and term lists
+  ;; <procedures adjoin-term ...coeff from text below>
+  (define (adjoin-term term term-list)
+    (if (=zero? (coeff term))
+        term-list
+        (cons term term-list)))
+  (define (the-empty-termlist) '())
+  (define (first-term term-list) (car term-list))
+  (define (rest-terms term-list) (cdr term-list))
+  (define (empty-termlist? term-list) (null? term-list))
+  (define (make-term order coeff) (list order coeff))
+  (define (order term) (car term))
+  (define (coeff term) (cadr term))
+#+END_SRC
+
+#+NAME: ex-2-91-division
+#+BEGIN_SRC scheme
+  (define (div-terms L1 L2)
+    (if (empty-termlist? L1)
+        (list (the-empty-termlist) (the-empty-termlist))
+        (let ((t1 (first-term L1))
+              (t2 (first-term L2)))
+          (if (> (order t2) (order t1))
+              (list (the-empty-termlist) L1)
+              (let ((new-c (div (coeff t1) (coeff t2)))
+                    (new-o (- (order t1) (order t2))))
+                (let ((rest-of-result
+                       (div-terms
+                        (sub-terms L1
+                                   (mul-terms (list (make-term new-c new-o))
+                                              L2)))))
+                  (cons (adjoin-term (make-term new-c new-o)
+                                     (car rest-of-result))
+                        rest-of-result)))))))
+  (define (div-poly-sparse p1 p2)
+    (if (same-variable? (variable p1)
+                        (variable p2))
+        (letrec ((make-poly-sparse (get 'make 'poly-sparse))
+                 (var (variable p1))
+                 (result (div-terms (term-list p1)
+                                    (term-list p2)))
+                 (quotient (car result))
+                 (remainder (cadr result)))
+          (list (make-poly-sparse var quotient)
+                (make-poly-sparse var remainder)))
+        (error "DIV-POLY -- ")))
+#+END_SRC
+
+**** Exercise 2.92.
+
+By imposing an ordering on variables, extend the polynomial package so that
+addition and multiplication of polynomials works for polynomials in different
+variables. (This is not easy!)
+
+***** Solution
+
+Skipping.
+
+**** Exercise 2.93.
+
+Modify the rational-arithmetic package to use generic operations, but change
+~make-rat~ so that it does not attempt to reduce fractions to lowest
+terms. Test your system by calling ~make-rational~ on two polynomials to
+produce a rational function
+
+#+BEGIN_SRC scheme
+  (define p1 (make-poly-sparse 'x '((2 1)(0 1))))
+  (define p2 (make-poly-sparse 'x '((3 1)(0 1))))
+  (define rf (make-rational p2 p1))
+#+END_SRC
+
+Now add ~rf~ to itself, using ~add~. You will observe that this addition
+procedure does not reduce fractions to lowest terms.
+
+***** Solution
+
+#+BEGIN_SRC scheme
+  (define (install-rational-package)
+    ;; internal procedures
+    (define (numer x) (car x))
+    (define (denom x) (cdr x))
+    (define (make-rat n d)
+      (cons n d))
+    (define (add-rat x y)
+      (make-rat (add (mul (numer x) (denom y))
+                     (mul (numer y) (denom x)))
+                (mul (denom x) (denom y))))
+    (define (sub-rat x y)
+      (make-rat (sub (mul (numer x) (denom y))
+                     (mul (numer y) (denom x)))
+                (mul (denom x) (denom y))))
+    (define (mul-rat x y)
+      (make-rat (mul (numer x) (numer y))
+                (mul (denom x) (denom y))))
+    (define (div-rat x y)
+      (make-rat (mul (numer x) (denom y))
+                (mul (denom x) (numer y))))
+    ;; interface to rest of the system
+    (define (tag x) (attach-tag 'rational x))
+    (put 'add '(rational rational)
+         (lambda (x y) (tag (add-rat x y))))
+    (put 'sub '(rational rational)
+         (lambda (x y) (tag (sub-rat x y))))
+    (put 'mul '(rational rational)
+         (lambda (x y) (tag (mul-rat x y))))
+    (put 'div '(rational rational)
+         (lambda (x y) (tag (div-rat x y))))
+
+    (put 'make 'rational
+         (lambda (n d) (tag (make-rat n d))))
+    'done)
+  (define (make-rational n d)
+    ((get 'make 'rational) n d))
+#+END_SRC
