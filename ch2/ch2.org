@@ -45,63 +45,7 @@ No exercises.
 
 *** 2.4.3: Data-Directed Programming and Additivity
 
-Section 2.3.2 described a program that performs symbolic differentiation:
-
-#+BEGIN_SRC scheme
-  (define (deriv exp var)
-    (cond ((number? exp) 0)
-          ((variable? exp) (if (same-variable? exp var) 1 0))
-          ((sum? exp)
-           (make-sum (deriv (addend exp) var)
-                     (deriv (augend exp) var)))
-          ((product? exp)
-           (make-sum
-             (make-product (multiplier exp)
-                           (deriv (multiplicand exp) var))
-             (make-product (deriv (multiplier exp) var)
-                           (multiplicand exp))))
-          <more rules can be added here>
-          (else (error "unknown expression type -- DERIV" exp))))
-#+END_SRC
-
-We can regard this program as performing a dispatch on the type of the
-expression to be differentiated. In this situation the ``type tag'' of the
-datum is the algebraic operator symbol (such as ~+~) and the operation being
-performed is ~deriv~. We can transform this program into data-directed style by
-rewriting the basic derivative procedure as
-
-#+BEGIN_SRC scheme
-  (define (deriv exp var)
-     (cond ((number? exp) 0)
-           ((variable? exp) (if (same-variable? exp var) 1 0))
-           (else ((get 'deriv (operator exp)) (operands exp)
-                                              var))))
-  (define (operator exp) (car exp))
-  (define (operands exp) (cdr exp))
-#+END_SRC
-
-a.  Explain what was done above. Why can't we assimilate the predicates
-    ~number?~ and ~same-variable?~ into the data-directed dispatch?
-
-b.  Write the procedures for derivatives of sums and products, and the
-    auxiliary code required to install them in the table used by the program
-    above.
-
-c.  Choose any additional differentiation rule that you like, such as the one
-    for exponents (exercise 2.56), and install it in this data-directed system.
-
-d.  In this simple algebraic manipulator the type of an expression is the
-    algebraic operator that binds it together. Suppose, however, we indexed the
-    procedures in the opposite way, so that the dispatch line in ~deriv~ looked
-    like
-
-    #+BEGIN_SRC scheme
-    ((get (operator exp) 'deriv) (operands exp) var)
-    #+END_SRC
-
-    What corresponding changes to the derivative system are required?
-
-***** Solution
+**** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-17.html#%_thm_2.73][Exercise 2.73.]]
 
 a. We dispatch to an implementation of differentiation based on the operator of
    an expression, which indicates whether it's a sum, product, etc. Since
@@ -165,49 +109,7 @@ d. It is only necessary to change the places where the ~get~ or ~put~
    when registering the operator-specific commands, the order of the arguments
    to the ~put~ calls is the only thing to change.
 
-**** Exercise 2.74.
-
-Insatiable Enterprises, Inc., is a highly decentralized conglomerate company
-consisting of a large number of independent divisions located all over the
-world. The company's computer facilities have just been interconnected by means
-of a clever network-interfacing scheme that makes the entire network appear to
-any user to be a single computer. Insatiable's president, in her first attempt
-to exploit the ability of the network to extract administrative information
-from division files, is dismayed to discover that, although all the division
-files have been implemented as data structures in Scheme, the particular data
-structure used varies from division to division. A meeting of division managers
-is hastily called to search for a strategy to integrate the files that will
-satisfy headquarters' needs while preserving the existing autonomy of the
-divisions.
-
-Show how such a strategy can be implemented with data-directed programming. As
-an example, suppose that each division's personnel records consist of a single
-file, which contains a set of records keyed on employees' names. The structure
-of the set varies from division to division. Furthermore, each employee's
-record is itself a set (structured differently from division to division) that
-contains information keyed under identifiers such as ~address~ and ~salary~. In
-particular:
-
-a.  Implement for headquarters a ~get-record~ procedure that retrieves a
-    specified employee's record from a specified personnel file. The procedure
-    should be applicable to any division's file. Explain how the individual
-    divisions' files should be structured. In particular, what type information
-    must be supplied?
-
-b.  Implement for headquarters a ~get-salary~ procedure that returns the salary
-    information from a given employee's record from any division's personnel
-    file. How should the record be structured in order to make this operation
-    work?
-
-c.  Implement for headquarters a ~find-employee-record~ procedure. This should
-    search all the divisions' files for the record of a given employee and
-    return the record. Assume that this procedure takes as arguments an
-    employee's name and a list of all the divisions' files.
-
-d.  When Insatiable takes over a new company, what changes must be made in
-    order to incorporate the new personnel information into the central system?
-
-***** Solution
+**** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-17.html#%_thm_2.74][Exercise 2.74.]]
 
 a. Assume that a procedure ~file-type~ can extract the type of a file without
    knowing the detailed structure of the file. For example, the first element
@@ -250,13 +152,7 @@ d. Each file and employee record must be modified to place the type information
    primitive type-dependent procedures must be defined and put into the
    dispatch table.
 
-**** Exercise 2.75.
-
-Implement the constructor ~make-from-mag-ang~ in message-passing style. This
-procedure should be analogous to the ~make-from-real-imag~ procedure given
-above.
-
-***** Solution
+**** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-17.html#%_thm_2.75][Exercise 2.75.]]
 
 #+BEGIN_SRC scheme
   (define (make-from-mag-ang mag ang)
@@ -283,17 +179,7 @@ above.
         (z 'imag-part))
 #+END_SRC
 
-**** Exercise 2.76.
-
-As a large system with generic operations evolves, new types of data objects or
-new operations may be needed. For each of the three strategies -- generic
-operations with explicit dispatch, data-directed style, and
-message-passing-style -- describe the changes that must be made to a system in
-order to add new types or new operations. Which organization would be most
-appropriate for a system in which new types must often be added? Which would be
-most appropriate for a system in which new operations must often be added?
-
-***** Solution
+**** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-17.html#%_thm_2.76][Exercise 2.76.]]
 
 Steps to add types or operations:
 
@@ -341,16 +227,7 @@ Steps to add types or operations:
 
 *** 2.5.1: Generic Arithmetic Operations
 
-**** Exercise 2.77.
-
-Louis Reasoner tries to evaluate the expression ~(magnitude z)~ where ~z~ is
-the object shown in figure 2.24. To his surprise, instead of the answer 5 he
-gets an error message from ~apply-generic~, saying there is no method for the
-operation ~magnitude~ on the types ~(complex)~. He shows this interaction to
-Alyssa P. Hacker, who says ``The problem is that the complex-number selectors
-were never defined for ~complex~ numbers, just for ~polar~ and ~rectangular~
-numbers. All you have to do to make this work is add the following to the
-~complex~ package:''
+**** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-17.html#%_thm_2.77][Exercise 2.77.]]
 
 #+BEGIN_SRC scheme
   (put 'real-part '(complex) real-part)
@@ -358,13 +235,6 @@ numbers. All you have to do to make this work is add the following to the
   (put 'magnitude '(complex) magnitude)
   (put 'angle '(complex) angle)
 #+END_SRC
-
-Describe in detail why this works. As an example, trace through all the
-procedures called in evaluating the expression ~(magnitude z)~ where ~z~ is the
-object shown in figure 2.24. In particular, how many times is ~apply-generic~
-invoked? What procedure is dispatched to in each case?
-
-***** Solution
 
 The ~real-part~, etc. functions are in fact simple wrappers around the
 application of the corresponding generic operations:
@@ -400,21 +270,7 @@ in the following calls:
   (internal-magnitude (contents (contents z)))
 #+END_SRC
 
-**** Exercise 2.78.
-The internal procedures in the scheme-number package are essentially nothing
-more than calls to the primitive procedures ~+~, ~-~, etc. It was not possible
-to use the primitives of the language directly because our type-tag system
-requires that each data object have a type attached to it. In fact, however,
-all Lisp implementations do have a type system, which they use
-internally. Primitive predicates such as ~symbol?~ and ~number?~ determine
-whether data objects have particular types. Modify the definitions of
-~type-tag~, ~contents~, and ~attach-tag~ from section 2.4.2 so that our generic
-system takes advantage of Scheme's internal type system. That is to say, the
-system should work as before except that ordinary numbers should be represented
-simply as Scheme numbers rather than as pairs whose ~car~ is the symbol
-~scheme-number~.
-
-***** Solution
+**** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-17.html#%_thm_2.78][Exercise 2.78.]]
 
 We special-case numbers to return ~scheme-number~ as their type tag and avoid
 adding the type tag to numbers that would otherwise be tagged with
@@ -437,12 +293,7 @@ adding the type tag to numbers that would otherwise be tagged with
           (else (error "Bad tagged datum -- CONTENTS" datum))))
 #+END_SRC
 
-**** Exercise 2.79.
-Define a generic equality predicate ~equ?~ that tests the equality of two
-numbers, and install it in the generic arithmetic package. This operation
-should work for ordinary numbers, rational numbers, and complex numbers.
-
-***** Solution
+**** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-17.html#%_thm_2.79][Exercise 2.79.]]
 
 We define the top-level generic function for convenience:
 
@@ -469,12 +320,7 @@ corresponding packages:
   (put 'equ? 'complex equ?-complex)
 #+END_SRC
 
-**** Exercise 2.80.
-Define a generic predicate ~=zero?~ that tests if its argument is zero, and
-install it in the generic arithmetic package. This operation should work for
-ordinary numbers, rational numbers, and complex numbers.
-
-***** Solution
+**** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-17.html#%_thm_2.80][Exercise 2.80.]]
 
 We define the top-level generic function for convenience:
 
@@ -536,50 +382,7 @@ event that such an override is desirable for efficiency or correctness.
      (list type-from type-to)))
 #+END_SRC
 
-**** Exercise 2.81.
-
-Louis Reasoner has noticed that ~apply-generic~ may try to coerce the arguments
-to each other's type even if they already have the same type. Therefore, he
-reasons, we need to put procedures in the coercion table to "coerce" arguments
-of each type to their own type. For example, in addition to the
-~scheme-number->complex~ coercion shown above, he would do:
-
-#+BEGIN_SRC scheme
-(define (scheme-number->scheme-number n) n)
-(define (complex->complex z) z)
-(put-coercion 'scheme-number 'scheme-number
-              scheme-number->scheme-number)
-(put-coercion 'complex 'complex complex->complex)
-#+END_SRC
-
-a. With Louis's coercion procedures installed, what happens if ~apply-generic~
-   is called with two arguments of type ~scheme-number~ or two arguments of
-   type ~complex~ for an operation that is not found in the table for those
-   types? For example, assume that we've defined a generic exponentiation
-   operation:
-
-   #+BEGIN_SRC scheme
-   (define (exp x y) (apply-generic 'exp x y))
-   #+END_SRC
-
-   and have put a procedure for exponentiation in the ~scheme-number~ package
-   but not in any other package:
-
-   #+BEGIN_SRC scheme
-   ;; following added to Scheme-number package
-   (put 'exp '(scheme-number scheme-number)
-        (lambda (x y) (tag (expt x y)))) ; using primitive expt
-   #+END_SRC scheme
-
-   What happens if we call ~exp~ with two ~complex~ numbers as arguments?
-
-b. Is Louis correct that something had to be done about coercion with arguments
-   of the same type, or does ~apply-generic~ work correctly as is?
-
-c. Modify ~apply-generic~ so that it doesn't try coercion if the two arguments
-   have the same type.
-
-***** Solution
+**** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-17.html#%_thm_2.81][Exercise 2.81.]]
 
 a. If ~exp~ is called with two ~complex~ numbers as arguments, ~apply-generic~
    will fail to find an implementation of ~exp~ for the arguments. However, it
@@ -630,17 +433,7 @@ c. From the above, it is clear that the only time ~apply-generic~ would look
                    (no-method op type-tags))))))
    #+END_SRC
 
-**** Exercise 2.82.
-
-Show how to generalize ~apply-generic~ to handle coercion in the general case
-of multiple arguments. One strategy is to attempt to coerce all the arguments
-to the type of the first argument, then to the type of the second argument, and
-so on. Give an example of a situation where this strategy (and likewise the
-two-argument version given above) is not sufficiently general. (Hint: Consider
-the case where there are some suitable mixed-type operations present in the
-table that will not be tried.)
-
-***** Solution
+**** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-17.html#%_thm_2.82][Exercise 2.82.]]
 
 Here's the steps:
 
@@ -686,15 +479,7 @@ This procedure works for some simple cases. However, if
 
 an appropriate coercion will not be found even though it exists.
 
-**** Exercise 2.83.
-
-Suppose you are designing a generic arithmetic system for dealing with the
-tower of types shown in figure 2.25: integer, rational, real, complex. For each
-type (except complex), design a procedure that raises objects of that type one
-level in the tower. Show how to install a generic ~raise~ operation that will
-work for each type (except complex).
-
-***** Solution
+**** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-17.html#%_thm_2.83][Exercise 2.83.]]
 
 #+BEGIN_SRC scheme
   ;; Install these in the corresponding packages to implement the generic RAISE
@@ -710,16 +495,7 @@ work for each type (except complex).
   (define (raise x) (apply-generic 'raise x))
 #+END_SRC
 
-**** Exercise 2.84.
-
-Using the ~raise~ operation of exercise 2.83, modify the ~apply-generic~
-procedure so that it coerces its arguments to have the same type by the method
-of successive raising, as discussed in this section. You will need to devise a
-way to test which of two types is higher in the tower. Do this in a manner that
-is ``compatible'' with the rest of the system and will not lead to problems in
-adding new levels to the tower.
-
-***** Solution
+**** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-17.html#%_thm_2.84][Exercise 2.84.]]
 
 For simplicity, use the earlier two-argument version of ~apply-generic~.
 
@@ -752,6 +528,7 @@ attempt coercing the arguments as before
                                (no-method op type-tags))))))
                 (no-method op type-tags))))))
 #+END_SRC
+
 
 *** 2.5.3: Example: Symbolic Algebra
 
@@ -844,13 +621,11 @@ attempt coercing the arguments as before
 #+END_SRC
 
 
-**** Exercise 2.87.
+**** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-17.html#%_thm_2.87][Exercise 2.87.]]
 
 Install ~=zero?~ for polynomials in the generic arithmetic package. This will
 allow ~adjoin-term~ to work for polynomials with coefficients that are
 themselves polynomials.
-
-***** Solution
 
 #+BEGIN_SRC scheme
   (define (=zero?-poly-sparse p)
@@ -861,12 +636,7 @@ themselves polynomials.
   (put '=zero? 'poly-sparse =zero?-poly)
 #+END_SRC
 
-**** Exercise 2.88.
-
-Extend the polynomial system to include subtraction of polynomials. (Hint: You
-may find it helpful to define a generic negation operation.)
-
-***** Solution
+**** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-17.html#%_thm_2.88][Exercise 2.88.]]
 
 #+BEGIN_SRC scheme
   ;; Negation
@@ -894,12 +664,7 @@ may find it helpful to define a generic negation operation.)
   (put 'sub '(poly-sparse poly-sparse) sub-poly-sparse)
 #+END_SRC
 
-**** Exercise 2.89.
-
-Define procedures that implement the term-list representation described above
-as appropriate for dense polynomials.
-
-***** Solution
+**** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-17.html#%_thm_2.89][Exercise 2.89.]]
 
 #+BEGIN_SRC scheme
   (define (install-poly-dense-package)
@@ -985,17 +750,7 @@ as appropriate for dense polynomials.
         'done)
 #+END_SRC
 
-**** Exercise 2.90.
-
-Suppose we want to have a polynomial system that is efficient for both sparse
-and dense polynomials. One way to do this is to allow both kinds of term-list
-representations in our system. The situation is analogous to the complex-number
-example of section 2.4, where we allowed both rectangular and polar
-representations. To do this we must distinguish different types of term lists
-and make the operations on term lists generic. Redesign the polynomial system
-to implement this generalization. This is a major effort, not a local change.
-
-***** Solution
+**** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-17.html#%_thm_2.90][Exercise 2.90.]]
 
 We first want to define some coercions. I will use the ~get-coercion~ and
 ~put-coercion~ interface for this.
@@ -1069,7 +824,7 @@ implemented.
     'done)
 #+END_SRC
 
-**** Exercise 2.91.
+**** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-17.html#%_thm_2.91][Exercise 2.91.]]
 
 A univariate polynomial can be divided by another one to produce a polynomial
 quotient and a polynomial remainder. For example,
@@ -1160,33 +915,11 @@ arguments and returns a list of the quotient and remainder polys.
         (error "DIV-POLY -- ")))
 #+END_SRC
 
-**** Exercise 2.92.
-
-By imposing an ordering on variables, extend the polynomial package so that
-addition and multiplication of polynomials works for polynomials in different
-variables. (This is not easy!)
-
-***** Solution
+**** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-17.html#%_thm_2.92][Exercise 2.92.]]
 
 Skipping.
 
-**** Exercise 2.93.
-
-Modify the rational-arithmetic package to use generic operations, but change
-~make-rat~ so that it does not attempt to reduce fractions to lowest
-terms. Test your system by calling ~make-rational~ on two polynomials to
-produce a rational function
-
-#+BEGIN_SRC scheme
-  (define p1 (make-poly-sparse 'x '((2 1)(0 1))))
-  (define p2 (make-poly-sparse 'x '((3 1)(0 1))))
-  (define rf (make-rational p2 p1))
-#+END_SRC
-
-Now add ~rf~ to itself, using ~add~. You will observe that this addition
-procedure does not reduce fractions to lowest terms.
-
-***** Solution
+**** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-17.html#%_thm_2.93][Exercise 2.93.]]
 
 #+BEGIN_SRC scheme
   (define (install-rational-package)
