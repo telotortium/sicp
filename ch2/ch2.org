@@ -361,7 +361,7 @@ occurrence of a symbol rather than the first.
 #+BEGIN_SRC scheme :tangle dispatch-table.scm
   ;; Operation, type -> procedure dispatch table.
   (use apropos)
-  (if (not (= (length (apropos-list '*op-table)) 1))
+  (if (not (= (length (apropos-list '*op-table*)) 1))
       (begin
         (display "Defining *op-table*")
         (newline)
@@ -382,7 +382,6 @@ occurrence of a symbol rather than the first.
                   (error
                    "No method for these types -- APPLY-GENERIC"
                    (list op type-tags))))))))
-
 #+END_SRC
 
 *** 2.4.1: Representations for Complex Numbers
@@ -665,17 +664,17 @@ corresponding packages:
 #+BEGIN_SRC scheme
   (define (equ?-scheme-number x y)
     (= x y))
-  (put 'equ? 'scheme-number equ?-scheme-number)
+  (put 'equ? '(scheme-number scheme-number) equ?-scheme-number)
 
   (define (equ?-rat x y)
     (and (= (numer x) (numer y))
          (= (denom x) (denom y))))
-  (put 'equ? 'rational equ?-rat)
+  (put 'equ? '(rational rational) equ?-rat)
 
   (define (equ?-complex x y)
     (and (= (real-part x) (real-part y)
             (imag-part x) (imag-part y))))
-  (put 'equ? 'complex equ?-complex)
+  (put 'equ? '(complex complex) equ?-complex)
 #+END_SRC
 
 **** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-17.html#%_thm_2.80][Exercise 2.80.]]
@@ -898,10 +897,11 @@ for the two types before putting them in the dispatch table.
   (include "dispatch-table.scm")
   (include "generic-zero.scm")
   (include "generic-neg.scm")
+  (include "generic-reduce.scm")
   (define (variable? x) (symbol? x))
   (define (same-variable? v1 v2)
     (and (variable? v1) (variable? v2) (eq? v1 v2)))
-
+  
   (define (install-poly-sparse-package)
     <<poly-sparse-basic-procs>>
 
@@ -954,7 +954,9 @@ for the two types before putting them in the dispatch table.
   <<poly-sparse-mul-terms>>
   <<poly-sparse-div-terms>>
   <<ex-2-94-terms>>
-  <<ex-2-96-terms>>
+  <<ex-2-96-improved-terms>>
+  <<ex-2-96-reimproved-terms>>
+  <<poly-sparse-reduce-terms>>
 #+END_SRC
 
 #+NAME: poly-sparse-add-terms
@@ -1024,7 +1026,9 @@ for the two types before putting them in the dispatch table.
        (lambda (x y) (tag (mul-poly-sparse x y))))
   <<ex-2-91-div-poly-sparse>>
   <<ex-2-94-gcd-poly-sparse>>
-  <<ex-2-96-gcd-poly-sparse>>
+  <<ex-2-96-improved-gcd-poly-sparse>>
+  <<ex-2-96-reimproved-gcd-poly-sparse>>
+  <<poly-sparse-reduce>>
 #+END_SRC
 
 **** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-17.html#%_thm_2.87][Exercise 2.87.]]
@@ -1351,7 +1355,7 @@ Skipping.
          (lambda (x y) (tag (mul-rat x y))))
     (put 'div '(rational rational)
          (lambda (x y) (tag (div-rat x y))))
-
+  
     (put 'make 'rational
          (lambda (n d) (tag (make-rat n d))))
     'done)
@@ -1372,7 +1376,6 @@ Skipping.
   (test result
         (add rf rf))
 #+END_SRC
-
 
 **** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-17.html#%25_thm_2.94][Exercise 2.94.]]
 
@@ -1420,21 +1423,22 @@ Skipping.
   (define p3 (make-poly-sparse 'x '((1 13) (0 5))))
   (define q1 (mul p1 p2))
   (define q2 (mul p1 p3))
-  (test nil
-        (apply-generic 'greatest-common-divisor q1 q2))
+  (parameterize ((test-epsilon 0.01))
+                (test '(0 1.10004)
+                      (caddr (apply-generic 'greatest-common-divisor q1 q2))))
 #+END_SRC
 
 **** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-17.html#%25_thm_2.96][Exercise 2.96.]]
 
 a. Pseudoremainder
 
-#+NAME: ex-2-96-terms
+#+NAME: ex-2-96-improved-terms
 #+BEGIN_SRC scheme
   (define (pseudoremainder-terms L1 L2)
     (letrec ((integerizing-factor (expt (coeff (first-term L2))
                                         (+ 1 (- (order (first-term L1))
                                                 (order (first-term L2))))))
-             (dividend (mul-terms L1 '((0 integerizing-factor)))))
+             (dividend (mul-terms L1 `((0 ,integerizing-factor)))))
       (list-ref (div-terms dividend L2) 1)))
   (define (improved-gcd-terms a b)
     (if (empty-termlist? b)
@@ -1442,9 +1446,9 @@ a. Pseudoremainder
         (gcd-terms b (pseudoremainder-terms a b))))
 #+END_SRC
 
-#+NAME: ex-2-96-gcd-poly-sparse
+#+NAME: ex-2-96-improved-gcd-poly-sparse
 #+BEGIN_SRC scheme
-  (define (gcd-poly-sparse p1 p2)
+  (define (improved-gcd-poly-sparse p1 p2)
     (if (same-variable? (variable p1)
                         (variable p2))
         (letrec ((var (variable p1))
@@ -1453,7 +1457,47 @@ a. Pseudoremainder
           (make-poly-sparse var result))
         (error "GCD-POLY -- GCD between different variables NYI")))
   (put 'improved-greatest-common-divisor '(poly-sparse poly-sparse)
-       (lambda (x y) (tag (gcd-poly-sparse x y))))
+       (lambda (x y) (tag (improved-gcd-poly-sparse x y))))
+#+END_SRC
+
+
+b. Reduce to lowest terms
+
+#+NAME: ex-2-96-gcd-integer
+#+BEGIN_SRC scheme
+  (define (gcd a . terms)
+    (define (gcd-dyadic a b)
+      (if (= b 0)
+          a
+          (gcd-dyadic b (remainder a b))))
+    (fold gcd-dyadic 0 (append (list a) terms)))
+#+END_SRC
+
+#+NAME: ex-2-96-reimproved-terms
+#+BEGIN_SRC scheme
+  <<ex-2-96-gcd-integer>>
+  (define (reimproved-gcd-terms a b)
+    (define (rec a b)
+      (if (empty-termlist? b)
+          a
+          (gcd-terms b (pseudoremainder-terms a b))))
+    (letrec ((gcd-terms-result (rec a b))
+             (common-coeff (apply gcd (map coeff gcd-terms-result))))
+      (div-terms gcd-terms-result (list (make-term 0 common-coeff)))))
+#+END_SRC
+
+#+NAME: ex-2-96-reimproved-gcd-poly-sparse
+#+BEGIN_SRC scheme
+  (define (reimproved-gcd-poly-sparse p1 p2)
+    (if (same-variable? (variable p1)
+                        (variable p2))
+        (letrec ((var (variable p1))
+                 (result (reimproved-gcd-terms (term-list p1)
+                                               (term-list p2))))
+          (make-poly-sparse var result))
+        (error "GCD-POLY -- GCD between different variables NYI")))
+  (put 'reimproved-greatest-common-divisor '(poly-sparse poly-sparse)
+       (lambda (x y) (tag (reimproved-gcd-poly-sparse x y))))
 #+END_SRC
 
 #+BEGIN_SRC scheme :tangle ex-2-96-test.scm
@@ -1464,8 +1508,12 @@ a. Pseudoremainder
   (define p3 (make-poly-sparse 'x '((1 13) (0 5))))
   (define q1 (mul p1 p2))
   (define q2 (mul p1 p3))
-  (test nil
+  (define improved-result (make-poly-sparse 'x '((2 1458) (1 -2916) (0 1458))))
+  (test improved-result
         (apply-generic 'improved-greatest-common-divisor q1 q2))
+  (define reimproved-result (make-poly-sparse 'x '((2 1) (1 -2) (0 1))))
+  (test reimproved-result
+        (apply-generic 'reimproved-greatest-common-divisor q1 q2))
 #+END_SRC
 
 **** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-17.html#%25_thm_2.97][Exercise 2.97.]]
@@ -1479,4 +1527,81 @@ a. Pseudoremainder
 #+BEGIN_SRC scheme
   (define (reduce n d)
     (lambda (n d) (apply-generic 'reduce n d)))
+#+END_SRC
+
+#+NAME: poly-sparse-reduce-terms
+#+BEGIN_SRC scheme
+  (define (reduce-terms n d)
+    (define (scalar-terms c) (list (make-term 0 c)))
+    (letrec (
+             ;; Compute GCD of terms using code from Exercise 2.96
+             (gcd-n-d (reimproved-gcd-terms n d))
+             ;; Multiply numerator and denominator by integerizing factor before
+             ;; dividing both by GCD to ensure no noninteger coefficients are
+             ;; introduced.
+             (integerizing-factor (expt (coeff (first-term gcd-n-d))
+                                        (+ 1 (- (max (order (first-term n))
+                                                     (order (first-term d)))
+                                                (order (first-term gcd-n-d))))))
+             (n-integerized (mul-terms n (scalar-terms integerizing-factor)))
+             (d-integerized (mul-terms d (scalar-terms integerizing-factor)))
+             (n-reduced (div-terms n-integerized gcd-n-d))
+             (d-reduced (div-terms d-integerized gcd-n-d)))
+      (begin
+        ;; Division by GCD of numerator and denominator should produce no
+        ;; remainder by definition.
+        (define (quotient-terms x) (list-ref x 0))
+        (define (remainder-terms x) (list-ref x 1))
+        (assert (empty-termlist? (remainder-terms n-reduced)))
+        (assert (empty-termlist? (remainder-terms d-reduced)))
+        (letrec ((gcd-coeffs (apply gcd (append (map coeff (quotient-terms n-reduced))
+                                                (map coeff (quotient-terms d-reduced)))))
+                 (nn (div-terms n-reduced (scalar-terms gcd-coeffs)))
+                 (dd (div-terms d-reduced (scalar-terms gcd-coeffs))))
+          (list nn dd)))))
+#+END_SRC
+
+#+NAME: poly-sparse-reduce
+#+BEGIN_SRC scheme
+  (define (reduce-poly-sparse p1 p2)
+    (if (same-variable? (variable p1) (variable p2))
+        (map (lambda (p) (make-poly-sparse (variable p1) p))
+             (reduce-terms (term-list p1) (term-list p2)))
+        (error "REDUCE-POLY -- cannot reduce two polynomials with different variables")))
+  (put 'reduce '(poly-sparse poly-sparse)
+       (lambda (x y) (tag (reduce-poly-sparse x y))))
+#+END_SRC
+
+#+NAME: ex-2-97-reduce-integers
+#+BEGIN_SRC scheme
+  (define (reduce-integers n d)
+    <<ex-2-96-gcd-integers>>
+    (let ((g (gcd n d)))
+      (list (/ n g) (/ d g))))
+  (put 'reduce '(scheme-number scheme-number)
+       (lambda (x y) (attach-tag 'scheme-number (reduce-integers x y))))
+#+END_SRC
+
+#+BEGIN_SRC scheme :tangle generic-reduce.scm
+  (include "dispatch-table.scm")
+  <<ex-2-97-reduce-integers>>
+  (define (reduce x y) (apply-generic 'reduce x y))
+#+END_SRC
+
+#+BEGIN_SRC scheme :tangle ex-2-97-test.scm
+  (use test)
+  (include "poly-sparse-package")
+  (include "rational-package")
+  (define p1 (make-poly-sparse 'x '((1 1)(0 1))))
+  (define p2 (make-poly-sparse 'x '((3 1)(0 -1))))
+  (define p3 (make-poly-sparse 'x '((1 1))))
+  (define p4 (make-poly-sparse 'x '((2 1)(0 -1))))
+
+  (define rf1 (make-rational p1 p2))
+  (define rf2 (make-rational p3 p4))
+
+  (define result (make-rational (make-poly-sparse 'x '((4 1) (3 1) (2 1) (1 -2) (0 -1)))
+                                (make-poly-sparse 'x '((5 1) (3 -1) (2 -1) (0 1)))))
+  (test result
+        (add rf1 rf2))
 #+END_SRC
