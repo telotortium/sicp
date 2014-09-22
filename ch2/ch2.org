@@ -344,6 +344,12 @@ occurrence of a symbol rather than the first.
 #+END_SRC
 
 
+*** 2.3.3: Example: Representing Sets
+
+
+*** 2.3.4: Example: Huffman Encoding Trees
+
+
 ** 2.4: Multiple Representations for Abstract Data
 
 #+BEGIN_SRC scheme
@@ -537,6 +543,8 @@ Steps to add types or operations:
 
 ** 2.5: Systems with Generic Operations
 
+*** Auxiliary definitions
+
 #+NAME: generic-arithmetic-procedures
 #+BEGIN_SRC scheme
   (define (add x y) (apply-generic 'add x y))
@@ -561,9 +569,11 @@ Steps to add types or operations:
     (put 'make 'scheme-number
          (lambda (x) (tag x)))
     'done)
+  (install-scheme-number-package)
   (define (make-scheme-number n)
     ((get 'make 'scheme-number) n))
 #+END_SRC
+
 
 *** 2.5.1: Generic Arithmetic Operations
 
@@ -872,6 +882,11 @@ attempt coercing the arguments as before
 
 *** 2.5.3: Example: Symbolic Algebra
 
+I've decided to distinguish dense and sparse polynomials with the ~poly-dense~
+and ~poly-sparse~ tags to allow keeping functions for both variants defined at
+the same time. A similar distinction is made when defining auxiliary functions
+for the two types before putting them in the dispatch table.
+
 **** Auxiliary definitions
 
 #+BEGIN_SRC scheme
@@ -973,7 +988,7 @@ themselves polynomials.
       (or (empty-termlist? terms)
           (and (=zero? (coeff (first-term terms)))
                (=zero?-terms (rest-terms terms))))))
-  (put '=zero? 'poly-sparse =zero?-poly)
+  (put '=zero? 'poly-sparse =zero?-poly-sparse)
 #+END_SRC
 
 **** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-17.html#%_thm_2.88][Exercise 2.88.]]
@@ -992,7 +1007,7 @@ themselves polynomials.
   (define (neg-complex z)
     (make-from-real-imag (- (real-part z))
                          (- (imag-part z))))
-  (put 'neg 'polynomial neg-poly)
+  (put 'neg 'poly-sparse neg-poly-sparse)
   (put 'neg 'complex neg-complex)
   (put 'neg 'scheme-number
        (lambda (x) (attach-tag 'scheme-number (- x))))
@@ -1252,7 +1267,19 @@ arguments and returns a list of the quotient and remainder polys.
                  (remainder (cadr result)))
           (list (make-poly-sparse var quotient)
                 (make-poly-sparse var remainder)))
-        (error "DIV-POLY -- ")))
+        (error "DIV-POLY -- division between different variables NYI")))
+#+END_SRC
+
+#+NAME: ex-2-91-test
+#+BEGIN_SRC scheme
+  (define t1 '((5 1) (0 -1)))
+  (define t2 '((2 1) (0 -1)))
+  (define p1 (make-poly-sparse 'x t1))
+  (define p2 (make-poly-sparse 'x t2))
+  (define quotient-terms '((3 1) (1 1)))
+  (define remainder-terms '((1 1) (0 -1)))
+  (test (list quotient-terms remainder-terms)
+        (div-terms t1 t2))
 #+END_SRC
 
 **** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-17.html#%_thm_2.92][Exercise 2.92.]]
