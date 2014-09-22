@@ -9,5 +9,7 @@
                                (else (count-leaves x))))
                        t)))
 
-(count-leaves '((0 0) (0 0) (0 0)))
-; => 6
+(test 6
+      (count-leaves '((0 0) (0 0) (0 0))))
+(test 0
+      (count-leaves '(())))

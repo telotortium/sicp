@@ -95,12 +95,12 @@
 ;;
 ;; \begin{equation}
 ;; (a, wa) * (b, wb):
-;; (a + wa) * (b + wb) = (ab + a * wb + b * wa + wa * wb)
-;;                     = (ab + wa * wb + (a * wb + b * wa))
-;;                     = (ab + wa * wb + a * wb + b * wa)
-;; (a - wa) * (b - wb) = (ab + wa * wb - a * wb - b * wa)
-;; (a + wa) * (b - wb) = (ab + b * wa - a * wb - wa * wb)
-;; (a - wa) * (b + wb) = (ab + a * wb - b * wa - wa * wb)
+;; (a + wa) * (b + wb) = (a * b + a * wb + b * wa + wa * wb)
+;;                     = (a * b + wa * wb + (a * wb + b * wa))
+;;                     = (a * b + wa * wb + a * wb + b * wa)
+;; (a - wa) * (b - wb) = (a * b + wa * wb - a * wb - b * wa)
+;; (a + wa) * (b - wb) = (a * b + b * wa - a * wb - wa * wb)
+;; (a - wa) * (b + wb) = (a * b + a * wb - b * wa - wa * wb)
 ;; \end{equation}
 
 ;; }}}

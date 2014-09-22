@@ -67,3 +67,17 @@
   (a b))
 (((mul one two) incr) 0)
 ; => 2
+
+;; Predecessor function
+(define (sub-1 n)
+  (lambda (f)
+    (lambda (x)
+      (((n (lambda (g)
+             (lambda (h)
+               (h (g f)))))
+        (lambda (u) x))
+       (lambda (u) u)))))
+
+;; Subtraction
+(define (sub a b)
+  ((b sub-1) a))
