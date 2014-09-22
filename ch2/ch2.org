@@ -1115,7 +1115,7 @@ themselves polynomials.
         'done)
 #+END_SRC
 
-**** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-17.html#%_thm_2.90][Exercise 2.90.]]
+**** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-17.html\#%25_thm_2.90][Exercise 2.90.]]
 
 We first want to define some coercions. I will use the ~get-coercion~ and
 ~put-coercion~ interface for this.
