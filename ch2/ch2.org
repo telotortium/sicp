@@ -360,31 +360,29 @@ occurrence of a symbol rather than the first.
 
 #+BEGIN_SRC scheme :tangle dispatch-table.scm
   ;; Operation, type -> procedure dispatch table.
-  (define *op-table* (make-hash-table equal?))
-  (define (put op type proc)
-    (hash-table-set! *op-table* (list op type) proc))
-  (define (get op type)
-    (hash-table-ref *op-table* (list op type)))
+  (use apropos)
+  (if (not (= (length (apropos-list '*op-table)) 1))
+      (begin
+        (display "Defining *op-table*")
+        (newline)
+        (define *op-table* (make-hash-table equal?))
+        (define (put op type proc)
+          (hash-table-set! *op-table* (list op type) proc))
+        (define (get op type)
+          (hash-table-ref *op-table* (list op type)))
 
-  (define (attach-tag type-tag contents)
-    (cons type-tag contents))
-  (define (type-tag datum)
-    (if (pair? datum)
-        (car datum)
-        (error "Bad tagged datum -- TYPE-TAG" datum)))
-  (define (contents datum)
-    (if (pair? datum)
-        (cdr datum)
-        (error "Bad tagged datum -- CONTENTS" datum)))
+        ;; Without loss of generality
+        <<ex-2-78-type-tag-scheme-number>>
 
-  (define (apply-generic op . args)
-    (let ((type-tags (map type-tag args)))
-      (let ((proc (get op type-tags)))
-        (if proc
-            (apply proc (map contents args))
-            (error
-             "No method for these types -- APPLY-GENERIC"
-             (list op type-tags))))))
+        (define (apply-generic op . args)
+          (let ((type-tags (map type-tag args)))
+            (let ((proc (get op type-tags)))
+              (if proc
+                  (apply proc (map contents args))
+                  (error
+                   "No method for these types -- APPLY-GENERIC"
+                   (list op type-tags))))))))
+
 #+END_SRC
 
 *** 2.4.1: Representations for Complex Numbers
@@ -558,7 +556,7 @@ Steps to add types or operations:
   (define (div x y) (apply-generic 'div x y))
 #+END_SRC
 
-#+BEGIN_SRC scheme :tangle install-scheme-number-package.scm
+#+BEGIN_SRC scheme :tangle scheme-number-package.scm
   (define (install-scheme-number-package)
     (define (tag x)
       (attach-tag 'scheme-number x))
@@ -570,12 +568,12 @@ Steps to add types or operations:
          (lambda (x y) (tag (* x y))))
     (put 'div '(scheme-number scheme-number)
          (lambda (x y) (tag (/ x y))))
-    (put 'make 'scheme-number
+    (put 'make '(scheme-number)
          (lambda (x) (tag x)))
     'done)
   (install-scheme-number-package)
   (define (make-scheme-number n)
-    ((get 'make 'scheme-number) n))
+    ((get 'make '(scheme-number)) n))
 #+END_SRC
 
 
@@ -630,7 +628,10 @@ We special-case numbers to return ~scheme-number~ as their type tag and avoid
 adding the type tag to numbers that would otherwise be tagged with
 ~scheme-number~.
 
-#+BEGIN_SRC scheme :tangle type-tag-scheme-number.scm
+#+NAME: ex-2-78-type-tag-scheme-number
+#+BEGIN_SRC scheme
+  (include "generic-arithmetic-procedures.scm")
+  (include "scheme-number-package.scm")
   (define (attach-tag type-tag contents)
     (if (and (equal? type-tag 'scheme-number)
              ;; Leave open the possibility to apply SCHEME-NUMBER to non-numbers.
@@ -652,7 +653,7 @@ adding the type tag to numbers that would otherwise be tagged with
 We define the top-level generic function for convenience:
 
 #+BEGIN_SRC scheme :tangle generic-equ.scm
-  (use "dispatch-table.scm")
+  (include "dispatch-table.scm")
   <<ex-2-79-impl>>
   (define equ? (apply-generic 'equ? x y))
 #+END_SRC
@@ -682,7 +683,7 @@ corresponding packages:
 We define the top-level generic function for convenience:
 
 #+BEGIN_SRC scheme :tangle generic-zero.scm
-  (use "dispatch-table.scm")
+  (include "dispatch-table.scm")
   <<ex-2-80-impl>>
   (define =zero? (lambda (x)  (apply-generic '=zero? x)))
 #+END_SRC
@@ -695,13 +696,6 @@ corresponding packages:
   (define (=zero?-scheme-number x)
     (= x 0))
   (put '=zero? '(scheme-number) =zero?-scheme-number)
-
-  (define (=zero?-rat x y)
-    (and (= (numer x) 0)
-         ;; Denominator of 0 is undefined -- choose not to make such a number
-         ;; equal to 0 even if the numerator is 0.
-         (/= (denom x) 0)))
-  (put '=zero? '(rational) =zero?-rat)
 
   (define (=zero?-complex x y)
     (= (magnitude x) 0))
@@ -901,6 +895,9 @@ for the two types before putting them in the dispatch table.
 
 #+BEGIN_SRC scheme :tangle poly-sparse-package.scm
   ;; <procedures same-variable? and variable? from section 2.3.2>
+  (include "dispatch-table.scm")
+  (include "generic-zero.scm")
+  (include "generic-neg.scm")
   (define (variable? x) (symbol? x))
   (define (same-variable? v1 v2)
     (and (variable? v1) (variable? v2) (eq? v1 v2)))
@@ -930,59 +927,94 @@ for the two types before putting them in the dispatch table.
     (define (order term) (car term))
     (define (coeff term) (cadr term))
 
+    (define (tag p) (attach-tag 'poly-sparse p))
+
+    <<poly-sparse-arithmetic-terms>>
+
+    ;; Arithmetic on polynomials in terms of arithmetic on their term lists.
+    <<ex-2-87-zero>>
+    (define (neg-poly-sparse p)
+      (make-poly-sparse (variable p)
+                 (neg-terms (term-list p))))
     (define (add-poly-sparse p1 p2)
       (if (same-variable? (variable p1) (variable p2))
           (make-poly-sparse (variable p1)
                             (add-terms (term-list p1) (term-list p2)))
           (error "ADD-POLY -- cannot add two polynomials with different variables")))
-    ;; <procedures used by add-poly>
-    (define (add-terms L1 L2)
-      (cond ((empty-termlist? L1) L2)
-            ((empty-termlist? L2) L1)
-            (else
-             (let ((t1 (first-term L1)) (t2 (first-term L2)))
-               (cond ((> (order t1) (order t2))
-                      (adjoin-term
-                       t1 (add-terms (rest-terms L1) L2)))
-                     ((< (order t1) (order t2))
-                      (adjoin-term
-                       t2 (add-terms L1 (rest-terms L2))))
-                     (else
-                      (adjoin-term
-                       (make-term (order t1)
-                                  (add (coeff t1) (coeff t2)))
-                       (add-terms (rest-terms L1)
-                                  (rest-terms L2)))))))))
+    (define (sub-poly-sparse p1 p2)
+      (add-poly-sparse p1 (neg-poly-sparse p2)))
     (define (mul-poly-sparse p1 p2)
       (if (same-variable? (variable p1) (variable p2))
           (make-poly-sparse (variable p1)
                             (mul-terms (term-list p1) (term-list p2)))
           (error "MUL-POLY -- cannot multiply two polynomials with different variables")))
-    ;; <procedures used by mul-poly>
-    (define (mul-terms L1 L2)
-      (if (empty-termlist? L1)
-          (the-empty-termlist)
-          (add-terms (mul-term-by-all-terms (first-term L1) L2)
-                     (mul-terms (rest-terms L1) L2))))
-    (define (mul-term-by-all-terms t1 L)
-      (if (empty-termlist? L)
-          (the-empty-termlist)
-          (let ((t2 (first-term L)))
-            (adjoin-term
-             (make-term (+ (order t1) (order t2))
-                        (mul (coeff t1) (coeff t2)))
-             (mul-term-by-all-terms t1 (rest-terms L))))))
+    <<ex-2-91-div-poly-sparse>>
+    <<ex-2-94-gcd-poly-sparse>>
+
     ;; interface to rest of the system
-    (define (tag p) (attach-tag 'poly-sparse p))
+    (put 'neg '(poly-sparse)
+         (lambda (x) (tag (neg-poly-sparse x))))
     (put 'add '(poly-sparse poly-sparse)
-         (lambda (p1 p2) (tag (add-poly-sparse p1 p2))))
+         (lambda (x y) (tag (add-poly-sparse x y))))
+    (put 'sub '(poly-sparse poly-sparse)
+         (lambda (x y) (tag (sub-poly-sparse x y))))
     (put 'mul '(poly-sparse poly-sparse)
-         (lambda (p1 p2) (tag (mul-poly-sparse p1 p2))))
-    (put 'make 'poly-sparse
+         (lambda (x y) (tag (mul-poly-sparse x y))))
+    (put 'div '(poly-sparse poly-sparse)
+         (lambda (x y) (tag (div-poly-sparse x y))))
+    (put 'make '(poly-sparse)
          (lambda (var terms) (tag (make-poly-sparse var terms))))
     'done)
+  (install-poly-sparse-package)
   (define (make-poly-sparse var terms)
-    ((get 'make 'poly-sparse) var terms))
+    ((get 'make '(poly-sparse)) var terms))
+#+END_SRC
+
+#+NAME: poly-sparse-arithmetic-terms
+#+BEGIN_SRC scheme
+  <<poly-sparse-add-terms>>
+  <<poly-sparse-sub-terms>>
+  <<poly-sparse-mul-terms>>
+  <<poly-sparse-div-terms>>
+  <<ex-2-94-terms>>
+#+END_SRC
+
+#+NAME: poly-sparse-add-terms
+#+BEGIN_SRC scheme
+  (define (add-terms L1 L2)
+    (cond ((empty-termlist? L1) L2)
+          ((empty-termlist? L2) L1)
+          (else
+           (let ((t1 (first-term L1)) (t2 (first-term L2)))
+             (cond ((> (order t1) (order t2))
+                    (adjoin-term
+                     t1 (add-terms (rest-terms L1) L2)))
+                   ((< (order t1) (order t2))
+                    (adjoin-term
+                     t2 (add-terms L1 (rest-terms L2))))
+                   (else
+                    (adjoin-term
+                     (make-term (order t1)
+                                (add (coeff t1) (coeff t2)))
+                     (add-terms (rest-terms L1)
+                                (rest-terms L2)))))))))
+#+END_SRC
+
+#+NAME: poly-sparse-mul-terms
+#+BEGIN_SRC scheme
+  (define (mul-terms L1 L2)
+    (if (empty-termlist? L1)
+        (the-empty-termlist)
+        (add-terms (mul-term-by-all-terms (first-term L1) L2)
+                   (mul-terms (rest-terms L1) L2))))
+  (define (mul-term-by-all-terms t1 L)
+    (if (empty-termlist? L)
+        (the-empty-termlist)
+        (let ((t2 (first-term L)))
+          (adjoin-term
+           (make-term (+ (order t1) (order t2))
+                      (mul (coeff t1) (coeff t2)))
+           (mul-term-by-all-terms t1 (rest-terms L))))))
 #+END_SRC
 
 
@@ -992,7 +1024,9 @@ Install ~=zero?~ for polynomials in the generic arithmetic package. This will
 allow ~adjoin-term~ to work for polynomials with coefficients that are
 themselves polynomials.
 
+#+NAME: ex-2-87-zero
 #+BEGIN_SRC scheme
+  (include "generic-zero.scm")
   (define (=zero?-poly-sparse p)
     (let =zero?-terms ((terms (term-list p)))
       (or (empty-termlist? terms)
@@ -1003,30 +1037,36 @@ themselves polynomials.
 
 **** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-17.html#%_thm_2.88][Exercise 2.88.]]
 
+We define subtraction in terms of negation. For this, it is useful to have a
+generic negation function ~neg~:
+
+#+BEGIN_SRC scheme :tangle generic-neg.scm
+  (include "dispatch-table.scm")
+  <<ex-2-88-neg-monomial>>
+  (define (neg x) (apply-generic 'neg x))
+#+END_SRC
+
+#+NAME: ex-2-88-neg-monomial
 #+BEGIN_SRC scheme
-  ;; Negation
-  (define (neg-poly-sparse p)
-    (define (neg-terms terms)
-      (if (empty-termlist? terms)
-          (the-empty-termlist)
-          (adjoin-term (make-term (order (first-term terms))
-                                  (neg (coeff (first-term terms))))
-                       (rest-terms terms))))
-    (make-poly-sparse (variable p)
-               (neg-terms (term-list p))))
   (define (neg-complex z)
     (make-from-real-imag (- (real-part z))
                          (- (imag-part z))))
-  (put 'neg 'poly-sparse neg-poly-sparse)
-  (put 'neg 'complex neg-complex)
-  (put 'neg 'scheme-number
+  (put 'neg '(complex) neg-complex)
+  (put 'neg '(scheme-number)
        (lambda (x) (attach-tag 'scheme-number (- x))))
-  (define (neg x) (apply-generic 'neg x))
+#+END_SRC
 
-  ;; Subtraction in terms of negation
-  (define (sub-poly-sparse p1 p2)
-    (add p1 (neg p2)))
-  (put 'sub '(poly-sparse poly-sparse) sub-poly-sparse)
+#+NAME: poly-sparse-sub-terms
+#+BEGIN_SRC scheme
+  (include "generic-neg.scm")
+  (define (neg-terms terms)
+    (if (empty-termlist? terms)
+        (the-empty-termlist)
+        (adjoin-term (make-term (order (first-term terms))
+                                (neg (coeff (first-term terms))))
+                     (rest-terms terms))))
+  (define (sub-terms L1 L2)
+    (add-terms L1 (neg-terms L2)))
 #+END_SRC
 
 **** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-17.html#%_thm_2.89][Exercise 2.89.]]
@@ -1089,30 +1129,30 @@ themselves polynomials.
                 (if (empty-termlist? L1)
                     (the-empty-termlist)
                     (add-terms (mul-term-by-all-terms (first-term L1) o1 L2)
-                               (rec (rest-terms L1) L2 (- o1 1))))))
-      ;; c1, o1 -- coefficient, order of term to be multiplied by term list L
-      ;; First multiply terms by c1, then append a list of (+ o1 1) zeros to the
-      ;; end of L to represent the multiplication by the inderminate variable
-      ;; raised to the power of o1.
-      (define (mul-term-by-all-terms c1 o1 L)
-        (define (rec c1 o1 L)
-          (if (empty-termlist? L)
-              (the-empty-termlist)
-              (let ((t2 (first-term L)))
-                (adjoin-term
-                 (mul c1 t2)
-                 (rec c1 (- o1 1) (rest-terms L))))))
-        (append (rec t1 o1 L)
-                (repeat 0 (+ o1 1)))
-        ;; interface to rest of the system
-        (define (tag p) (attach-tag 'poly-dense p))
-        (put 'add '(poly-dense poly-dense)
-             (lambda (p1 p2) (tag (add-poly p1 p2))))
-        (put 'mul '(poly-dense poly-dense)
-             (lambda (p1 p2) (tag (mul-poly p1 p2))))
-        (put 'make 'poly-dense
-             (lambda (var terms) (tag (make-poly var terms))))
-        'done)
+                               (rec (rest-terms L1) L2 (- o1 1)))))))
+    ;; c1, o1 -- coefficient, order of term to be multiplied by term list L
+    ;; First multiply terms by c1, then append a list of (+ o1 1) zeros to the
+    ;; end of L to represent the multiplication by the inderminate variable
+    ;; raised to the power of o1.
+    (define (mul-term-by-all-terms c1 o1 L)
+      (define (rec c1 o1 L)
+        (if (empty-termlist? L)
+            (the-empty-termlist)
+            (let ((t2 (first-term L)))
+              (adjoin-term
+               (mul c1 t2)
+               (rec c1 (- o1 1) (rest-terms L))))))
+      (append (rec t1 o1 L)
+              (repeat 0 (+ o1 1))))
+    ;; interface to rest of the system
+    (define (tag p) (attach-tag 'poly-dense p))
+    (put 'add '(poly-dense poly-dense)
+         (lambda (p1 p2) (tag (add-poly p1 p2))))
+    (put 'mul '(poly-dense poly-dense)
+         (lambda (p1 p2) (tag (mul-poly p1 p2))))
+    (put 'make '(poly-dense)
+         (lambda (var terms) (tag (make-poly var terms))))
+    'done)
 #+END_SRC
 
 **** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-17.html\#%25_thm_2.90][Exercise 2.90.]]
@@ -1121,6 +1161,7 @@ We first want to define some coercions. I will use the ~get-coercion~ and
 ~put-coercion~ interface for this.
 
 #+BEGIN_SRC scheme
+  (include "coercion-table.scm")
   (define (coerce-poly-sparse->poly-dense p)
     (define (coeff t) (car t))
     (define (order t) (cdr t))
@@ -1183,7 +1224,7 @@ implemented.
     (put 'mul '(poly-generic poly-generic)
          (lambda (p1 p2)
            (tag (mul (contents p1) (contents p2)))))
-    (put 'make 'poly-generic
+    (put 'make '(poly-generic)
          (lambda (var terms)
            (tag ((get 'poly-sparse 'make) var terms))))
     'done)
@@ -1191,64 +1232,8 @@ implemented.
 
 **** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-17.html#%_thm_2.91][Exercise 2.91.]]
 
-A univariate polynomial can be divided by another one to produce a polynomial
-quotient and a polynomial remainder. For example,
-
-\begin{equation}
-\frac{x^5 - 1}{x^2 - 1} = x^3 + x, \ \textrm{remainder} \ x - 1
-\end{equation}
-
-Division can be performed via long division. That is, divide the highest-order
-term of the dividend by the highest-order term of the divisor. The result is
-the first term of the quotient. Next, multiply the result by the divisor,
-subtract that from the dividend, and produce the rest of the answer by
-recursively dividing the difference by the divisor. Stop when the order of the
-divisor exceeds the order of the dividend and declare the dividend to be the
-remainder. Also, if the dividend ever becomes zero, return zero as both
-quotient and remainder.
-
-We can design a ~div-poly~ procedure on the model of ~add-poly~ and
-~mul-poly~. The procedure checks to see if the two polys have the same
-variable. If so, ~div-poly~ strips off the variable and passes the problem to
-~div-terms~, which performs the division operation on term lists. ~div-poly~
-finally reattaches the variable to the result supplied by ~div-terms~. It is
-convenient to design ~div-terms~ to compute both the quotient and the remainder
-of a division. ~div-terms~ can take two term lists as arguments and return a
-list of the quotient term list and the remainder term list.
-
-Complete the following definition of ~div-terms~ by filling in the missing
-expressions. Use this to implement ~div-poly~, which takes two polys as
-arguments and returns a list of the quotient and remainder polys.
-
-***** Solution
-
-#+NAME: ex-2-91-sparse
-#+BEGIN_SRC scheme
-  (define (make-poly-sparse variable term-list)
-    (cons variable term-list))
-  (define (variable p) (car p))
-  (define (term-list p) (cdr p))
-  ;; <procedures same-variable? and variable? from section 2.3.2>
-  (define (variable? x) (symbol? x))
-  (define (same-variable? v1 v2)
-    (and (variable? v1) (variable? v2) (eq? v1 v2)))
-  ;; representation of terms and term lists
-  ;; <procedures adjoin-term ...coeff from text below>
-  (define (adjoin-term term term-list)
-    (if (=zero? (coeff term))
-        term-list
-        (cons term term-list)))
-  (define (the-empty-termlist) '())
-  (define (first-term term-list) (car term-list))
-  (define (rest-terms term-list) (cdr term-list))
-  (define (empty-termlist? term-list) (null? term-list))
-  (define (make-term order coeff) (list order coeff))
-  (define (order term) (car term))
-  (define (coeff term) (cadr term))
-#+END_SRC
-
-#+NAME: ex-2-91-division
-#+BEGIN_SRC scheme
+#+NAME: poly-sparse-div-terms
+#+BEGIN_SRC scheme :tangle ex-2-91-division.scm
   (define (div-terms L1 L2)
     (if (empty-termlist? L1)
         (list (the-empty-termlist) (the-empty-termlist))
@@ -1261,35 +1246,47 @@ arguments and returns a list of the quotient and remainder polys.
                 (let ((rest-of-result
                        (div-terms
                         (sub-terms L1
-                                   (mul-terms (list (make-term new-c new-o))
-                                              L2)))))
-                  (cons (adjoin-term (make-term new-c new-o)
-                                     (car rest-of-result))
-                        rest-of-result)))))))
+                                   (mul-terms (list (make-term new-o new-c))
+                                              L2))
+                        L2)))
+                  (display rest-of-result)
+                  (newline)
+                  (cons (adjoin-term (make-term new-o new-c)
+                                     (list-ref rest-of-result 0))
+                        (list-ref rest-of-result 1))))))))
+#+END_SRC
+
+#+NAME: ex-2-91-div-poly-sparse
+#+BEGIN_SRC scheme
   (define (div-poly-sparse p1 p2)
     (if (same-variable? (variable p1)
                         (variable p2))
-        (letrec ((make-poly-sparse (get 'make 'poly-sparse))
+        (letrec ((make-poly-sparse (get 'make '(poly-sparse)))
                  (var (variable p1))
                  (result (div-terms (term-list p1)
                                     (term-list p2)))
-                 (quotient (car result))
-                 (remainder (cadr result)))
+                 (quotient (list-ref result 0))
+                 (remainder (list-ref result 1)))
+          (display result)
+          (newline)
           (list (make-poly-sparse var quotient)
                 (make-poly-sparse var remainder)))
-        (error "DIV-POLY -- division between different variables NYI")))
+        (error "DIV-POLY-SPARSE -- division between different variables NYI")))
 #+END_SRC
 
 #+NAME: ex-2-91-test
-#+BEGIN_SRC scheme
-  (define t1 '((5 1) (0 -1)))
-  (define t2 '((2 1) (0 -1)))
-  (define p1 (make-poly-sparse 'x t1))
-  (define p2 (make-poly-sparse 'x t2))
-  (define quotient-terms '((3 1) (1 1)))
-  (define remainder-terms '((1 1) (0 -1)))
-  (test (list quotient-terms remainder-terms)
-        (div-terms t1 t2))
+#+BEGIN_SRC scheme :tangle ex-2-91-test.scm
+  (use test)
+  (include "poly-sparse-package.scm")
+  <<poly-sparse-div-terms>>
+  (define tl1 '((5 1) (0 -1)))
+  (define tl2 '((2 1) (0 -1)))
+  (define p1 (make-poly-sparse 'x tl1))
+  (define p2 (make-poly-sparse 'x tl2))
+  (define quotient-terms (make-poly-sparse 'x '((3 1) (1 1))))
+  (define remainder-terms (make-poly-sparse 'x '((1 1) (0 -1))))
+  (test (list quotient remainder)
+        (div p1 p2))
 #+END_SRC
 
 **** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-17.html#%_thm_2.92][Exercise 2.92.]]
@@ -1298,13 +1295,24 @@ Skipping.
 
 **** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-17.html#%_thm_2.93][Exercise 2.93.]]
 
-#+BEGIN_SRC scheme
+#+BEGIN_SRC scheme :tangle rational-package.scm
+  (include "dispatch-table")
+  (include "generic-zero")
+  (include "generic-neg")
   (define (install-rational-package)
     ;; internal procedures
-    (define (numer x) (car x))
-    (define (denom x) (cdr x))
+    (define (numer x) (list-ref x 0))
+    (define (denom x) (list-ref x 1))
     (define (make-rat n d)
-      (cons n d))
+      (list n d))
+
+    (define (=zero?-rat x y)
+      (and (= (numer x) 0)
+           ;; Denominator of 0 is undefined -- choose not to make such a number
+           ;; equal to 0 even if the numerator is 0.
+           (not (= (denom x) 0))))
+    (define (neg-rat x)
+      (make-rat (neg (numer x)) (denom x)))
     (define (add-rat x y)
       (make-rat (add (mul (numer x) (denom y))
                      (mul (numer y) (denom x)))
@@ -1321,6 +1329,8 @@ Skipping.
                 (mul (denom x) (numer y))))
     ;; interface to rest of the system
     (define (tag x) (attach-tag 'rational x))
+    (put '=zero? '(rational) =zero?-rat)
+    (put 'neg '(rational) neg-rat)
     (put 'add '(rational rational)
          (lambda (x y) (tag (add-rat x y))))
     (put 'sub '(rational rational)
@@ -1333,6 +1343,58 @@ Skipping.
     (put 'make 'rational
          (lambda (n d) (tag (make-rat n d))))
     'done)
+  (install-rational-package)
   (define (make-rational n d)
     ((get 'make 'rational) n d))
 #+END_SRC
+
+
+#+BEGIN_SRC scheme :tangle ex-2-93-test.scm
+  (include "poly-sparse-package")
+  (include "rational-package")
+  (define p1 (make-poly-sparse 'x '((2 1)(0 1))))
+  (define p2 (make-poly-sparse 'x '((3 1)(0 1))))
+  (define rf (make-rational p2 p1))
+  (define result (make-rational (make-poly-sparse 'x '((5 2) (3 2) (2 2) (0 2)))
+                                (make-poly-sparse 'x '((4 1) (2 2) (0 1)))))
+  (test result
+        (add rf rf))
+#+END_SRC
+
+
+**** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-17.html#%25_thm_2.94][Exercise 2.94.]]
+
+#+NAME: ex-2-94-terms
+#+BEGIN_SRC scheme
+  (define (remainder-terms L1 L2)
+    (list-ref (div-terms L1 L2) 1))
+  (define (gcd-terms a b)
+    (if (empty-termlist? b)
+        a
+        (gcd-terms b (remainder-terms a b))))
+#+END_SRC
+
+#+NAME: ex-2-94-gcd-poly-sparse
+#+BEGIN_SRC scheme
+  (define (gcd-poly-sparse p1 p2)
+    (if (same-variable? (variable p1)
+                        (variable p2))
+        (letrec ((var (variable p1))
+                 (result (gcd-terms (term-list p1)
+                                    (term-list p2))))
+          result)
+        (error "GCD-POLY -- GCD between different variables NYI")))
+  (put 'greatest-common-divisor '(poly-sparse poly-sparse)
+       (lambda (x y) (tag (gcd-poly-sparse x y))))
+#+END_SRC
+
+#+BEGIN_SRC scheme :tangle ex-2-94-test
+  (include "poly-sparse-package")
+  (define p1 (make-poly-sparse 'x '((4 1) (3 -1) (2 -2) (1 2))))
+  (define p2 (make-poly-sparse 'x '((3 1) (1 -1))))
+  (greatest-common-divisor p1 p2)
+#+END_SRC
+
+**** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-17.html#%25_thm_2.95][Exercise 2.95.]]
+**** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-17.html#%25_thm_2.96][Exercise 2.96.]]
+**** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-17.html#%25_thm_2.97][Exercise 2.97.]]
