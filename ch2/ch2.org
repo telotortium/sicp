@@ -1,3 +1,9 @@
+#+TITLE: Structure and Interpretation of Computer Programs (SICP)
+#+AUTHOR: Robert Irelan
+#+EMAIL: rirelan@gmail.com
+#+OPTIONS: author:t email:t f:t
+#+PROPERTY: header-args :comments link :noweb no-export
+#+PROPERTY: header-args:scheme :shebang #!/usr/bin/env chicken-scheme
 #+BEGIN_SRC scheme
   (use sicp test)
 #+END_SRC
@@ -352,7 +358,7 @@ occurrence of a symbol rather than the first.
 
 ** 2.4: Multiple Representations for Abstract Data
 
-#+BEGIN_SRC scheme
+#+BEGIN_SRC scheme :tangle dispatch-table.scm
   ;; Operation, type -> procedure dispatch table.
   (define *op-table* (make-hash-table equal?))
   (define (put op type proc)
@@ -545,16 +551,14 @@ Steps to add types or operations:
 
 *** Auxiliary definitions
 
-#+NAME: generic-arithmetic-procedures
-#+BEGIN_SRC scheme
+#+BEGIN_SRC scheme :tangle generic-arithmetic-procedures.scm
   (define (add x y) (apply-generic 'add x y))
   (define (sub x y) (apply-generic 'sub x y))
   (define (mul x y) (apply-generic 'mul x y))
   (define (div x y) (apply-generic 'div x y))
 #+END_SRC
 
-#+NAME: install-scheme-number-package
-#+BEGIN_SRC scheme
+#+BEGIN_SRC scheme :tangle install-scheme-number-package.scm
   (define (install-scheme-number-package)
     (define (tag x)
       (attach-tag 'scheme-number x))
@@ -626,7 +630,7 @@ We special-case numbers to return ~scheme-number~ as their type tag and avoid
 adding the type tag to numbers that would otherwise be tagged with
 ~scheme-number~.
 
-#+BEGIN_SRC scheme
+#+BEGIN_SRC scheme :tangle type-tag-scheme-number.scm
   (define (attach-tag type-tag contents)
     (if (and (equal? type-tag 'scheme-number)
              ;; Leave open the possibility to apply SCHEME-NUMBER to non-numbers.
@@ -647,13 +651,16 @@ adding the type tag to numbers that would otherwise be tagged with
 
 We define the top-level generic function for convenience:
 
-#+BEGIN_SRC scheme
+#+BEGIN_SRC scheme :tangle generic-equ.scm
+  (use "dispatch-table.scm")
+  <<ex-2-79-impl>>
   (define equ? (apply-generic 'equ? x y))
 #+END_SRC
 
 Install the following functions as implementations for ~equ?~ in the
 corresponding packages:
 
+#+NAME: ex-2-79-impl
 #+BEGIN_SRC scheme
   (define (equ?-scheme-number x y)
     (= x y))
@@ -674,13 +681,16 @@ corresponding packages:
 
 We define the top-level generic function for convenience:
 
-#+BEGIN_SRC scheme
+#+BEGIN_SRC scheme :tangle generic-zero.scm
+  (use "dispatch-table.scm")
+  <<ex-2-80-impl>>
   (define =zero? (lambda (x)  (apply-generic '=zero? x)))
 #+END_SRC
 
 Install the following functions as implementations for ~=zero?~ in the
 corresponding packages:
 
+#+NAME: ex-2-80-impl
 #+BEGIN_SRC scheme
   (define (=zero?-scheme-number x)
     (= x 0))
@@ -717,7 +727,7 @@ event that such an override is desirable for efficiency or correctness.
 
 **** Auxiliary definitions
 
-#+BEGIN_SRC scheme
+#+BEGIN_SRC scheme :tangle coercion-table.scm
   (define *coercion-table* (make-hash-table equal?))
 
   (define (put-coercion type-from type-to proc)
@@ -889,7 +899,7 @@ for the two types before putting them in the dispatch table.
 
 **** Auxiliary definitions
 
-#+BEGIN_SRC scheme
+#+BEGIN_SRC scheme :tangle poly-sparse-package.scm
   ;; <procedures same-variable? and variable? from section 2.3.2>
   (define (variable? x) (symbol? x))
   (define (same-variable? v1 v2)
