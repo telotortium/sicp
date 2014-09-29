@@ -187,8 +187,8 @@
                            SHA BOOM))
 
 (define rock-encoded (encode rock-message rock-tree))
-(test '(1 1 1 1 1 1 1 0 0 1 1 1 1 0 1 1 1 0 0 0 0 0 0 0 0 0 1 1 1 1 1 1 1 0 0 1 1 1 1 0 1 1 1 0 0 0 0 0 0 0 0 0 1 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 1 1 0 1 1 0 1 1)
-      rock-encoded)
+(test rock-encoded
+      '(1 1 1 1 1 1 1 0 0 1 1 1 1 0 1 1 1 0 0 0 0 0 0 0 0 0 1 1 1 1 1 1 1 0 0 1 1 1 1 0 1 1 1 0 0 0 0 0 0 0 0 0 1 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 1 1 0 1 1 0 1 1))
 
 (test 84
       (length rock-encoded))
@@ -209,7 +209,7 @@
 ;; additional doubling in the frequency list requires an additional bit in the
 ;; final encoding. However, since more frequent symbols require fewer bits, the
 ;; most frequent symbol requires 1 bit and the least frequent
-;; $\lfloor \lg{2n - 1} \rfloor$ bits.
+;; $\lfloor \lg{2^n - 1} \rfloor$ bits.
 
 ;;; }}}
 

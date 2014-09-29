@@ -65,8 +65,8 @@
 
 ;; tree->list-1 grows more slowly: since a non-destructive append is $O(n)$ in
 ;; its first argument, the cost of performing the appends on a tree of $n$
-;; nodes grows as $\sum_{k=0}^{n-1} 2^k = \frac{1 - 2^k}{1 - 2} = 2^k
-;; - 1 = O(2^n)$. Meanwhile, the cost ot append a node to the result list in
+;; nodes grows as $\sum_{k=0}^{n-1} k = O(n^2)$.
+;; Meanwhile, the cost to append a node to the result list in
 ;; tree->list-2 is $O(1)$, so the cost of the entire conversion is $O(n)$.
 
 ;;; }}}
@@ -77,8 +77,8 @@
 ;;;
 ;;; The following procedure list->tree converts an ordered list to a balanced
 ;;; binary tree. The helper procedure partial-tree takes as arguments an
-;;; integer n and list of at least n elements and constructs a balanced tree
-;;; containing the first n elements of the list. The result returned by
+;;; integer $n$ and list of at least $n$ elements and constructs a balanced
+;;; tree containing the first $n$ elements of the list. The result returned by
 ;;; partial-tree is a pair (formed with cons) whose car is the constructed tree
 ;;; and whose cdr is the list of elements not included in the tree.
 
@@ -86,6 +86,8 @@
   (car (partial-tree elements (length elements))))
 
 (define (partial-tree elts n)
+  (display "partial-tree")
+  (newline)
   (if (= n 0)
       (cons '() elts)
       (let ((left-size (quotient (- n 1) 2)))

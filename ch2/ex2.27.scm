@@ -8,11 +8,11 @@
 
 ;;; Auxiliary functions {{{
 (define (reverse xs)
-  (define (iter xs rs)
+  (let iter ((xs xs)
+             (rs '()))
     (if (null? xs)
       rs
-      (iter (cdr xs) (cons (car xs) rs))))
-  (iter xs '()))
+      (iter (cdr xs) (cons (car xs) rs)))))
 ;;; }}}
 
 (define (deep-reverse xs)
@@ -33,6 +33,14 @@
            rs
            (iter (cdr xs) (cons (deep-reverse* (car xs)) rs))))))
     (deep-reverse* xs)))
+
+;; Much more elegant version from Peter Danenburg
+(define (deep-reverse xs)
+  (reverse (map (lambda (elt)
+                  (if (pair? elt)
+                    (deep-reverse elt)
+                    elt))
+                xs)))
 
 (define x (list (list 1 2) (list 3 4)))
 

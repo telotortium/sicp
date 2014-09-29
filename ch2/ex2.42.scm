@@ -1,3 +1,5 @@
+(use sicp test)
+
 (define (queens board-size)
   (define (queen-cols k)
     (if (= k 0)
@@ -34,6 +36,7 @@
             (not (or (= 0 dx)
                      (= 0 dy)
                      (= (abs dx) (abs dy))))))))
+  ;; Each column has a queen in only one row - find the position in column k
   (let ((last-position (find (lambda (position)
                                (= k (cdr position)))
                              positions)))
@@ -41,3 +44,6 @@
     (not (find (lambda (point)
                  (not (pos-safe? point last-position)))
                positions))))
+
+(test '(1 0 0 2 10 4 40 92)
+      (map (lambda (x) (length (queens x))) (iota 8 1)))
