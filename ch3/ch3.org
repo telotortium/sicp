@@ -244,6 +244,37 @@ the seed is initialized.
 
 **** [[view-source:http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-20.html#%_thm_3.8][Exercise 3.8.]]
 
+#+BEGIN_SRC scheme :tangle ex-3-8.scm
+  (define f
+    (let ((cache '()))
+      (lambda (x)
+        (cond ((null? x) (set! cache '())) ; Allow cache to be cleared.
+              ((not (null? cache)) 0)      ; Return 0 if cache isn't clear.
+              (else (set! cache x)       ; Set cache if it isn't clear already.
+                    x)))))
+#+END_SRC
+
+#+BEGIN_SRC scheme :tangle ex-3-8-test.scm
+  (use test)
+  (include "ex-3-8")
+
+  ;;; Simulate left-to-right evaluation by assigning to temporaries
+  (define x (f 0))
+  (define y (f 1))
+  (test 0
+        (+ x y))
+
+  ;;; Reset cache
+  (f '())
+
+  ;;; Right-to-left evaluation
+  (define y (f 1))
+  (define x (f 0))
+  (test 1
+        (+ x y))
+#+END_SRC
+
+
 ** 3.2: The Environment Model of Evaluation
 
 *** 3.2.1: The Rules for Evaluation
