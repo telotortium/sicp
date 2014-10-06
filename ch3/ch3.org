@@ -1,3 +1,9 @@
+#+TITLE: Structure and Interpretation of Computer Programs (SICP)
+#+AUTHOR: Robert Irelan
+#+EMAIL: rirelan@gmail.com
+#+OPTIONS: author:t email:t f:t
+#+PROPERTY: header-args :comments link :noweb no-export
+#+PROPERTY: header-args:scheme :shebang #!/usr/bin/env chicken-scheme
 
 * Chapter 3: Modularity, Objects, and State
 
