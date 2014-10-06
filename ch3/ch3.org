@@ -10,15 +10,16 @@
 
 **** [[view-source:http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-20.html#%_thm_3.1][Exercise 3.1.]]
 
-#+BEGIN_SRC scheme
+#+BEGIN_SRC scheme :tangle ex-3-1.scm
   (define (make-accumulator initial)
     (lambda (increment)
       (set! initial (+ initial increment))
       initial))
 #+END_SRC
 
-#+NAME: test-3-1
-#+BEGIN_SRC scheme
+#+BEGIN_SRC scheme :tangle ex-3-1-test.scm
+  (use test)
+  (include "ex-3-1")
   (define A (make-accumulator 5))
   (test 15
         (A 10))
@@ -28,7 +29,7 @@
 
 **** [[view-source:http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-20.html#%_thm_3.2][Exercise 3.2.]]
 
-#+BEGIN_SRC scheme
+#+BEGIN_SRC scheme :tangle ex-3-2.scm
   (define (make-monitored f)
     (define counter 0)
     (lambda (x)
@@ -41,8 +42,9 @@
              (set! counter (+ counter 1))))))
 #+END_SRC
 
-#+NAME: test-3-2
-#+BEGIN_SRC scheme
+#+BEGIN_SRC scheme :tangle ex-3-2-test.scm
+  (use test)
+  (include "ex-3-2")
   (define s (make-monitored sqrt))
   (test 10
         (s 100))
@@ -52,7 +54,7 @@
 
 **** [[view-source:http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-20.html#%_thm_3.3][Exercise 3.3.]]
 
-#+BEGIN_SRC scheme
+#+BEGIN_SRC scheme :tangle ex-3-3.scm
   (define (make-account balance password)
     (define (withdraw amount)
       (if (>= balance amount)
@@ -72,8 +74,9 @@
     dispatch)
 #+END_SRC
 
-#+NAME: test-3-3
-#+BEGIN_SRC scheme
+#+BEGIN_SRC scheme :tangle ex-3-3-test.scm
+  (use test)
+  (include "ex-3-3")
   (define acc (make-account 100 'secret-password))
   (test 60
         ((acc 'secret-password 'withdraw) 40))
@@ -89,7 +92,7 @@ incorrect attempts in a row have been made. Ideally, a different response
 would not be returned to the user when the cops have been called, but I've
 decided to do so for ease of testing.
 
-#+BEGIN_SRC scheme
+#+BEGIN_SRC scheme :tangle ex-3-4.scm
   (define (make-account balance password)
     (define incorrect-password-attempts 0)
     (define (call-the-cops)
@@ -119,8 +122,9 @@ decided to do so for ease of testing.
     dispatch)
 #+END_SRC
 
-#+NAME: test-3-4
-#+BEGIN_SRC scheme
+#+BEGIN_SRC scheme :tangle ex-3-4-test.scm
+  (use test)
+  (include "ex-3-4")
   (define acc (make-account 100 'secret-password))
   (for-each (lambda (i)
               (test "Incorrect password"
@@ -134,7 +138,7 @@ decided to do so for ease of testing.
 
 **** [[view-source:http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-20.html#%_thm_3.5][Exercise 3.5.]]
 
-#+BEGIN_SRC scheme
+#+BEGIN_SRC scheme :tangle ex-3-5.scm
   (define (estimate-integral P x1 x2 y1 y2 ntrial)
     ;; Number of trials for which the trial point was inside the region to be
     ;; integrated (i.e., where (= (P x y) #t)).
@@ -154,8 +158,9 @@ decided to do so for ease of testing.
        (/ ninside ntrial)))
 #+END_SRC
 
-#+NAME: test-3-5
-#+BEGIN_SRC scheme
+#+BEGIN_SRC scheme :tangle ex-3-5-test.scm
+  (use test)
+  (include "ex-3-5")
   (define (p-circle)
     (lambda (x y)
       (> (* 1.0 1.0)
@@ -176,7 +181,7 @@ don't define a ~random-init~ variable here. Thus, it is necessary to make at
 least one call to ~(rand 'reset)~ before using ~(rand 'generate)~ to make sure
 the seed is initialized.
 
-#+BEGIN_SRC scheme
+#+BEGIN_SRC scheme :tangle ex-3-6.scm
   (define (rand command)
     (define x nil)                        ; Don't produce random numbers until initialized
     (cond ((equal? command 'generate)
