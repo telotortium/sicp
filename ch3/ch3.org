@@ -493,3 +493,239 @@ environment of ~make-account~ so that ~dispatch~ can resolve the references to
 ~withdraw~ and ~deposit~ in its body. (On the other hand, it should not
 strictly be necessary to retain a reference to ~dispatch~ since a reference to
 that procedure is returned.)
+
+
+** 3.3: Modeling with Mutable Data
+
+*** 3.3.1: Applying Simple Procedures
+**** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-22.html#%25_thm_3.12][Exercise 3.12.]]
+
+#+BEGIN_SRC scheme :tangle ex-3-12-test.scm
+  (use test)
+
+  ;;; Nondestructive
+  (define x (list 'a 'b))
+  (define y (list 'c 'd))
+  (define z (append x y))
+
+  (test z
+        '(a b c d))
+  (test (cdr x)
+        '(b))
+
+  ;;; Destructive
+  (define w (append! x y))
+
+  (test w
+        '(a b c d))
+  (test (cdr w)
+        '(b c d))
+#+END_SRC
+
+**** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-22.html#%25_thm_3.13][Exercise 3.13.]]
+
+When a circular list is constructed from a linear list, the last cons cell in
+the original list has its cdr set to the head of the original list. Thus,
+~(null? (cdr x))~ never returns true for any element ~x~ in the list and the
+~last-pair~ procedure loops around the list forever.
+
+**** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-22.html#%25_thm_3.14][Exercise 3.14.]]
+
+~mystery~ reverses a list destructively:
+
+#+NAME: ex-3-14
+#+BEGIN_SRC scheme
+  (define (mystery x)
+    (define (loop x y)
+      (if (null? x)
+          y
+          (let ((temp (cdr x)))
+            (set-cdr! x y)
+            (loop temp x))))
+    (loop x '()))
+#+END_SRC
+
+#+BEGIN_SRC scheme :tangle ex-3-14-test.scm
+  (use test)
+  <<ex-3-14>>
+  (define v '(a b c d))
+  (define w (mystery v))
+  (test w
+        '(d c b a))
+#+END_SRC
+
+**** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-22.html#%25_thm_3.15][Exercise 3.15.]]
+
+In Figure 3.16, modify the diagram so that the arrow pointing to the ~'a~ cell
+now points to a ~'wow~ cell.
+
+In Figure 3.17, only the arrow pointing to ~'a~ from below now points to ~'wow~
+-- the arrow from above continues to point to ~'a~.
+
+**** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-22.html#%25_thm_3.16][Exercise 3.16.]]
+
+Ben Bitdiddle's flawed procedure:
+
+#+NAME: ex-3-16-count-pairs
+#+BEGIN_SRC scheme
+  (define (count-pairs x)
+    (if (not (pair? x))
+        0
+        (+ (count-pairs (car x))
+           (count-pairs (cdr x))
+           1)))
+#+END_SRC
+
+We define some test data here, containing a simple list, some more complex
+linked structures, and a list containing a cycle, for this and the rest of the
+exercises in this section.
+
+#+BEGIN_SRC scheme :tangle sharing-identity-test-data.scm
+  (define pairs-3 '(a b c))
+  (define pairs-4
+    (begin
+      (define x '(a b c))
+      (set-car! x (cddr x))
+      x))
+  (define pairs-7
+    (begin
+      (define x '(a b c))
+      (set-car! x (cdr x))
+      (set-car! (cdr x) (cddr x))
+      x))
+  (define pairs-cycle
+    (begin
+      (define x '(a b c))
+      (set-cdr! (cddr x) x)
+      x))
+#+END_SRC
+
+#+BEGIN_SRC scheme :tangle ex-3-16-test.scm
+  (use test)
+  (include "sharing-identity-test-data")
+  (test 0
+        (count-pairs '()))
+  (test 0
+        (count-pairs 'a))
+  (test 3
+        (count-pairs pairs-3))
+  (test 4
+        (count-pairs pairs-4))
+  (test 7
+        (count-pairs pairs-7))
+  ;;; No test for pairs-cycle, because a cycle causes this version of count-pairs
+  ;;; to run forever.
+#+END_SRC
+
+**** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-22.html#%25_thm_3.17][Exercise 3.17.]]
+
+#+BEGIN_SRC scheme :tangle ex-3-17-count-pairs.scm
+  (define (count-pairs x)
+    (let ((seens '()))
+      (let inner ((x x))
+        (if (or (not (pair? x))
+                (memq x seens))
+            0
+            (begin
+              (set! seens (cons x seens))
+              (+ (inner (car x))
+                 (inner (cdr x))
+                 1))))))
+#+END_SRC
+
+#+BEGIN_SRC scheme :tangle ex-3-17-test.scm
+  (use test)
+  (include "sharing-identity-test-data")
+  (include "ex-3-17-count-pairs")
+  (test 0
+        (count-pairs '()))
+  (test 0
+        (count-pairs 'a))
+  (test 3
+        (count-pairs pairs-3))
+  (test 4
+        (count-pairs pairs-4))
+  (test 7
+        (count-pairs pairs-7))
+  (test 3
+        (count-pairs pairs-cycle))
+#+END_SRC
+
+**** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-22.html#%25_thm_3.18][Exercise 3.18.]]
+
+#+BEGIN_SRC scheme :tangle ex-3-18.scm
+  (define (cycle? x)
+    (let ((seens '()))
+      (let inner ((x x))
+        (cond ((not (pair? x)) #f)
+              ((memq x seens) #t)
+              (else (set! seens (cons x seens))
+                    (inner (cdr x)))))))
+#+END_SRC
+
+#+BEGIN_SRC scheme :tangle ex-3-18-test.scm
+  (use test)
+  (include "sharing-identity-test-data")
+  (include "ex-3-18")
+  (test #f
+        (cycle? '()))
+  (test #f
+        (cycle? 'a))
+  (test #f
+        (cycle? pairs-3))
+  (test #f
+        (cycle? pairs-4))
+  (test #f
+        (cycle? pairs-7))
+  (test #t
+        (cycle? pairs-cycle))
+#+END_SRC
+
+**** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-22.html#%25_thm_3.19][Exercise 3.19.]]
+
+Use [[http://en.wikipedia.org/wiki/Cycle_detection#Tortoise_and_hare][Floyd's cycle-finding algorithm]], also known as the "tortoise-and-hare"
+algorithm. Two pointers to the list elements are kept. The "tortoise" is
+advanced by 1 position for every call, while the "hare" is advanced by 2
+positions. If a cycle exists, the tortoise and hare will eventually run into
+other (i.e., compare equal via ~eq?~ after the initial call).
+
+#+BEGIN_SRC scheme :tangle ex-3-19.scm
+  (define (cycle? x)
+    (define (cdr-safe x)
+      (if (not (pair? x))
+          x
+          (cdr x)))
+    (define (cddr-safe x)
+      (if (not (pair? x))
+          x
+          (cdr-safe (cdr x))))
+    (define (inner tortoise hare first-run)
+      (cond ((any (lambda (p) (not (pair? p)))
+                  (list tortoise hare))
+             #f)
+            ((and (not first-run)
+                  (eq? tortoise hare))
+             #t)
+            (else (inner (cdr-safe tortoise)
+                         (cddr-safe hare)
+                         #f))))
+    (inner x x #t))
+#+END_SRC
+
+#+BEGIN_SRC scheme :tangle ex-3-19-test.scm
+  (use test)
+  (include "sharing-identity-test-data")
+  (include "ex-3-19")
+  (test #f
+        (cycle? '()))
+  (test #f
+        (cycle? 'a))
+  (test #f
+        (cycle? pairs-3))
+  (test #f
+        (cycle? pairs-4))
+  (test #f
+        (cycle? pairs-7))
+  (test #t
+        (cycle? pairs-cycle))
+#+END_SRC
