@@ -339,3 +339,157 @@ and the password ~rosebud~. You may wish to modify your solution to exercise
 #+BEGIN_SRC scheme
 
 #+END_SRC
+
+
+** 3.2: The Environment Model of Evaluation
+
+*** 3.2.1: The Rules for Evaluation
+
+No exercises
+
+*** 3.2.2: Applying Simple Procedures
+**** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-21.html#%25_thm_3.9][Exercise 3.9.]]
+
+I don't want to draw, so I'll use Scheme S-expressions instead.
+
+In general, each invocation of a procedure creates an environment containing a
+reference to its enclosing environment and a list of references to its
+parameters. The global environment is much the same except that has a nil
+pointer for the enclosing environment since there is no enclosing
+environment. In the below, I've represented each parameter as a list of the
+symbol name and value, but the symbol name is only preserved here for ease of
+following the examples -- it doesn't necessarily have to be kept in an actual
+interpreter.
+
+The recursive definition of ~factorial~,
+
+#+BEGIN_SRC scheme
+  (define (factorial n)
+    (if (= n 1)
+        1
+        (* n (factorial (- n 1)))))
+#+END_SRC
+
+spawns a separate environment for each call of ~factorial~, each of which has a
+reference to the global environment and the value of its one argument:
+
+#+BEGIN_SRC scheme
+  (define global-env `(() (factorial ,factorial-proc)
+                          (fact-iter ,fact-iter-proc)
+                          ,@intrinsic-defs))
+  (define all-envs `((,global-env (n ,6))))
+  (set! ,all-envs `((,global-env (n ,5)) ,all-envs))
+  (set! ,all-envs `((,global-env (n ,4)) ,all-envs))
+  (set! ,all-envs `((,global-env (n ,3)) ,all-envs))
+  (set! ,all-envs `((,global-env (n ,2)) ,all-envs))
+  (set! ,all-envs `((,global-env (n ,1)) ,all-envs))
+  (set! all-envs (cdr all-envs))
+  (set! all-envs (cdr all-envs))
+  (set! all-envs (cdr all-envs))
+  (set! all-envs (cdr all-envs))
+  (set! all-envs (cdr all-envs))
+  (set! all-envs (cdr all-envs))
+  (assert (null? all-envs))
+
+#+END_SRC
+
+In contrast, the iterative version,
+
+#+BEGIN_SRC scheme
+  (define (factorial n)
+    (fact-iter 1 1 n))
+  (define (fact-iter product counter max-count)
+    (if (> counter max-count)
+        product
+        (fact-iter (* counter product)
+                   (+ counter 1)
+                   max-count)))
+#+END_SRC
+
+because it is tail recursive, replaces the environment of the function from
+which a tail recursive call is made with the environment for the target
+function of the tail recursive call. Since all function calls in both
+~factorial~ and ~fact-iter~ are tail recursive, the list of environments
+changes basically as described in the pseudocode below:
+
+#+BEGIN_SRC scheme
+  (define global-env `(() (factorial ,factorial-proc)
+                       (fact-iter ,fact-iter-proc)
+                       ,@intrinsic-defs))
+  (define all-envs `((global-env (n ,6))))
+  (set-car! all-envs `(global-env (product ,1)
+                                  (counter ,1)
+                                  (max-count ,6)))
+  (set-car! all-envs `(global-env (product ,1)
+                                  (counter ,2)
+                                  (max-count ,6)))
+  (set-car! all-envs `(global-env (product ,2)
+                                  (counter ,3)
+                                  (max-count ,6)))
+  (set-car! all-envs `(global-env (product ,6)
+                                  (counter ,4)
+                                  (max-count ,6)))
+  (set-car! all-envs `(global-env (product ,24)
+                                  (counter ,5)
+                                  (max-count ,6)))
+  (set-car! all-envs `(global-env (product ,120)
+                                  (counter ,6)
+                                  (max-count ,6)))
+  (set-car! all-envs `(global-env (product ,720)
+                                  (counter ,7)
+                                  (max-count ,6)))
+  (set! all-envs (cdr all-envs))
+  (assert (null? all-envs))
+#+END_SRC
+
+Notice above that we've really simulated a stack, with ~set-car!~ performing a
+mutation-in-place of the top entry of the stack.
+
+*** 3.2.3: Frames as the Repository of Local State
+**** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-21.html#%25_thm_3.10][Exercise 3.10.]]
+
+The procedure to be analyzed,
+
+#+BEGIN_SRC scheme
+  (define (make-withdraw initial-amount)
+    (let ((balance initial-amount))
+      (lambda (amount)
+        (if (>= balance amount)
+            (begin (set! balance (- balance amount))
+                   balance)
+            "Insufficient funds"))))
+#+END_SRC
+
+expands to the following when ~let~ is expanded to its underlying syntax:
+
+#+BEGIN_SRC scheme
+  (define (make-withdraw initial-amount)
+    ((lambda (balance)
+       (lambda (amount)
+         (if (>= balance amount)
+             (begin (set! balance (- balance amount))
+                    balance)
+             "Insufficient funds")))
+     initial-amount))
+#+END_SRC
+
+Without TCE, the function returned by ~make-withdraw~ (i.e.,
+~(lambda (amount) ⋯)~), has a pointer the environment of
+~(lambda (balance) ⋯)~, which has a pointer to the global environment. However,
+the call to ~(lambda (balance) ⋯)~ is in tail position, so it replaces the
+environment formed by the call of ~make-withdraw~. When the returned
+~(lambda (amount) ⋯)~ is called, it therefore has a pointer to the environment
+of ~(lambda (balance) ⋯)~, which points to the global environment.
+
+*** 3.2.4: Internal Definitions
+**** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-21.html#%25_thm_3.11][Exercise 3.11.]]
+
+The environment for ~make-account~ points to the global environment. In this
+environment exist references to the argument ~balance~ as well as the local
+procedures ~withdraw~, ~deposit~, and ~dispatch~. Each local procedure points to
+the environment of ~make-account~ (and retains references to its own arguments
+as well). It's necessary to keep references to the local procedures in the
+environment of ~make-account~ so that ~dispatch~ can resolve the references to
+~withdraw~ and ~deposit~ in its body. (On the other hand, it should not
+strictly be necessary to retain a reference to ~dispatch~ since a reference to
+that procedure is returned.)
