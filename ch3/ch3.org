@@ -168,8 +168,9 @@ decided to do so for ease of testing.
             (* y y)))))
   (current-test-epsilon 0.10)
   (define pi (* 4 (atan 1 1)))
-  (test pi
-        (estimate-integral (p-circle) -2.0 2.0 -2.0 2.0 100000))
+  (parameterize ((current-test-epsilon 0.10))
+                (test pi
+                      (estimate-integral (p-circle) -2.0 2.0 -2.0 2.0 100000)))
 #+END_SRC
 
 **** [[view-source:http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-20.html#%_thm_3.6][Exercise 3.6.]]
