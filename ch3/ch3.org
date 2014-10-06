@@ -199,4 +199,44 @@ the seed is initialized.
 *** 3.1.3: The Costs of Introducing Assignment
 
 **** [[view-source:http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-20.html#%_thm_3.7][Exercise 3.7.]]
+
+#+BEGIN_SRC scheme :tangle ex-3-7.scm
+  (include "ex-3-3")
+  (define (make-joint account original-password new-password)
+    (define (dispatch p m)
+      ;; The underlying account accepts only original-password, so accept
+      ;; new-password by passing original-password. Otherwise, let the underlying
+      ;; account deal with error handling for a wrong password.
+      (display p) (newline)
+      (if (equal? p new-password)
+          (account original-password m)
+          (account p m)))
+    dispatch)
+#+END_SRC
+
+#+BEGIN_SRC scheme :tangle ex-3-7-test.scm
+  (use test)
+  (include "ex-3-7")
+  (define acc (make-account 140 'secret-password))
+  (define joint-acc
+    (make-joint acc 'secret-password 'proxy-password))
+  ;;; Both `acc` and `joint-acc` accept the original password, and actions on
+  ;;; either affect the other since `joint-acc` delegates all messages to `acc`.
+  (test 100
+        ((joint-acc 'secret-password 'withdraw) 40))
+  (test 60
+        ((joint-acc 'secret-password 'withdraw) 40))
+  ;;; Neither account works with an unknown password.
+  (test "Incorrect password"
+        ((acc 'some-other-password 'deposit) 50))
+  (test "Incorrect password"
+        ((joint-acc 'some-other-password 'deposit) 50))
+  ;;; Original account `acc` doesn't work with the proxy password, but the joint
+  ;;; account `joint-acc` does.
+  (test "Incorrect password"
+        ((acc 'proxy-password 'withdraw) 20))
+  (test 40
+        ((joint-acc 'proxy-password 'withdraw) 20))
+#+END_SRC
+
 **** [[view-source:http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-20.html#%_thm_3.8][Exercise 3.8.]]
