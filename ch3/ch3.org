@@ -1123,3 +1123,478 @@ Represent as doubly-linked list. Will need selectors for DLL:
 **** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-22.html#%25_thm_3.27][Exercise 3.27.]]
 
 Ehh...
+
+
+*** 3.3.4: [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-22.html#%_sec_3.3.4][A Simulator for Digital Circuits]]
+
+Some common procedures, most copied from the book.
+
+#+BEGIN_SRC scheme :tangle logic-gates-common.scm
+  (include "logic-gates-agenda")
+
+  (define (make-wire)
+    (let ((signal-value 0) (action-procedures '()))
+      (define (set-my-signal! new-value)
+        (if (not (= signal-value new-value))
+            (begin (set! signal-value new-value)
+                   (call-each action-procedures))
+            'done))
+      (define (accept-action-procedure! proc)
+        (set! action-procedures (cons proc action-procedures))
+        (proc))
+      (define (dispatch m)
+        (cond ((eq? m 'get-signal) signal-value)
+              ((eq? m 'set-signal!) set-my-signal!)
+              ((eq? m 'add-action!) accept-action-procedure!)
+              (else (error "Unknown operation -- WIRE" m))))
+      dispatch))
+  (define (call-each procedures)
+    (if (null? procedures)
+        'done
+        (begin
+          ((car procedures))
+          (call-each (cdr procedures)))))
+  (define (get-signal wire)
+    (wire 'get-signal))
+  (define (set-signal! wire new-value)
+    ((wire 'set-signal!) new-value))
+  (define (add-action! wire action-procedure)
+    ((wire 'add-action!) action-procedure))
+
+
+#+END_SRC
+
+#+BEGIN_SRC scheme
+  (define (make-probe log)
+    (define (probe name wire)
+      (add-action! wire
+                   (lambda ()
+                     (cons (list name
+                                 (current-time the-agenda)
+                                 (get-signal wire))
+                           log))))
+    probe)
+
+#+END_SRC
+
+**** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-22.html#%25_thm_3.28][Exercise 3.28.]]
+
+#+NAME: ex-3-28-or-gate
+#+BEGIN_SRC scheme
+  (define (or-gate a1 a2 output)
+    (define (logical-or s1 s2)
+      (define (signal-valid s)
+        (or (= s 0) (= s 1)))
+      (cond ((not (signal-valid s1)) (error "Invalid signal on a1" s1))
+            ((not (signal-valid s2)) (error "Invalid signal on a2" s2))
+            ((and (= s1 0) (= s2 0)) 0)
+            ((and (= s1 1) (= s2 0)) 1)
+            ((and (= s1 0) (= s2 1)) 1)
+            ((and (= s1 1) (= s2 1)) 1)
+            (else (error "Unreachable"))))
+    (define (or-action-procedure)
+      (let ((new-value
+             (logical-or (get-signal a1) (get-signal a2))))
+        (after-delay or-gate-delay
+                     (lambda ()
+                       (set-signal! output new-value)))))
+    (add-action! a1 or-action-procedure)
+    (add-action! a2 or-action-procedure)
+    'ok)
+#+END_SRC
+
+**** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-22.html#%25_thm_3.29][Exercise 3.29.]]
+
+We use this result from De Morgan's laws
+
+\begin{equation*}
+a \vee b = \neg \left( \neg a \wedge \neg b \right)
+\end{equation*}
+
+to implement the or-gate in terms of and-gates and inverters:
+
+#+BEGIN_SRC scheme
+  (define (or-gate a1 a2 output)
+    (let ((na (make-wire)) (nb (make-wire))
+          (c (make-wire)))
+      (inverter a na)
+      (inverter b nb)
+      (and-gate na nb c)
+      (inverter c output)
+      'ok))
+#+END_SRC
+
+This construction is simpler than the primitive and-gate constructed
+above. However, its propagation times are more complex -- the formula for the
+total propagation time \(t_{\mathrm{total}}\), where \(t_{x}\) is the
+propagation delay due to the gate that begins the wire \(x\), is
+
+\begin{equation*}
+t_{\mathrm{total}} = \t_{output} + \t_{c} + \max{(na, nb)}
+\end{equation*}
+
+This may be a larger delay than that of the primitive or-gate if the primitive
+gate can be manufactured to have a delay similar to that of the and-gate, for
+example. On the other hand, if the composition of inverters and and-gates has
+enough of an advantage, such as individual speed or cost, over a single
+primitive or-gate or-gate for whatever reason, the composed or-gate may still
+be preferable.
+
+**** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-22.html#%25_thm_3.30][Exercise 3.30.]]
+
+Straightforward implementation of the diagram:
+
+#+BEGIN_SRC scheme :tangle ex-3-30.scm
+  (define (ripple-carry-adder as bs ss carry)
+    (let ((cs
+           ;; Construct the n internal wires needed to link the full-adders
+           ;; internally and verify that as, bs, and ss all have the same length.
+           (let make-cs ((as as) (bs bs) (ss ss) (cs '()))
+                (cond ((and (null? as) (null? bs) (null? ss)) cs)
+                      ((null? as) (error "Too few bits in as"))
+                      ((null? bs) (error "Too few bits in bs"))
+                      ((null? ss) (error "Too few bits in ss"))
+                      (else (make-cs (cdr as) (cdr bs) (cdr ss)
+                                   (cons (make-wire) cs)))))))
+      (let make-adder ((as as) (bs bs) (cs cs) (ss ss) (carry carry))
+        (cond ((null? as) 'ok)  ; Only test `as` since all lists have same length.
+            (else (full-adder (car as) (car bs) (car cs) (car ss) carry)
+                  (make-adder (cdr as) (cdr bs) (cdr cs) (cdr ss) (car cs)))))))
+#+END_SRC
+
+#+BEGIN_SRC scheme :tangle ex-3-30-test.scm
+  (include "ex-3-30")
+  (use test)
+#+END_SRC
+
+The delay is troublesome -- \(n \mathrm{delay}_{\mathrm{full-adder}}\).
+
+**** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-22.html#%25_thm_3.31][Exercise 3.31.]]
+
+If the procedure is merely added without executing it, the state of the circuit
+can become inconsistent until the first change to the inputs is made. For
+example, consider the execution of ~(half-adder a b s c)~, with ~a~ and ~b~
+initially ~1~ and ~s~ and ~c~ initially ~0~. Without the argument ~proc~ being
+called immediately on the call to ~accept-action-procedure!~, no calls to
+~set-my-signal!~, which is the only means now to call any of the
+~action-procedures~, are made, so ~s~ and ~c~ remain set to ~0~ until the first
+input is set.
+
+**** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-22.html#%25_thm_3.32][Exercise 3.32.]]
+
+It is necessary to execute the events in the same queue (i.e., those that take
+place "at the same time") in FIFO order because it is in fact the case that the
+and-gate observes the change to ~a1~ while it is scheduling ~a2~.
+
+#+NAME: FIFO-agenda
+#+BEGIN_SRC scheme
+  (define agenda
+    '((0 ((lambda () (set-a1! 0))
+          (lambda () (set-a2! 1))))
+      ;; Stable value of and-gate output after initialization.
+      (5 ((lambda () (assert-output 0))))
+      ;; Change a1 and a2 simultaneously.
+      (10 ((lambda () (set-a1! 1))
+           (lambda () (set-a2! 0))))
+      (13 ((lambda ()
+             ;; Lexical capture of new-value at t = 10 after setting just a1.
+             (set-output! 1))
+           (lambda ()
+             ;; Lexical capture of new-value at t = 10 after setting a1 followed
+             ;; by a2.
+             (set-output! 0))))))
+#+END_SRC
+
+#+NAME: LIFO-agenda
+#+BEGIN_SRC scheme
+  (define agenda
+    '((0 ((lambda () (set-a1! 0))
+          (lambda () (set-a2! 1))))
+      ;; Stable value of and-gate output after initialization.
+      (5 ((lambda () (assert-output 0))))
+      ;; Change a1 and a2 simultaneously.
+      (10 ((lambda () (set-a1! 1))
+           (lambda () (set-a2! 0))))
+      (13 ((lambda ()
+             ;; Lexical capture of new-value at t = 10 after setting a1 followed
+             ;; by a2.
+             (set-output! 0))
+           (lambda ()
+             ;; Lexical capture of new-value at t = 10 after setting just a1.
+             ;; THIS IS THE INCORRECT RESULT.
+             (set-output! 1))))))
+#+END_SRC
+
+*** 3.3.5: [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-22.html#%_sec_3.3.4][Propagation of Constraints]]
+
+Implementation of constraint objects from book. Includes the primitive
+procedures
+
+#+BEGIN_SRC scheme :tangle constraint-primitive.scm
+  ;;; Primitive connector construction
+  (define (make-connector)
+    (let ((value #f) (informant #f) (constraints '()))
+      (define (set-my-value newval setter)
+        (cond ((not (has-value? me))
+               (set! value newval)
+               (set! informant setter)
+               (for-each-except setter
+                                inform-about-value
+                                constraints))
+              ((not (= value newval))
+               (error "Contradiction" (list value newval)))
+              (else 'ignored)))
+      (define (forget-my-value retractor)
+        (if (eq? retractor informant)
+            (begin (set! informant #f)
+                   (for-each-except retractor
+                                    inform-about-no-value
+                                    constraints))
+            'ignored))
+      (define (connect new-constraint)
+        (if (not (memq new-constraint constraints))
+            (set! constraints
+                  (cons new-constraint constraints)))
+        (if (has-value? me)
+            (inform-about-value new-constraint))
+        'done)
+      (define (me request)
+        (cond ((eq? request 'has-value?)
+               (if informant #t #f))
+              ((eq? request 'value) value)
+              ((eq? request 'set-value!) set-my-value)
+              ((eq? request 'forget) forget-my-value)
+              ((eq? request 'connect) connect)
+              (else (error "Unknown operation -- CONNECTOR"
+                           request))))
+      me))
+
+  ;;; Convenience procedures for make-connector.
+  (define (for-each-except exception procedure list)
+    (define (loop items)
+      (cond ((null? items) 'done)
+            ((eq? (car items) exception) (loop (cdr items)))
+            (else (procedure (car items))
+                  (loop (cdr items)))))
+    (loop list))
+  (define (has-value? connector)
+    (connector 'has-value?))
+  (define (get-value connector)
+    (connector 'value))
+  (define (set-value! connector new-value informant)
+    ((connector 'set-value!) new-value informant))
+  (define (forget-value! connector retractor)
+    ((connector 'forget) retractor))
+  (define (connect connector new-constraint)
+    ((connector 'connect) new-constraint))
+  (define (inform-about-value constraint)
+    (constraint 'I-have-a-value))
+  (define (inform-about-no-value constraint)
+    (constraint 'I-lost-my-value))
+#+END_SRC
+
+and some commonly used constraints, implemented in terms of the primitives:
+
+#+BEGIN_SRC scheme :tangle constraint-common.scm
+  (include "constraint-primitive")
+
+  ;;; Adder constraint between summands and sum
+  (define (adder a1 a2 sum)
+    (define (process-new-value)
+      (cond ((and (has-value? a1) (has-value? a2))
+             (set-value! sum
+                         (+ (get-value a1) (get-value a2))
+                         me))
+            ((and (has-value? a1) (has-value? sum))
+             (set-value! a2
+                         (- (get-value sum) (get-value a1))
+                         me))
+            ((and (has-value? a2) (has-value? sum))
+             (set-value! a1
+                         (- (get-value sum) (get-value a2))
+                         me))))
+    (define (process-forget-value)
+      (forget-value! sum me)
+      (forget-value! a1 me)
+      (forget-value! a2 me)
+      (process-new-value))
+    (define (me request)
+      (cond ((eq? request 'I-have-a-value)
+             (process-new-value))
+            ((eq? request 'I-lost-my-value)
+             (process-forget-value))
+            (else
+             (error "Unknown request -- ADDER" request))))
+    (connect a1 me)
+    (connect a2 me)
+    (connect sum me)
+    me)
+
+  ;;; Multiplier constraint between multiplicands and product.
+  (define (multiplier m1 m2 product)
+    (define (process-new-value)
+      (cond ((or (and (has-value? m1) (= (get-value m1) 0))
+                 (and (has-value? m2) (= (get-value m2) 0)))
+             (set-value! product 0 me))
+            ((and (has-value? m1) (has-value? m2))
+             (set-value! product
+                         (* (get-value m1) (get-value m2))
+                         me))
+            ((and (has-value? product) (has-value? m1))
+             (set-value! m2
+                         (/ (get-value product) (get-value m1))
+                         me))
+            ((and (has-value? product) (has-value? m2))
+             (set-value! m1
+                         (/ (get-value product) (get-value m2))
+                         me))))
+    (define (process-forget-value)
+      (forget-value! product me)
+      (forget-value! m1 me)
+      (forget-value! m2 me)
+      (process-new-value))
+    (define (me request)
+      (cond ((eq? request 'I-have-a-value)
+             (process-new-value))
+            ((eq? request 'I-lost-my-value)
+             (process-forget-value))
+            (else
+             (error "Unknown request -- MULTIPLIER" request))))
+    (connect m1 me)
+    (connect m2 me)
+    (connect product me)
+    me)
+
+  ;;; Constrain connector to a constant
+  (define (constant value connector)
+    (define (me request)
+      (error "Unknown request -- CONSTANT" request))
+    (connect connector me)
+    (set-value! connector value me)
+    me)
+
+  ;;; Print a message about setting or unsetting of a connector (e.g., for
+  ;;; testing).
+  (define (probe name connector)
+    (define (print-probe value)
+      (display "Probe: ")
+      (display name)
+      (display " = ")
+      (display value)
+      (newline))
+    (define (process-new-value)
+      (print-probe (get-value connector)))
+    (define (process-forget-value)
+      (print-probe "?"))
+    (define (me request)
+      (cond ((eq? request 'I-have-a-value)
+             (process-new-value))
+            ((eq? request 'I-lost-my-value)
+             (process-forget-value))
+            (else
+             (error "Unknown request -- PROBE" request))))
+    (connect connector me)
+    me)
+#+END_SRC
+
+**** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-22.html#%25_thm_3.33][Exercise 3.33.]]
+
+#+BEGIN_SRC scheme :tangle ex-3-33.scm
+  (define (averager a b c)
+    (let ((half (make-connector))
+          (sum (make-connector)))
+      (constant 0.5 half)
+      (adder a b sum)
+      (multiplier half sum c)
+      'ok))
+#+END_SRC
+
+**** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-22.html#%25_thm_3.34][Exercise 3.34.]]
+
+The procedure suggested by Louis won't work when propagation from the
+product to the multiplicands is needed. ~multiplier~ needs at least two of
+~m1~, ~m2~, and ~product~ to be set in order to propagate the constraint from
+the set values to the unset value. However, if one of the multiplicands is
+unset, both are, a situation that ~multiplier~ can't handle.
+
+**** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-22.html#%25_thm_3.35][Exercise 3.35.]]
+
+Straightforward implementation based on ~multiplier~:
+
+#+BEGIN_SRC scheme :tangle ex-3-35.scm
+  (define (squarer a b)
+    (define (process-new-value)
+      (if (has-value? b)
+          (if (< (get-value b) 0)
+              (error "square less than 0 -- SQUARER" (get-value b))
+              (set-value! a (sqrt b)))
+          (let ((aval (get-value a)))
+            (set-value! b (* aval aval))))
+    (define (process-forget-value)
+      (forget-value! b me)
+      (forget-value! a me)
+      (process-new-value))
+    (define (me request)
+      (cond ((eq? request 'I-have-a-value)
+             (process-new-value))
+            ((eq? request 'I-lost-my-value)
+             (process-forget-value))
+            (else
+             (error "Unknown request -- SQUARER" request))))
+    (connect a me)
+    (connect b me)
+    me)
+#+END_SRC
+
+**** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-22.html#%25_thm_3.36][Exercise 3.36.]]
+
+Do in class.
+
+**** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-22.html#%25_thm_3.37][Exercise 3.37.]]
+
+The expression-oriented constraint adder is defined thus in the book:
+
+#+NAME: constraint-adder-expression
+#+BEGIN_SRC scheme
+  (define (c+ x y)
+    (let ((z (make-connector)))
+      (adder x y z)
+      z))
+#+END_SRC
+
+We define similar procedures for subtraction, multiplication, division, and
+constant values:
+
+#+BEGIN_SRC scheme :tangle ex-3-37.scm
+  (include "constraint-common")
+
+  <<constraint-adder-expression>>
+
+  ;;; Constant
+  (define (cv x)
+    (let ((z (make-connector)))
+      (constant x z)
+      z))
+
+  ;;; Subtraction
+  (define (c- x y)
+    ;; $x - y = z \Rightarrow x = y + z$ to avoid having to introduce an
+    ;; additional multiplier and constant constraint.
+    (let ((z (make-connector)))
+      (adder y z x)
+      z))
+
+  ;;; Multiplication
+  (define (c* x y)
+    (let ((z (make-connector)))
+      (multiplier x y z)
+      z))
+
+  ;;; Division
+  (define (c/ x y)
+    ;; $x / y = z \Rightarrow x = y * z$ to avoid having to implement division as
+    ;; a primitive constraint. Pray that $y \neq 0$.
+    (let ((z (make-connector)))
+      (multiplier y z x)
+      z))
+#+END_SRC
