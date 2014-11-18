@@ -671,3 +671,455 @@ other (i.e., compare equal via ~eq?~ after the initial call).
   (test #t
         (cycle? pairs-cycle))
 #+END_SRC
+
+**** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-22.html#%25_thm_3.20][Exercise 3.20.]]
+
+Given the implementation of the primitive list functions in terms of
+dispatching, now including mutation,
+
+#+BEGIN_SRC scheme :tangle ex-3-20-cons-dispatch.scm
+  ;;; -d for dispatching.
+  (define (cons-d x y)
+    (define (set-x! v) (set! x v))
+    (define (set-y! v) (set! y v))
+    (define (dispatch m)
+      (cond ((eq? m 'car) x)
+            ((eq? m 'cdr) y)
+            ((eq? m 'set-car!) set-x!)
+            ((eq? m 'set-cdr!) set-y!)
+            (else (error "Undefined operation -- CONS" m))))
+    dispatch)
+  (define (car-d z) (z 'car))
+  (define (cdr-d z) (z 'cdr))
+  (define (set-car-d! z new-value)
+    ((z 'set-car!) new-value)
+    z)
+  (define (set-cdr-d! z new-value)
+    ((z 'set-cdr!) new-value)
+    z)
+#+END_SRC
+
+we can understand the environment diagram of the following code
+
+#+BEGIN_SRC scheme :tangle ex-3-20-test.scm
+  (use test)
+  (include "ex-3-20-cons-dispatch")
+  (define x (cons 1 2))
+  (define z (cons x x))
+  (set-car! (cdr z) 17)
+  (test 17
+        (car x))
+#+END_SRC
+
+as follows:
+
+- Every call to ~cons-d~ returns a ~dispatch~ closure which has a pointer to
+  the environment of the ~cons-d~ closure, which holds the arguments to
+  ~cons-d~, ~x~ and ~y~.
+- All messages to the ~dispatch~ closure read or write to the environment of
+  the original ~cons-d~ call, which is preserved by the link from ~dispatch~.
+- ~x~ and ~y~, the arguments to ~cons-d~, are acted upon in precisely the same
+  way as the ~car~ and ~cdr~ of a normal ~cons~ cell.
+
+
+*** 3.3.2: [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-22.html#%_sec_3.3.2][Representing Queues]]
+
+#+BEGIN_SRC scheme :tangle queue-cons.scm
+  (define (front-ptr queue) (car queue))
+  (define (rear-ptr queue) (cdr queue))
+  (define (set-front-ptr! queue item) (set-car! queue item))
+  (define (set-rear-ptr! queue item) (set-cdr! queue item))
+  (define (empty-queue? queue) (null? (front-ptr queue)))
+  (define (make-queue) (cons '() '()))
+  (define (front-queue queue)
+    (if (empty-queue? queue)
+        (error "FRONT called with an empty queue" queue)
+        (car (front-ptr queue))))
+  (define (insert-queue! queue item)
+    (let ((new-pair (cons item '())))
+      (cond ((empty-queue? queue)
+             (set-front-ptr! queue new-pair)
+             (set-rear-ptr! queue new-pair)
+             queue)
+            (else
+             (set-cdr! (rear-ptr queue) new-pair)
+             (set-rear-ptr! queue new-pair)
+             queue))))
+  (define (delete-queue! queue)
+    (cond ((empty-queue? queue)
+           (error "DELETE! called with an empty queue" queue))
+          (else
+           (set-front-ptr! queue (cdr (front-ptr queue)))
+           queue)))
+#+END_SRC
+
+**** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-22.html#%25_thm_3.21][Exercise 3.21.]]
+
+The standard Lisp printer recursively prints the contents of a list (or cons
+cell) in order. In particular, this implementation does not treat two pointers
+to the same underlying object specially. With the mutation used to implement
+the queue, ~(rear-ptr queue)~ points to the last item in the queue, while
+~(front-ptr queue)~ points to the head of the list that actually stores the
+items in the queue. Since the last item is in the queue list, it is printed
+twice, once as an element of the list and once as a lone item. (As an aside, it
+appears that the queue is keeping the last item alive longer than necessary
+through the pointer ~rear-ptr~ after the queue is empty. The implementation
+should set ~rear-ptr~ to nil (or some other small, primitive, immutable value)
+to fix this.)
+
+Since ~front-ptr~ returns a pointer to the list that represents the queue, all
+we need to do to print the queue properly is print that list:
+
+#+BEGIN_SRC scheme :tangle ex-3-21-print-queue.scm
+  (define (print-queue q)
+    (display (front-ptr q)))
+#+END_SRC
+
+**** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-22.html#%25_thm_3.22][Exercise 3.22.]]
+
+A straightforward implementation uses the same approach as implementing cons
+cells using dispatch -- the arguments to the constructor, retained by the
+~dispatch~ closure, are manipulated by subprocedures in ~dispatch~ in the same
+way as the car and cdr of the cons cell we use to implement the queue above.
+
+#+BEGIN_SRC scheme :tangle ex-3-22-queue-dispatch.scm
+  (define (make-queue-d)
+    (let ((front-ptr '())
+          (rear-ptr '()))
+      ;; Some of these procedures are defined to return a reference to the queue
+      ;; on which the procedure was invoked. For consistency, we define all these
+      ;; procedures to take `queue`.
+      (define (set-front-ptr! queue item) (set! front-ptr item))
+      (define (set-rear-ptr! queue item) (set! rear-ptr item))
+      (define (empty-queue? queue) (null? front-ptr))
+      (define (front-queue queue)
+        (if (empty-queue? queue)
+            (error "FRONT called with an empty queue" queue)
+            (car front-ptr)))
+      (define (insert-queue! queue item)
+        (let ((new-pair (cons item '())))
+          (cond ((empty-queue? queue)
+                 (set-front-ptr! queue new-pair)
+                 (set-rear-ptr! queue new-pair)
+                 queue)
+                (else
+                 (set-cdr! rear-ptr new-pair)
+                 (set-rear-ptr! queue new-pair)
+                 queue))))
+      (define (delete-queue! queue)
+        (cond ((empty-queue? queue)
+               (error "DELETE! called with an empty queue" queue))
+              (else
+               (set-front-ptr! queue (cdr front-ptr))
+               ;; If the queue becomes empty, clear `rear-ptr` to avoid
+               ;; unnecessarily retaining a reference to it.
+               (when (null? front-ptr)
+                     (set-rear-ptr! queue '()))
+               queue)))
+      (define (dispatch m)
+        (cond ((eq? m 'front-ptr) front-ptr)
+              ((eq? m 'rear-ptr) rear-ptr)
+              ((eq? m 'set-front-ptr!)
+               (lambda (item) (set-front-ptr! dispatch item)))
+              ((eq? m 'set-rear-ptr!)
+               (lambda (item) (set-rear-ptr! dispatch item)))
+              ((eq? m 'empty-queue?)
+               (empty-queue? dispatch))
+              ((eq? m 'front-queue)
+               (front-queue dispatch))
+              ((eq? m 'insert-queue!)
+               (lambda (item) (insert-queue! dispatch item)))
+              ((eq? m 'delete-queue!)
+               (delete-queue! dispatch))
+              (else
+               error "Undefined operation - QUEUE" m)))
+      dispatch))
+#+END_SRC
+
+#+BEGIN_SRC scheme :tangle ex-3-22-test.scm
+  (use test)
+  (include "ex-3-22-queue-dispatch")
+  (define q (make-queue-d))
+  ((q 'insert-queue!) 0)
+  (test 0
+        (q 'front-queue))
+  ((q 'insert-queue!) 1)
+  ((q 'insert-queue!) 2)
+  (test 2
+        (car (q 'rear-ptr)))
+  (q 'delete-queue!)
+  (test 1
+        (q 'front-queue))
+  (q 'delete-queue!)
+  (q 'delete-queue!)
+  (test #t
+        (q 'empty-queue?))
+  (test #t
+        (null? (q 'rear-ptr)))
+#+END_SRC
+
+**** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-22.html#%25_thm_3.23][Exercise 3.23.]]
+
+Represent as doubly-linked list. Will need selectors for DLL:
+
+#+BEGIN_SRC scheme :tangle ex-3-23.scm
+  (define (make-deque)
+    (let ((header (cons '() '())))
+      ;; Internal procedures on internal representation of deque.
+      (define (make-node item prev next)
+        (cons (cons item prev) next))
+      (define (front) (car header))
+      (define (rear) (cdr header))
+      (define (set-front! node) (set-car! header node))
+      (define (set-rear! node) (set-cdr! header node))
+      (define (item node) (caar node))
+      (define (prev node) (cdar node))
+      (define (next node) (cdr node))
+      (define (set-prev! this that) (set-cdr! (car this) that))
+      (define (set-next! this that) (set-cdr! this that))
+
+      ;; Exported procedures
+      (define (empty? self)
+        (eq? (front) '()))
+      (define (front-deque self)
+        (item (front)))
+      (define (rear-deque self)
+        (item (rear)))
+      (define (front-insert! self item)
+        (set-front! (make-node item '() (front))))
+      (define (rear-insert! self item)
+        (set-rear! (make-node item (rear) '())))
+      (define (front-delete! self)
+        (set-front! (next (front))))
+      (define (rear-delete! self)
+        (set-rear! (prev (rear))))
+
+      (define (dispatch m)
+        (cond ((eq? m 'empty?) (empty? header))
+              ((eq? m 'front-deque) (front-deque header))
+              ((eq? m 'rear-deque) (rear-deque header))
+              ((eq? m 'front-insert!) (front-insert! header item))
+              ((eq? m 'rear-insert!) (rear-insert! header item))
+              ((eq? m 'front-delete!) (front-delete! header))
+              ((eq? m 'rear-delete!) (rear-delete! header))
+              (else (error "Undefined operation -- DEQUE" m))))
+      dispatch))
+#+END_SRC
+
+
+*** 3.3.3: [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-22.html#%_sec_3.3.3][Representing Tables]]
+
+**** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-22.html#%25_thm_3.24][Exercise 3.24.]]
+
+#+BEGIN_SRC scheme :tangle ex-3-24.scm
+  (define (make-table same-key?)
+    (let ((tbl (cons '*table* '())))
+      ;; Internal procedure
+      (define (assoc key records)
+        (cond ((null? records) #f)
+              ((same-key? key (caar records)) (car records))
+              (else (assoc key (cdr records)))))
+      ;; Exported procedures
+      (define (lookup key)
+        (let ((record (assoc key (cdr tbl))))
+          (if record
+              (cdr record)
+              #f)))
+      (define (insert! key value)
+        (let ((record (assoc key (cdr tbl))))
+          (if record
+              (set! (cdr record) value)
+              (set! (cdr tbl) (cons (cons key value) (cdr tbl))))))
+      ;; Dispatch
+      (define (dispatch msg)
+        (cond ((equal? msg 'lookup) lookup)
+              ((equal? msg 'insert!) insert!)
+              (else (error "TABLE -- unknown message")))))
+      dispatch)
+#+END_SRC
+
+#+BEGIN_SRC scheme :tangle ex-3-24-test.scm
+  (include "ex-3-24")
+  (use test)
+
+  (define tbl-exact (make-table (lambda (x y) (equal? x y))))
+  (test #f
+        ((tbl-exact 'lookup) 'foo))
+
+  ((tbl-exact 'insert!) 'a 1)
+  ((tbl-exact 'insert!) 'b 2)
+  ((tbl-exact 'insert!) 'c 3)
+  (test 1
+        ((tbl-exact 'lookup) 'a))
+  (test 2
+        ((tbl-exact 'lookup) 'b))
+  (test 3
+        ((tbl-exact 'lookup) 'c))
+
+  (define tbl-inexact (make-table (lambda (x y)
+                                    (< (abs (- x y)) .1))))
+  (test #f
+        ((tbl-inexact 'lookup) 'foo))
+  ((tbl-inexact 'insert!) 1.0 'x)
+  (test 'x
+        ((tbl-inexact 'lookup) 1.05))
+#+END_SRC
+
+**** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-22.html#%25_thm_3.25][Exercise 3.25.]]
+
+#+BEGIN_SRC scheme :tangle ex-3-25.scm
+  (define (make-table same-key?)
+    (let ((tbl (cons '*table* '())))
+      (define (assoc key records)
+        (cond ((null? records) #f)
+              ((same-key? key (caar records)) (car records))
+              (else (assoc key (cdr records)))))
+      (define (lookup keys)
+        (let recur ((elems (cdr tbl))
+                    (keys keys))
+          (let ((record (assoc (car keys) elems)))
+            (if record
+                (cond
+                 ;; If the current key maps to a list, there must be more keys to
+                 ;; continue the search.
+                 ((and (pair? (cdr keys)) (pair? (cdr record)))
+                  (recur (cdr record) (cdr keys)))
+                 ;; Ensure that e.g. `(lookup '(a b))` does not succeed if
+                 ;; `(lookup '(a))` does not return a list.
+                 ((null? (cdr keys))
+                  (cdr record))
+                 (else #f))
+                #f))))
+      (define (insert! keys value)
+        (when (null? keys)
+              (error "INSERT! -- keys cannot be empty"))
+        (let recur ((header tbl)
+                    (keys keys))
+          (define (recursively-insert record)
+            (if (null? (cdr keys))
+                (set! (cdr record) value)
+                (begin
+                  ;; Obliterate any non-list associated with the current key,
+                  ;; since it will need to be replaced.
+                  (when (not (pair? (cdr record)))
+                        (set! (cdr record) '()))
+                  (recur record (cdr keys)))))
+          (let ((record (assoc (car keys) (cdr header))))
+            (if (pair? record)
+                (recursively-insert record)
+                (let ((inserted (if record
+                                    record
+                                    (cons (car keys) '()))))
+                  (when (not record)
+                        (set! (cdr header) (cons inserted (cdr header))))
+                  (recursively-insert inserted))))))
+      (define (dispatch msg)
+        (cond ((equal? msg 'lookup) lookup)
+              ((equal? msg 'insert!) insert!)
+              (else (error "TABLE -- unknown message"))))
+      dispatch))
+#+END_SRC
+
+#+BEGIN_SRC scheme :tangle ex-3-25-test.scm
+  (include "ex-3-25")
+  (use test)
+
+  (define (lookup tbl keys)
+    ((tbl 'lookup) keys))
+  (define (insert! tbl keys value)
+    ((tbl 'insert!) keys value))
+  (define tbl (make-table equal?))
+  (test #f
+        (lookup tbl '(a)))
+  (test #f
+        (lookup tbl '(0 1 2)))
+
+  (insert! tbl '(a) 'foo)
+  (insert! tbl '(0 1 2) 'bar)
+  (test 'foo
+        (lookup tbl '(a)))
+  (test #f
+        (lookup tbl '(a b)))
+  (test 'bar
+        (lookup tbl '(0 1 2)))
+  (test #t
+        (pair? (lookup tbl '(0))))
+
+  (insert! tbl '(a b) 'baz)
+  (test 'baz
+        (lookup tbl '(a b)))
+  (test #t
+        (pair? (lookup tbl '(a))))
+#+END_SRC
+
+**** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-22.html#%25_thm_3.26][Exercise 3.26.]]
+
+#+BEGIN_SRC scheme :tangle ex-3-26.scm
+  (define (make-table cmp)
+    (let ((tbl (cons '*table* '())))
+      ;; Accessor functions
+      (define (key node) (caar node))
+      (define (value node) (cdar node))
+      (define (left node) (cadr node))
+      (define (right node) (cddr node))
+      (define (set-value! node v) (set-cdr! (car node) v))
+      (define (set-left! node n) (set-car! (cdr node) n))
+      (define (set-right! node n) (set-cdr! (cdr node) n))
+      (define (make-node k v) (cons #|payload|#  (cons k v)
+                                    #|children|# (cons '() '())))
+
+      (define (lookup k)
+        (let recur ((node (cdr tbl)))
+          (cond ((null? node) #f)
+                ((< (cmp k (key node)) 0) (recur (left node)))
+                ((> (cmp k (key node)) 0) (recur (right node)))
+                (else (value node)))))
+      (define (insert! k v)
+        (set! (cdr tbl)
+              (let recur ((node (cdr tbl)))
+                (cond ((null? node) (make-node k v))
+                      ((< (cmp k (key node)) 0)
+                       (set-left! node (recur (left node)))
+                       node)
+                      ((> (cmp k (key node)) 0)
+                       (set-right! node (recur (right node)))
+                       node)
+                      (else (set-value! node v)
+                            node)))))
+      (define (dispatch msg)
+        (cond ((equal? msg 'lookup) lookup)
+              ((equal? msg 'insert!) insert!)
+              (else (error "TABLE -- unknown message"))))
+      dispatch))
+#+END_SRC
+
+#+BEGIN_SRC scheme :tangle ex-3-26-test.scm
+  (include "ex-3-26")
+  (use test)
+
+  (define (lookup tbl key)
+    ((tbl 'lookup) key))
+  (define (insert! tbl key value)
+    ((tbl 'insert!) key value))
+  (define tbl (make-table (lambda (x y)
+                            (cond ((< x y) -1)
+                                  ((> x y) 1)
+                                  (else 0)))))
+
+  (test #f
+        (lookup tbl 0))
+  (insert! tbl 0 'foo)
+  (test 'foo
+        (lookup tbl 0))
+  (test #f
+        (lookup tbl 1))
+  (insert! tbl -3 'bar)
+  (test 'foo
+        (lookup tbl 0))
+  (test 'bar
+        (lookup tbl -3))
+#+END_SRC
+
+**** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-22.html#%25_thm_3.27][Exercise 3.27.]]
+
+Ehh...
