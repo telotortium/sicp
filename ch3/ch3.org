@@ -1598,3 +1598,124 @@ constant values:
       (multiplier y z x)
       z))
 #+END_SRC
+
+** 3.4: Concurrency: Time Is of the Essence
+
+*** 3.4.1: The Nature of Time in Concurrent Systems
+
+Complexity of concurrent systems comes from:
+
+- Dependence of ordering of events in a system with mutation.
+- Reduced ability to control ordering of events, and difficulty in mentally
+  taking this into account.
+
+Concurrency models:
+
+- No two operations on any shared state variable can occur at the same
+  time. Too strict for most uses (for example, implies that only one
+  transaction can occur at a time in a bank system).
+- System must proceed as if events had been executed sequentially in /some/
+  order (not guaranteed what order is used).
+  - There can still be more than one "correct" answer -- may need to restrict
+    some parts of the program further depending on requirements.
+
+**** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-23.html#%25_thm_3.38][Exercise 3.38.]]
+
+a. There are 6 combinations of Peter (A), Paul (B), and Mary (C):
+
+   | Order     | Final amount |
+   |-----------+--------------|
+   | (A, B, C) |           45 |
+   | (A, C, B) |           35 |
+   | (B, A, C) |           45 |
+   | (B, C, A) |           50 |
+   | (C, A, B) |           40 |
+   | (C, B, A) |           40 |
+
+b. For each transaction, there are 3 steps:
+
+   - Read the current balance from the shared account.
+   - Modify the balance of the individual account.
+   - Write the new balance to the shared account.
+
+   However, the second step doesn't modify a shared variable, so the relevant
+   combinations for each transaction can be represented by two operations (Xr
+   for read and Xw for write for person X). The six combinations where each
+   account is read and then immediately written by the same person is
+   represented above.
+
+   Here are some things to notice about concurrency in this scenario:
+
+   - The actions of A and B don't depend on the current balance, only those
+     of C.
+   - Because of this, it only matters when C reads relative to the times that A
+     or B read, for which there are 4 distinct possibilities.
+     - If C reads before or after both A and B write, the final
+       balance will be the same no matter what order A and B write.
+
+   Here is the table for completeness. Note that no final balances appear here
+   that did not appear above.
+
+   | Order        | Final amount |
+   |--------------+--------------|
+   | (Aw, Bw, Cr) |           45 |
+   | (Bw, Aw, Cr) |           45 |
+   | (Cr, Aw, Bw) |           40 |
+   | (Cr, Bw, Aw) |           40 |
+   | (Aw, Cr, Bw) |           35 |
+   | (Bw, Cr, Aw) |           50 |
+
+*** 3.4.2: Mechanisms for Controlling Concurrency
+
+There are too many possible orderings of concurrent processes to ensure a
+single answer or to analyze in many cases.
+
+Serializer:
+- Ensures that only one procedure under the control of the serializer can be
+  executed at a time.
+- Example: In the below, ~foo~ and ~bar~ are guaranteed to not execute at the
+  same time (i.e., their execution is /serialized/).
+
+  #+BEGIN_SRC scheme
+    (define s (make-serializer))
+    (parallel-execute (s (foo))
+                      (s (bar)))
+  #+END_SRC
+
+- Implemented in terms of /mutexes/.
+- Mutex implemented as a spin lock using a test-and-set instruction.
+
+Here's an implementation of the threading tools ~parallel-execute~ and
+~make-serializer~ using SRFI-18 mutexes and threads:
+
+#+BEGIN_SRC scheme :tangle concurrency.scm
+  (use srfi-18)
+
+  (define (make-serializer)
+    (let ((mutex (make-mutex)))
+      (lambda (p)
+        (define (serialized-p . args)
+          (mutex-lock! mutex)
+          (let ((val (apply p args)))
+            (mutex-unlock! mutex)
+            val))
+        serialized-p)))
+
+  (define (parallel-execute . fs)
+    (let ((ts (map make-thread fs)))
+      (for-each thread-start! ts)
+      (for-each thread-join! ts)
+      '()))
+#+END_SRC
+
+**** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-23.html#%25_thm_3.39][Exercise 3.39.]]
+**** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-23.html#%25_thm_3.40][Exercise 3.40.]]
+**** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-23.html#%25_thm_3.41][Exercise 3.41.]]
+**** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-23.html#%25_thm_3.42][Exercise 3.42.]]
+**** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-23.html#%25_thm_3.43][Exercise 3.43.]]
+**** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-23.html#%25_thm_3.44][Exercise 3.44.]]
+**** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-23.html#%25_thm_3.45][Exercise 3.45.]]
+**** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-23.html#%25_thm_3.46][Exercise 3.46.]]
+**** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-23.html#%25_thm_3.47][Exercise 3.47.]]
+**** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-23.html#%25_thm_3.48][Exercise 3.48.]]
+**** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-23.html#%25_thm_3.49][Exercise 3.49.]]
