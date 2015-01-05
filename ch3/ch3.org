@@ -784,3 +784,365 @@ Here's an implementation of the threading tools ~parallel-execute~ and
 **** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-23.html#%25_thm_3.47][Exercise 3.47.]]
 **** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-23.html#%25_thm_3.48][Exercise 3.48.]]
 **** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-23.html#%25_thm_3.49][Exercise 3.49.]]
+
+** 3.5: Streams
+
+Basic stream procedures used throughout the section.
+
+#+BEGIN_SRC scheme :tangle stream.scm
+  <<stream-primitives>>
+  <<stream-fold>>
+
+  (define (stream-ref s n)
+    (if (= n 0)
+        (stream-car s)
+        (stream-ref (stream-cdr s) (- n 1))))
+  <<stream-map-poly>>
+  (define (stream-for-each proc s)
+    (if (stream-null? s)
+        'done
+        (begin (proc (stream-car s))
+               (stream-for-each proc (stream-cdr s)))))
+  (define (stream-filter proc s)
+    (cond ((stream-null? s) the-empty-stream)
+          ((proc (stream-car s))
+           (cons-stream (stream-car s)
+                        (stream-filter proc (stream-cdr s))))
+          (else
+           (stream-filter proc (stream-cdr s)))))
+  (define (display-line x)
+    (newline)
+    (display x))
+  (define (display-stream s)
+    (stream-for-each display-line s))
+  (define (stream-enumerate-interval low high)
+    (if (> low high)
+        the-empty-stream
+        (cons-stream
+         low
+         (stream-enumerate-interval (+ low 1) high))))
+#+END_SRC
+
+We start with the primitive procedures on the stream data type:
+
+#+NAME: stream-primitives
+#+BEGIN_SRC scheme
+  (define the-empty-stream 'the-empty-stream)
+  (define (stream-null? s) (eq? s the-empty-stream))
+  (define-syntax cons-stream
+    (syntax-rules ()
+      ((cons-stream a b)
+       (cons a (delay b)))))
+  (define (stream-car stream) (car stream))
+  (define (stream-cdr stream) (force (cdr stream)))
+#+END_SRC
+
+Another very useful and generally-applicable stream function is ~fold~. In
+fact, both ~map~ and ~filter~ can be implemented in terms of ~fold~:
+
+#+NAME: stream-fold
+#+BEGIN_SRC scheme
+  (define (stream-fold kons knil . streams)
+    (if (or (map stream-null? streams))
+        knil
+        (cons-stream (apply kons (append (map stream-car streams)
+                                         knil))
+                     (apply stream-fold kons knil (map stream-cdr streams)))))
+#+END_SRC
+
+*** 3.5.1: Streams Are Delayed Lists
+**** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-24.html#%25_thm_3.50][Exercise 3.50.]]
+
+The ~apply~ procedure can be used to call a function with arguments drawn from
+a list, and we can iterate along the argument streams in turn (which are all
+assumed to be of the same length):
+
+#+NAME: stream-map-poly
+#+BEGIN_SRC scheme :tangle ex-3-50.scm
+  (define (stream-map proc . argstreams)
+    (if (stream-null? (car argstreams))
+        the-empty-stream
+        (cons-stream
+         (apply proc (map stream-car argstreams))
+         (apply stream-map
+                (cons proc (map stream-cdr argstreams))))))
+#+END_SRC
+
+#+BEGIN_SRC scheme :tangle ex-3-50-test.scm
+  (include "stream")
+  (use test)
+#+END_SRC
+
+**** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-24.html#%25_thm_3.51][Exercise 3.51.]]
+
+#+BEGIN_SRC scheme :tangle ex-3-51-test.scm
+  (include "stream")
+  (define (show x) (display-line x) x)
+  (define x (stream-map show (stream-enumerate-interval 0 10)))
+  (stream-ref x 5)
+  (stream-ref x 7)
+#+END_SRC
+
+**** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-24.html#%25_thm_3.52][Exercise 3.52.]]
+
+We have these definitions, which in particular include a mutating procedure
+~accum~:
+
+#+BEGIN_SRC scheme :tangle ex-3-52-test.scm
+  (include "stream")
+  (use test)
+  (define sum 0)
+  (define (accum x)
+    (set! sum (+ x sum))
+    sum)
+  (define seq (stream-map accum (stream-enumerate-interval 1 20)))
+  (define y (stream-filter even? seq))
+  (define z (stream-filter (lambda (x) (= (remainder x 5) 0))
+                           seq))
+
+  <<ex-3-52-eval-y>>
+  <<ex-3-52-eval-z>>
+#+END_SRC
+
+First, we obtain the 7^{th} element of ~y~, which is the 14^{th} element of ~seq~,
+obtaining the expected result of \( \sum_{i=1}^{14} i = 136 \):
+#+NAME: ex-3-52-eval-y
+#+BEGIN_SRC scheme
+  (stream-ref y 7)
+  (test 136
+        sum)
+#+END_SRC
+
+Next, we look at ~z~, which should contain only those entries of ~seq~
+divisible by ~5~. Since \( \sum_{i=1}^{n} i = \frac{n(n + 1)}{2} \), we expect
+that both every \(i\)^{th} entry and \(i-1\)^{th} entry of
+~(stream-enumerate-interval 1 20)~ should produce a corresponding entry in ~z~,
+and this is what we indeed observe, finally obtaining ~(= sum 210)~.
+
+#+NAME: ex-3-52-eval-y
+#+BEGIN_SRC scheme
+  (display-stream z)
+  (test 210
+        sum)
+#+END_SRC
+
+However, if ~delay~ did not cache its results, the mutation in ~accum~ would
+cause a different result to be obtained for ~z~ (but not for ~y~, since it was
+the first evaluated). The execution of ~y~ would have gone through the first 14
+integers, as before, giving ~(= sum 136)~. The values of ~seq~ when ~z~ was
+executed would therefore all be increased by 136, producing a different stream
+for ~z~ and a final sum of \(136 + 210 = 346\).
+
+
+*** 3.5.2: Infinite Streams
+
+The book defines several miscellaneous procedures that are useful for exercises
+in this section:
+
+#+BEGIN_SRC scheme :tangle stream-util.scm
+  (include "stream")
+
+  (define (integers-starting-from n)
+    (cons-stream n (integers-starting-from (+ n 1))))
+
+  (define integers (integers-starting-from 1))
+
+  (define (add-streams s1 s2)
+    (stream-map + s1 s2))
+  (define (scale-stream stream factor)
+    (stream-map (lambda (x) (* x factor)) stream))
+
+  <<stream-partial-sums>>
+#+END_SRC
+
+**** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-24.html#%25_thm_3.53][Exercise 3.53.]]
+
+This produces a stream consisting of the powers of 2: ~1 2 4 8 16 ...~.
+
+**** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-24.html#%25_thm_3.54][Exercise 3.54.]]
+
+#+BEGIN_SRC scheme
+
+#+END_SRC
+
+**** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-24.html#%25_thm_3.55][Exercise 3.55.]]
+
+In order to calculate the partial sum corresponding to an element in the input
+stream, you need two pieces of information: the partial sum of the elements
+before this one and the element itself. This is most easily done using
+recursion. The recursive function call tracks in its parameters the partial sum
+of the preceding elements and the start of the remaining input stream and
+returns the entire output stream.
+
+#+NAME: stream-partial-sums
+#+BEGIN_SRC scheme
+  (include "stream")
+  (define (partial-sums s)
+    (let rec ((partial-sum 0)
+              (s s))
+      (if (stream-null? s)
+          the-empty-stream
+          (let ((new-sum (+ partial-sum (stream-car s))))
+            (cons-stream new-sum
+                         (rec new-sum (stream-cdr s)))))))
+#+END_SRC
+
+#+BEGIN_SRC scheme :tangle ex-3-55-test.scm
+  (use test)
+  (include "stream-util")
+
+  (test 15
+        (stream-ref (partial-sums integers) 4))
+#+END_SRC
+
+**** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-24.html#%25_thm_3.56][Exercise 3.56.]]
+
+The ~merge~ procedure combines two streams ordered in ascending order,
+eliminating repetitions:
+
+#+NAME: stream-merge
+#+BEGIN_SRC scheme
+  (define (merge s1 s2)
+    (cond ((stream-null? s1) s2)
+          ((stream-null? s2) s1)
+          (else
+           (let ((s1car (stream-car s1))
+                 (s2car (stream-car s2)))
+             (cond ((< s1car s2car)
+                    (cons-stream s1car (merge (stream-cdr s1) s2)))
+                   ((> s1car s2car)
+                    (cons-stream s2car (merge s1 (stream-cdr s2))))
+                   (else
+                    (cons-stream s1car
+                                 (merge (stream-cdr s1)
+                                        (stream-cdr s2)))))))))
+#+END_SRC
+
+Given this, we can create ~S~, the list of integers with no prime factors but
+2, 3, and 5:
+
+#+BEGIN_SRC scheme :tangle ex-3-56.scm
+  (include "stream")
+  (include "stream-util")
+  <<stream-merge>>
+
+  (define S (cons-stream 1 (merge (scale-stream S 2)
+                                  (merge (scale-stream S 3)
+                                         (scale-stream S 5)))))
+#+END_SRC
+
+**** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-24.html#%25_thm_3.57][Exercise 3.57.]]
+**** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-24.html#%25_thm_3.58][Exercise 3.58.]]
+**** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-24.html#%25_thm_3.59][Exercise 3.59.]]
+**** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-24.html#%25_thm_3.60][Exercise 3.60.]]
+**** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-24.html#%25_thm_3.61][Exercise 3.61.]]
+**** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-24.html#%25_thm_3.62][Exercise 3.62.]]
+
+*** 3.5.3: Exploiting the Stream Paradigm
+
+**** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-24.html#%25_thm_3.63][Exercise 3.63.]]
+
+*TODO*: Explain better.
+
+First, note that both procedures are inefficient without memoization, because
+~guesses~ has to be evaluated always in Alyssa's version as well. However, with
+memoization, the ~guesses~ variable is bound in the environment of
+~sqrt-stream~, so the delayed cdr of the stream returned by ~cons-stream~ is
+memoized after the first call.
+
+**** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-24.html#%25_thm_3.64][Exercise 3.64.]]
+
+A straightforward recursive procedure:
+
+#+BEGIN_SRC scheme :tangle ex-3-64.scm
+  (include "stream")
+
+  (define (stream-limit stream tol)
+    (let rec ((stream stream)
+              (previous +inf))  ; +INF is IEEE-754 positive infinity
+      (if (stream-null? stream)
+          (error "STREAM-LIMIT - stream exhausted without tolerance achieved")
+          (let ((current (stream-car stream))
+                (rest (stream-cdr stream)))
+            (if (< (abs (- previous current)) tol)
+                current
+                (rec rest current))))))
+
+#+END_SRC
+
+**** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-24.html#%25_thm_3.65][Exercise 3.65.]]
+
+This is the original sequence:
+
+#+NAME: ln2-stream
+#+BEGIN_SRC scheme
+  (include "stream")
+  (include "stream-util")
+
+  (define (ln2-summands)
+    (cons-stream 1.0
+                 (stream-map (lambda (k)
+                               (* (if (even? k) -1.0 1.0)
+                                  (/ 1.0 k)))
+                             (integers-starting-from 2))))
+  (define (ln2-stream)
+    (partial-sums (ln2-summands)))
+#+END_SRC
+
+In order to accelerate the \(\ln{2}\) sequence, we use the Euler transform from
+this subsection:
+
+#+NAME: stream-euler-transform
+#+BEGIN_SRC scheme
+  (define (make-tableau transform s)
+    (cons-stream s
+                 (make-tableau transform
+                               (transform s))))
+
+  (define (accelerated-sequence transform s)
+    (stream-map stream-car
+                (make-tableau transform s)))
+
+  (define (square x) (* x x))
+  (define (euler-transform s)
+    (let ((s0 (stream-ref s 0))           ; S_{n-1}
+          (s1 (stream-ref s 1))           ; S_{n}
+          (s2 (stream-ref s 2)))          ; S_{n+1}
+      (cons-stream (- s2 (/ (square (- s2 s1))
+                            (+ s0 (* -2 s1) s2)))
+                   (euler-transform (stream-cdr s)))))
+#+END_SRC
+
+We put the sequence and the transform in the same file for ease of testing:
+
+#+BEGIN_SRC scheme :tangle ex-3-65.scm
+  <<stream-euler-transform>>
+  <<ln2-stream>>
+#+END_SRC
+
+With that, we can calculate the convergence of the original sequence as well as
+its acceleration one and two times. As expected, the more accelerated sequences
+converge much faster---while the original sequence has not converged even after
+hundreds of iterations, it only takes 10 iterations for the first accelerated
+sequence to converge to the limits of floating-point accuracy, and 5 iterations
+for the second accelerated sequence.
+
+#+BEGIN_SRC scheme :tangle ex-3-65-test.scm
+  (use test)
+  (include "ex-3-65")
+
+  (define orig (ln2-stream))
+  (define acc1 (accelerated-sequence euler-transform orig))
+  (define acc2 (accelerated-sequence euler-transform acc1))
+#+END_SRC
+
+**** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-24.html#%25_thm_3.66][Exercise 3.66.]]
+**** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-24.html#%25_thm_3.67][Exercise 3.67.]]
+**** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-24.html#%25_thm_3.68][Exercise 3.68.]]
+**** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-24.html#%25_thm_3.69][Exercise 3.69.]]
+**** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-24.html#%25_thm_3.70][Exercise 3.70.]]
+**** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-24.html#%25_thm_3.71][Exercise 3.71.]]
+**** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-24.html#%25_thm_3.72][Exercise 3.72.]]
+
+*** 3.5.4: Streams and Delayed Evaluation
+*** 3.5.5: Modularity of Functional Programs and Modularity of Objects
