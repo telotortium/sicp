@@ -1,0 +1,621 @@
+#+TITLE: Structure and Interpretation of Computer Programs (SICP)
+#+AUTHOR: Robert Irelan
+#+EMAIL: rirelan@gmail.com
+#+OPTIONS: author:t email:t f:t
+#+PROPERTY: header-args :comments link :noweb no-export
+#+PROPERTY: header-args:scheme :shebang #!/usr/bin/env chicken-scheme
+
+* TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-25.html#%_chap_4][Chapter 4: Metalinguistic Abstraction]] [%]
+
+** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-26.html#%_sec_4.1][4.1: The Metacircular Evaluator]] [14%]
+
+*** Code
+    :PROPERTIES:
+    :VISIBILITY: folded
+    :END:
+
+For convenience, put the entire metacircular interpreter here:
+
+#+BEGIN_SRC scheme :tangle interp-sec-4-1
+  <<primitive-expressions>>
+  <<derived-expressions>>
+  <<eval-sec-4-1>>
+#+END_SRC
+
+- Main body of ~eval~:
+
+  #+NAME: eval-sec-4-1
+  #+BEGIN_SRC scheme
+    <<eval-sec-4-1-aux>>
+    (define (eval-4-1 exp env)
+      (cond ((self-evaluating? exp) exp)
+            ((variable? exp) (lookup-variable-value exp env))
+            ((quoted? exp) (text-of-quotation exp))
+            ((assignment? exp) (eval-assignment exp env))
+            ((definition? exp) (eval-definition exp env))
+            ((if? exp) (eval-if exp env))
+            ((lambda? exp)
+             (make-procedure (lambda-parameters exp)
+                             (lambda-body exp)
+                             env))
+            ((begin? exp)
+             (eval-sequence (begin-actions exp) env))
+            ((cond? exp) (eval-4-1 (cond->if exp) env))
+            ((application? exp)
+             (apply (eval-4-1 (operator exp) env)
+                    (list-of-values (operands exp) env)))
+            (else
+             (error "Unknown expression type -- EVAL" exp))))
+  #+END_SRC
+
+- Auxiliary procedures:
+
+  #+NAME: eval-sec-4-1-aux
+  #+BEGIN_SRC scheme
+    (define (apply-4-1 procedure arguments)
+      (cond ((primitive-procedure? procedure)
+             (apply-primitive-procedure procedure arguments))
+            ((compound-procedure? procedure)
+             (eval-sequence
+              (procedure-body procedure)
+              (extend-environment
+               (procedure-parameters procedure)
+               arguments
+               (procedure-environment procedure))))
+            (else
+             (error
+              "Unknown procedure type -- APPLY" procedure))))
+
+    (define (list-of-values exps env)
+      (if (no-operands? exps)
+          '()
+          (cons (eval-4-1 (first-operand exps) env)
+                (list-of-values (rest-operands exps) env))))
+
+    (define (eval-if exp env)
+      (if (true? (eval-4-1 (if-predicate exp) env))
+          (eval-4-1 (if-consequent exp) env)
+          (eval-4-1 (if-alternative exp) env)))
+
+    (define (eval-sequence exps env)
+      (cond ((last-exp? exps) (eval-4-1 (first-exp exps) env))
+            (else (eval-4-1 (first-exp exps) env)
+                  (eval-sequence (rest-exps exps) env))))
+
+    (define (eval-assignment exp env)
+      (set-variable-value! (assignment-variable exp)
+                           (eval-4-1 (assignment-value exp) env)
+                           env)
+      'ok)
+
+    (define (eval-definition exp env)
+      (define-variable! (definition-variable exp)
+        (eval-4-1 (definition-value exp) env)
+        env)
+      'ok)
+  #+END_SRC
+
+*** DONE [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-26.html#%_sec_4.1.1][4.1.1: The Core of the Evaluator]] [2/2]
+**** DONE Read SICP 4.1.1
+     SCHEDULED: <2015-01-10 Sat>
+     CLOCK: [2015-01-10 Sat 12:53]--[2015-01-10 Sat 13:04] =>  0:11
+     :PROPERTIES:
+     :Effort:   0:15
+     :END:
+**** DONE [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-26.html#%_thm_4.1][Exercise 4.1]]
+     SCHEDULED: <2015-01-10 Sat>
+     CLOCK: [2015-01-10 Sat 16:48]--[2015-01-10 Sat 17:23] =>  0:35
+
+In the original version of the ~list-of-values~ procedure (shown here),
+
+#+BEGIN_SRC scheme
+(define (list-of-values exps env)
+(if (no-operands? exps)
+    '()
+    (cons (eval-4-1 (first-operand exps) env)
+          (list-of-values (rest-operands exps) env))))
+#+END_SRC
+
+whether the first or the rest of the operands of the list is evaluated
+first depends on the evaluation order of the underlying
+Lisp. Specifically, if the Lisp evaluates from left to right,
+~first-operand~ will be called before ~rest-operands~; if the Lisp
+evaluates from right to left, ~rest-operands~ is instead called first,
+producing a right-to-left evaluating version of ~list-of-values~.
+
+To guarantee the order of execution, one can take advantage of the fact
+that the ~begin~ form is guaranteed to evaluate its arguments in order to
+write both an explicitly left-to-right version
+
+#+BEGIN_SRC scheme :tangle ex-4-1-ltr.scm
+(define (list-of-values exps env)
+(if (no-operands? exps)
+    '()
+    (begin
+      ;; First evaluate the leftmost expression, then the rest of the
+      ;; expression on the right.
+      (define first (eval-4-1 (first-operand exps) env))
+      (define rest (list-of-values (rest-operands exps) env))
+      (cons first rest))))
+#+END_SRC
+
+and a right-to-left version:
+
+#+BEGIN_SRC scheme :tangle ex-4-1-rtl.scm
+(define (list-of-values exps env)
+(if (no-operands? exps)
+    '()
+    (begin
+      ;; First evaluate the expressions on the right, then the leftmost
+      ;; expression.
+      (define rest (list-of-values (rest-operands exps) env))
+      (define first (eval-4-1 (first-operand exps) env))
+      (cons first rest))))
+#+END_SRC
+
+Test to confirm:
+
+#+BEGIN_SRC scheme :tangle ex-4-1-test.scm
+  (include "interp-sec-4-1")
+
+  ;; Override EVAL for ease of testing
+  (define *test-list* '())
+  (define eval-4-1
+    (lambda (expr env)
+      (set! *test-list* (append *test-list* (list expr)))
+      (newline)))
+  (define input-list '(0 1 2 3 4 5))
+
+  (include "ex-4-1-ltr")
+  (set! *test-list* '())
+  (list-of-values input-list '())
+  (display *test-list*)
+  ; (0 1 2 3 4 5)
+
+  (include "ex-4-1-rtl")
+  (set! *test-list* '())
+  (list-of-values input-list '())
+  (display *test-list*)
+  ; (5 4 3 2 1 0)
+
+#+END_SRC
+
+     :PROPERTIES:
+     :Effort:   0:30
+     :END:
+*** NEXT [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-26.html#%_sec_4.1.2][4.1.2: Representing Expressions]] [2/10]
+**** Code
+     :PROPERTIES:
+     :VISIBILITY: folded
+     :END:
+
+Here's the code for the basic constructs of the interpreter, as defined in
+the text:
+
+- Primitive expressions:
+
+#+NAME: primitive-expressions
+#+BEGIN_SRC scheme
+<<self-evaluating>>
+<<variables>>
+<<quotations>>
+<<assignments>>
+<<definitions>>
+<<lambda-expressions>>
+<<conditionals>>
+<<sequences>>
+<<procedure-application>>
+#+END_SRC
+
+  - Self-evaluating items:
+
+  #+NAME: self-evaluating
+  #+BEGIN_SRC scheme
+    (define (self-evaluating? exp)
+      (cond ((number? exp) true)
+            ((string? exp) true)
+            (else false)))
+  #+END_SRC
+
+  - Variables:
+
+  #+NAME: variables
+  #+BEGIN_SRC scheme
+    (define (variable? exp) (symbol? exp))
+  #+END_SRC
+
+  - Quotations:
+
+  #+NAME: quotations
+  #+BEGIN_SRC scheme
+    (define (quoted? exp)
+      (tagged-list? exp 'quote))
+
+    (define (text-of-quotation exp) (cadr exp))
+
+    (define (tagged-list? exp tag)
+      (if (pair? exp)
+          (eq? (car exp) tag)
+          false))
+
+  #+END_SRC
+
+  - Assignments:
+
+  #+NAME: assignments
+  #+BEGIN_SRC scheme
+    (define (assignment? exp)
+      (tagged-list? exp 'set!))
+    (define (assignment-variable exp) (cadr exp))
+    (define (assignment-value exp) (caddr exp))
+  #+END_SRC
+
+  - Definitions:
+
+  #+NAME: definitions
+  #+BEGIN_SRC scheme
+    (define (definition? exp)
+      (tagged-list? exp 'define))
+    (define (definition-variable exp)
+      (if (symbol? (cadr exp))
+          (cadr exp)
+          (caadr exp)))
+    (define (definition-value exp)
+      (if (symbol? (cadr exp))
+          (caddr exp)
+          (make-lambda (cdadr exp)   ; formal parameters
+                       (cddr exp)))) ; body
+  #+END_SRC
+
+  - Lambda expressions:
+
+  #+NAME: lambda-expressions
+  #+BEGIN_SRC scheme
+    (define (lambda? exp) (tagged-list? exp 'lambda))
+    (define (lambda-parameters exp) (cadr exp))
+    (define (lambda-body exp) (cddr exp))
+
+    (define (make-lambda parameters body)
+      (cons 'lambda (cons parameters body)))
+
+  #+END_SRC
+
+  - Conditionals:
+
+  #+NAME: conditionals
+  #+BEGIN_SRC scheme
+    (define (if? exp) (tagged-list? exp 'if))
+    (define (if-predicate exp) (cadr exp))
+    (define (if-consequent exp) (caddr exp))
+    (define (if-alternative exp)
+      (if (not (null? (cdddr exp)))
+          (cadddr exp)
+          'false))
+
+    (define (make-if predicate consequent alternative)
+      (list 'if predicate consequent alternative))
+  #+END_SRC
+
+  - Sequences:
+
+  #+NAME: sequences
+  #+BEGIN_SRC scheme
+    (define (begin? exp) (tagged-list? exp 'begin))
+    (define (begin-actions exp) (cdr exp))
+    (define (last-exp? seq) (null? (cdr seq)))
+    (define (first-exp seq) (car seq))
+    (define (rest-exps seq) (cdr seq))
+
+    (define (sequence->exp seq)
+      (cond ((null? seq) seq)
+            ((last-exp? seq) (first-exp seq))
+            (else (make-begin seq))))
+    (define (make-begin seq) (cons 'begin seq))
+  #+END_SRC
+
+  - Procedure application:
+
+  #+NAME: procedure-application
+  #+BEGIN_SRC scheme
+    (define (application? exp) (pair? exp))
+    (define (operator exp) (car exp))
+    (define (operands exp) (cdr exp))
+    (define (no-operands? ops) (null? ops))
+    (define (first-operand ops) (car ops))
+    (define (rest-operands ops) (cdr ops))
+  #+END_SRC
+
+- Derived expressions:
+
+#+NAME: derived-expressions
+#+BEGIN_SRC scheme
+<<derived-expressions-cond>>
+<<derived-expressions-let>>
+#+END_SRC
+
+  - ~cond~:
+
+  #+NAME: derived-expressions-cond
+  #+BEGIN_SRC scheme
+    (define (cond? exp) (tagged-list? exp 'cond))
+    (define (cond-clauses exp) (cdr exp))
+    (define (cond-else-clause? clause)
+      (eq? (cond-predicate clause) 'else))
+    (define (cond-predicate clause) (car clause))
+    (define (cond-actions clause) (cdr clause))
+    (define (cond->if exp)
+      (expand-clauses (cond-clauses exp)))
+
+    (define (expand-clauses clauses)
+      (if (null? clauses)
+          'false                          ; no else clause
+          (let ((first (car clauses))
+                (rest (cdr clauses)))
+            (if (cond-else-clause? first)
+                (if (null? rest)
+                    (sequence->exp (cond-actions first))
+                    (error "ELSE clause isn't last -- COND->IF"
+                           clauses))
+                (make-if (cond-predicate first)
+                         (sequence->exp (cond-actions first))
+                         (expand-clauses rest))))))
+  #+END_SRC
+
+  - ~let~:
+
+  #+NAME: derived-expressions-let
+  #+BEGIN_SRC scheme
+    <<ex-4-6>>
+  #+END_SRC
+
+**** DONE Read SICP 4.1.2
+     SCHEDULED: <2015-01-10 Sat>
+     CLOCK: [2015-01-10 Sat 17:54]--[2015-01-10 Sat 18:09] =>  0:15
+
+     :PROPERTIES:
+     :Effort:   0:15
+     :END:
+**** DONE [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-26.html#%_thm_4.2][Exercise 4.2]]
+     SCHEDULED: <2015-01-10 Sat>
+     CLOCK: [2015-01-10 Sat 18:13]--[2015-01-10 Sat 18:26] =>  0:13
+
+- Louis' modification to the interpreter will fail if the operator is a
+special form rather than a function that can be applied, since the
+arguments to special forms might need to be evaluated in a different
+manner from those to normal procedures. For example, if Louis' ~eval~ is
+called on ~(define x 3)~, it will evaluate ~x~ to its value, rather than
+treating ~x~ as the assignment target.
+
+- In order to make Louis' plan work, we need to eliminate the ambiguity
+between special forms and ordinary procedures in the syntax. One simple
+way to do this is to denote procedure application by the special form
+~call~. This can be accomplished by the following modification to the
+interpreter:
+
+#+BEGIN_SRC scheme
+  (define (application? exp)
+    (and (pair? exp)
+         (tagged-list? exp 'call)))
+  (define (operator exp) (cadr exp))
+  (define (operands exp) (cddr exp))
+#+END_SRC
+
+     :PROPERTIES:
+     :Effort:   0:15
+     :END:
+**** NEXT [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-26.html#%_thm_4.3][Exercise 4.3]]
+     SCHEDULED: <2015-01-10 Sat>
+     CLOCK: [2015-01-10 Sat 18:41]--[2015-01-10 Sat 19:18] =>  0:37
+
+     #+BEGIN_SRC scheme :tangle symbol-table.scm
+       (define (put table op type proc)
+         (hash-table-set! table (list op type) proc))
+       (define (get table op type)
+         (hash-table-ref/default table (list op type) '()))
+     #+END_SRC
+
+     #+BEGIN_SRC scheme :tangle ex-4-3.scm
+       <<primitive-expressions>>
+       <<derived-expressions>>
+       <<eval-sec-4-1-aux>>
+
+       (include "symbol-table")
+       (define *eval-4-1-op-table* (make-parameter (make-hash-table equal?)))
+       (define (eval-4-1-get type)
+         (get *eval-4-1-op-table* 'eval type))
+       (define (eval-4-1-put type proc)
+         (put *eval-4-1-op-table* 'eval type proc))
+
+       (define (eval-4-1 exp env)
+         (cond ((self-evaluating? exp) exp)
+               ((variable? exp) (lookup-variable-value exp env))
+               (else (let ((method (eval-4-1-get(car exp))))
+                       (cond ((not (null? method))
+                              (method exp env))
+                             ((application? exp)
+                              (apply-4-1 (eval-4-1 (operator exp) env)
+                                         (list-of-values (operands exp) env)))
+                             (else
+                              (error "Unknown expression type: EVAL" exp)))))))
+
+       (eval-4-1-put 'quote
+                     (lambda (exp env)
+                       (text-of-quotation exp)))
+       (eval-4-1-put 'set!
+                     (lambda (exp env)
+                       (eval-assignment exp env)))
+       (eval-4-1-put 'define
+                     (lambda (exp env)
+                       (eval-definition exp env)))
+       (eval-4-1-put 'if
+                     (lambda (exp env)
+                       (eval-if exp env)))
+       (eval-4-1-put 'if
+                     (lambda (exp env)
+                       (make-procedure (lambda-parameters exp)
+                                       (lambda-body exp)
+                                       env)))
+       (eval-4-1-put 'begin
+                     (lambda (exp env)
+                       (eval-sequence (begin-actions exp) env)))
+       (eval-4-1-put 'cond
+                     (lambda (exp env)
+                       (eval-4-1 (cond->if exp) env)))
+
+     #+END_SRC
+
+     :PROPERTIES:
+     :Effort:   0:30
+     :END:
+**** NEXT [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-26.html#%_thm_4.4][Exercise 4.4]]
+     SCHEDULED: <2015-01-10 Sat>
+     :PROPERTIES:
+     :Effort:   0:15
+     :END:
+**** NEXT [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-26.html#%_thm_4.5][Exercise 4.5]]
+     SCHEDULED: <2015-01-10 Sat>
+     :PROPERTIES:
+     :Effort:   0:15
+     :END:
+**** NEXT [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-26.html#%_thm_4.6][Exercise 4.6]]
+     SCHEDULED: <2015-01-10 Sat>
+     :PROPERTIES:
+     :Effort:   0:15
+     :END:
+**** NEXT [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-26.html#%_thm_4.7][Exercise 4.7]]
+     SCHEDULED: <2015-01-10 Sat>
+     :PROPERTIES:
+     :Effort:   0:15
+     :END:
+**** NEXT [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-26.html#%_thm_4.8][Exercise 4.8]]
+     SCHEDULED: <2015-01-10 Sat>
+     :PROPERTIES:
+     :Effort:   0:15
+     :END:
+**** NEXT [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-26.html#%_thm_4.9][Exercise 4.9]]
+     SCHEDULED: <2015-01-10 Sat>
+     :PROPERTIES:
+     :Effort:   0:30
+     :END:
+**** NEXT [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-26.html#%_thm_4.10][Exercise 4.10]]
+     SCHEDULED: <2015-01-10 Sat>
+*** NEXT [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-26.html#%_sec_4.1.3][4.1.3: Evaluator Data Structures]] [/]
+**** TODO Read SICP 4.1.3
+     SCHEDULED: <2015-01-10 Sat>
+     :PROPERTIES:
+     :Effort:   0:15
+     :END:
+**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-26.html#%_thm_4.11][Exercise 4.11]]
+     SCHEDULED: <2015-01-10 Sat>
+**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-26.html#%_thm_4.12][Exercise 4.12]]
+     SCHEDULED: <2015-01-10 Sat>
+**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-26.html#%_thm_4.13][Exercise 4.13]]
+     SCHEDULED: <2015-01-10 Sat>
+*** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-26.html#%_sec_4.1.4][4.1.4: Running the Evaluator as a Program]] [/]
+**** TODO Read SICP 4.1.4
+**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-26.html#%_thm_4.14][Exercise 4.14]]
+*** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-26.html#%_sec_4.1.5][4.1.5: Data as Programs]] [/]
+**** TODO Read SICP 4.1.5
+**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-26.html#%_thm_4.15][Exercise 4.15]]
+*** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-26.html#%_sec_4.1.6][4.1.6: Internal Definitions]] [/]
+**** TODO Read SICP 4.1.6
+**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-26.html#%_thm_4.16][Exercise 4.16]]
+**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-26.html#%_thm_4.17][Exercise 4.17]]
+**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-26.html#%_thm_4.18][Exercise 4.18]]
+**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-26.html#%_thm_4.19][Exercise 4.19]]
+**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-26.html#%_thm_4.20][Exercise 4.20]]
+**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-26.html#%_thm_4.21][Exercise 4.21]]
+*** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-26.html#%_sec_4.1.7][4.1.7: Separating Syntactic Analysis from Execution]] [/]
+**** TODO Read SICP 4.1.7
+**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-26.html#%_thm_4.22][Exercise 4.22]]
+**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-26.html#%_thm_4.23][Exercise 4.23]]
+**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-26.html#%_thm_4.24][Exercise 4.24]]
+
+** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-29.html#%_sec_4.2][4.2: Variations on a Scheme -- Lazy Evaluation]] [%]
+*** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-29.html#%_sec_4.2.1][4.2.1: Normal Order and Applicative Order]] [/]
+**** TODO Read SICP 4.2.1
+**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-29.html#%_thm_4.25][Exercise 4.25]]
+**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-29.html#%_thm_4.26][Exercise 4.26]]
+*** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-29.html#%_sec_4.2.2][4.2.2: An Interpreter with Lazy Evaluation]] [/]
+**** TODO Read SICP 4.2.2
+**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-29.html#%_thm_4.29][Exercise 4.29]]
+**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-29.html#%_thm_4.28][Exercise 4.28]]
+**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-29.html#%_thm_4.29][Exercise 4.29]]
+**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-29.html#%_thm_4.30][Exercise 4.30]]
+**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-29.html#%_thm_4.31][Exercise 4.31]]
+*** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-29.html#%_sec_4.2.3][4.2.3: Streams as Lazy Lists]] [/]
+**** TODO Read SICP 4.2.3
+**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-29.html#%_thm_4.32][Exercise 4.32]]
+**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-29.html#%_thm_4.33][Exercise 4.33]]
+**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-29.html#%_thm_4.34][Exercise 4.34]]
+
+** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-28.html#%_sec_4.3][4.3: Variations on a Scheme -- Nondeterministic Computing]] [%]
+*** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-28.html#%_sec_4.3.1][4.3.1: Amb and Search]] [/]
+**** TODO Read SICP 4.3.1
+**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-28.html#%_thm_4.35][Exercise 4.35]]
+**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-28.html#%_thm_4.35][Exercise 4.35]]
+**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-28.html#%_thm_4.37][Exercise 4.37]]
+*** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-28.html#%_sec_4.3.2][4.3.2: Examples of Nondeterministic Programs]] [/]
+**** TODO Read SICP 4.3.2
+**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-28.html#%_thm_4.38][Exercise 4.38]]
+**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-28.html#%_thm_4.39][Exercise 4.39]]
+**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-28.html#%_thm_4.40][Exercise 4.40]]
+**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-28.html#%_thm_4.41][Exercise 4.41]]
+**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-28.html#%_thm_4.42][Exercise 4.42]]
+**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-28.html#%_thm_4.43][Exercise 4.43]]
+**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-28.html#%_thm_4.44][Exercise 4.44]]
+**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-28.html#%_thm_4.45][Exercise 4.45]]
+**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-28.html#%_thm_4.46][Exercise 4.46]]
+**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-28.html#%_thm_4.47][Exercise 4.47]]
+**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-28.html#%_thm_4.48][Exercise 4.48]]
+**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-28.html#%_thm_4.49][Exercise 4.49]]
+*** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-28.html#%_sec_4.3.3][4.3.3: Implementing the Amb Evaluator]] [/]
+**** TODO Read SICP 4.3.3
+**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-28.html#%_thm_4.50][Exercise 4.50]]
+**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-28.html#%_thm_4.51][Exercise 4.51]]
+**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-28.html#%_thm_4.52][Exercise 4.52]]
+**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-28.html#%_thm_4.53][Exercise 4.53]]
+**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-28.html#%_thm_4.54][Exercise 4.54]]
+
+** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-29.html#%_sec_4.4][4.4: Logic Programming]] [%]
+*** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-29.html#%_sec_4.4.1][4.4.4: Deductive Information Retrieval]] [/]
+**** TODO Read SICP 4.4.1
+**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-29.html#%_thm_4.55][Exercise 4.55]]
+**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-29.html#%_thm_4.56][Exercise 4.56]]
+**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-29.html#%_thm_4.57][Exercise 4.57]]
+**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-29.html#%_thm_4.58][Exercise 4.58]]
+**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-29.html#%_thm_4.59][Exercise 4.59]]
+**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-29.html#%_thm_4.60][Exercise 4.60]]
+**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-29.html#%_thm_4.61][Exercise 4.61]]
+**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-29.html#%_thm_4.62][Exercise 4.62]]
+**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-29.html#%_thm_4.63][Exercise 4.63]]
+*** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-29.html#%_sec_4.4.2][4.4.2: How the Query System Works]] [/]
+
+No exercises.
+
+**** TODO Read SICP 4.4.2
+*** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-29.html#%_sec_4.4.3][4.4.3: Is Logic Programming Mathematical Logic?]] [/]
+**** TODO Read SICP 4.4.3
+**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-29.html#%_thm_4.64][Exercise 4.64]]
+**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-29.html#%_thm_4.65][Exercise 4.65]]
+**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-29.html#%_thm_4.66][Exercise 4.66]]
+**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-29.html#%_thm_4.67][Exercise 4.67]]
+**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-29.html#%_thm_4.68][Exercise 4.68]]
+**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-29.html#%_thm_4.69][Exercise 4.69]]
+*** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-29.html#%_sec_4.4.4][4.4.4: Implementing the Query System]] [/]
+**** TODO Read SICP 4.4.4
+**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-29.html#%_thm_4.70][Exercise 4.70]]
+**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-29.html#%_thm_4.71][Exercise 4.71]]
+**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-29.html#%_thm_4.72][Exercise 4.72]]
+**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-29.html#%_thm_4.73][Exercise 4.73]]
+**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-29.html#%_thm_4.74][Exercise 4.74]]
+**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-29.html#%_thm_4.75][Exercise 4.75]]
+**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-29.html#%_thm_4.76][Exercise 4.76]]
+**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-29.html#%_thm_4.77][Exercise 4.77]]
+**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-29.html#%_thm_4.78][Exercise 4.78]]
+**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-29.html#%_thm_4.79][Exercise 4.79]]
+* Tasks
+** TODO Important Programming Concepts (Even on Embedded Systems)
+   [2015-01-10 Sat]
+** TODO Important Programming Concepts (Even on Embedded Systems)
+   [2015-01-10 Sat]
