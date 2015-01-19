@@ -1599,6 +1599,7 @@ constant values:
       z))
 #+END_SRC
 
+
 ** 3.4: Concurrency: Time Is of the Essence
 
 *** 3.4.1: The Nature of Time in Concurrent Systems
@@ -1632,38 +1633,26 @@ a. There are 6 combinations of Peter (A), Paul (B), and Mary (C):
    | (C, A, B) |           40 |
    | (C, B, A) |           40 |
 
-b. For each transaction, there are 3 steps:
+b. For transactions A and B, there are 3 steps:
 
-   - Read the current balance from the shared account.
-   - Modify the balance of the individual account.
-   - Write the new balance to the shared account.
+   - Read the current balance from the shared account [Xr].
+   - Perform the calculation.
+   - Write the new balance to the shared account [Xw].
 
-   However, the second step doesn't modify a shared variable, so the relevant
-   combinations for each transaction can be represented by two operations (Xr
-   for read and Xw for write for person X). The six combinations where each
-   account is read and then immediately written by the same person is
-   represented above.
+   However, transaction C reads the shared variable ~balance~ twice, so there
+   are 5 steps:
 
-   Here are some things to notice about concurrency in this scenario:
+   - Read the current balance from the shared account [Cr1].
+   - Perform the division.
+   - Read the current balance from the shared account [Cr2].
+   - Perform the subtraction.
+   - Write the new balance to the shared account [Cw].
 
-   - The actions of A and B don't depend on the current balance, only those
-     of C.
-   - Because of this, it only matters when C reads relative to the times that A
-     or B read, for which there are 4 distinct possibilities.
-     - If C reads before or after both A and B write, the final
-       balance will be the same no matter what order A and B write.
-
-   Here is the table for completeness. Note that no final balances appear here
-   that did not appear above.
-
-   | Order        | Final amount |
-   |--------------+--------------|
-   | (Aw, Bw, Cr) |           45 |
-   | (Bw, Aw, Cr) |           45 |
-   | (Cr, Aw, Bw) |           40 |
-   | (Cr, Bw, Aw) |           40 |
-   | (Aw, Cr, Bw) |           35 |
-   | (Bw, Cr, Aw) |           50 |
+   The calculations don't modify a shared variable, so the relevant
+   combinations for each transaction are combinations of Ar, Aw, Br, Bw, Cr1,
+   Cr2, and Cw, with the constraint that \(t(Ar) \leq t(Aw)\),
+   \(t(Br) \leq t(Bw)\), and \(t(Cr1) \leq t(Cr2) \leq t(Cw)\) or
+   \(t(Cr2) \leq t(Cr1) \leq t(Cw)\).
 
 *** 3.4.2: Mechanisms for Controlling Concurrency
 
