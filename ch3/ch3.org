@@ -436,11 +436,11 @@ strictly be necessary to retain a reference to ~dispatch~ since a reference to
 that procedure is returned.)
 
 
-** TODO 3.3: [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-22.html#%_sec_3.3][Modeling with Mutable Data]]
+** DONE 3.3: [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-22.html#%_sec_3.3][Modeling with Mutable Data]]
 
-*** TODO 3.3.1: [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-22.html#%_sec_3.3.1][Mutable List Structure]]
+*** DONE 3.3.1: [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-22.html#%_sec_3.3.1][Mutable List Structure]]
 
-**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-22.html#%25_thm_3.12][Exercise 3.12.]]
+**** DONE [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-22.html#%25_thm_3.12][Exercise 3.12.]]
 
 #+BEGIN_SRC scheme :tangle ex-3-12-test.scm
   (use test)
@@ -672,7 +672,7 @@ other (i.e., compare equal via ~eq?~ after the initial call).
         (cycle? pairs-cycle))
 #+END_SRC
 
-**** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-22.html#%25_thm_3.20][Exercise 3.20.]]
+**** DONE [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-22.html#%25_thm_3.20][Exercise 3.20.]]
 
 Given the implementation of the primitive list functions in terms of
 dispatching, now including mutation,
@@ -722,7 +722,7 @@ as follows:
   way as the ~car~ and ~cdr~ of a normal ~cons~ cell.
 
 
-*** 3.3.2: [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-22.html#%_sec_3.3.2][Representing Queues]]
+*** DONE 3.3.2: [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-22.html#%_sec_3.3.2][Representing Queues]]
 
 #+BEGIN_SRC scheme :tangle queue-cons.scm
   (define (front-ptr queue) (car queue))
@@ -753,7 +753,7 @@ as follows:
            queue)))
 #+END_SRC
 
-**** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-22.html#%25_thm_3.21][Exercise 3.21.]]
+**** DONE [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-22.html#%25_thm_3.21][Exercise 3.21.]]
 
 The standard Lisp printer recursively prints the contents of a list (or cons
 cell) in order. In particular, this implementation does not treat two pointers
@@ -775,7 +775,7 @@ we need to do to print the queue properly is print that list:
     (display (front-ptr q)))
 #+END_SRC
 
-**** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-22.html#%25_thm_3.22][Exercise 3.22.]]
+**** DONE [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-22.html#%25_thm_3.22][Exercise 3.22.]]
 
 A straightforward implementation uses the same approach as implementing cons
 cells using dispatch -- the arguments to the constructor, retained by the
@@ -858,7 +858,7 @@ way as the car and cdr of the cons cell we use to implement the queue above.
         (null? (q 'rear-ptr)))
 #+END_SRC
 
-**** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-22.html#%25_thm_3.23][Exercise 3.23.]]
+**** DONE [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-22.html#%25_thm_3.23][Exercise 3.23.]]
 
 Represent as doubly-linked list. Will need selectors for DLL:
 
@@ -907,9 +907,9 @@ Represent as doubly-linked list. Will need selectors for DLL:
 #+END_SRC
 
 
-*** 3.3.3: [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-22.html#%_sec_3.3.3][Representing Tables]]
+*** DONE 3.3.3: [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-22.html#%_sec_3.3.3][Representing Tables]]
 
-**** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-22.html#%25_thm_3.24][Exercise 3.24.]]
+**** DONE [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-22.html#%25_thm_3.24][Exercise 3.24.]]
 
 #+BEGIN_SRC scheme :tangle ex-3-24.scm
   (define (make-table same-key?)
@@ -965,7 +965,7 @@ Represent as doubly-linked list. Will need selectors for DLL:
         ((tbl-inexact 'lookup) 1.05))
 #+END_SRC
 
-**** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-22.html#%25_thm_3.25][Exercise 3.25.]]
+**** DONE [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-22.html#%25_thm_3.25][Exercise 3.25.]]
 
 #+BEGIN_SRC scheme :tangle ex-3-25.scm
   (define (make-table same-key?)
@@ -1052,7 +1052,7 @@ Represent as doubly-linked list. Will need selectors for DLL:
         (pair? (lookup tbl '(a))))
 #+END_SRC
 
-**** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-22.html#%25_thm_3.26][Exercise 3.26.]]
+**** DONE [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-22.html#%25_thm_3.26][Exercise 3.26.]]
 
 #+BEGIN_SRC scheme :tangle ex-3-26.scm
   (define (make-table cmp)
@@ -1120,12 +1120,13 @@ Represent as doubly-linked list. Will need selectors for DLL:
         (lookup tbl -3))
 #+END_SRC
 
-**** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-22.html#%25_thm_3.27][Exercise 3.27.]]
+**** HOLD [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-22.html#%25_thm_3.27][Exercise 3.27.]]                                               :HOLD:
+     - State "HOLD"       from "TODO"       [2015-01-18 Sun 19:09]
 
 Ehh...
 
 
-*** 3.3.4: [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-22.html#%_sec_3.3.4][A Simulator for Digital Circuits]]
+*** DONE 3.3.4: [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-22.html#%_sec_3.3.4][A Simulator for Digital Circuits]]
 
 Some common procedures, most copied from the book.
 
@@ -1177,7 +1178,7 @@ Some common procedures, most copied from the book.
 
 #+END_SRC
 
-**** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-22.html#%25_thm_3.28][Exercise 3.28.]]
+**** DONE [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-22.html#%25_thm_3.28][Exercise 3.28.]]
 
 #+NAME: ex-3-28-or-gate
 #+BEGIN_SRC scheme
@@ -1203,7 +1204,7 @@ Some common procedures, most copied from the book.
     'ok)
 #+END_SRC
 
-**** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-22.html#%25_thm_3.29][Exercise 3.29.]]
+**** DONE [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-22.html#%25_thm_3.29][Exercise 3.29.]]
 
 We use this result from De Morgan's laws
 
@@ -1240,7 +1241,7 @@ enough of an advantage, such as individual speed or cost, over a single
 primitive or-gate or-gate for whatever reason, the composed or-gate may still
 be preferable.
 
-**** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-22.html#%25_thm_3.30][Exercise 3.30.]]
+**** DONE [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-22.html#%25_thm_3.30][Exercise 3.30.]]
 
 Straightforward implementation of the diagram:
 
@@ -1269,7 +1270,7 @@ Straightforward implementation of the diagram:
 
 The delay is troublesome -- \(n \mathrm{delay}_{\mathrm{full-adder}}\).
 
-**** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-22.html#%25_thm_3.31][Exercise 3.31.]]
+**** DONE [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-22.html#%25_thm_3.31][Exercise 3.31.]]
 
 If the procedure is merely added without executing it, the state of the circuit
 can become inconsistent until the first change to the inputs is made. For
@@ -1280,7 +1281,7 @@ called immediately on the call to ~accept-action-procedure!~, no calls to
 ~action-procedures~, are made, so ~s~ and ~c~ remain set to ~0~ until the first
 input is set.
 
-**** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-22.html#%25_thm_3.32][Exercise 3.32.]]
+**** DONE [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-22.html#%25_thm_3.32][Exercise 3.32.]]
 
 It is necessary to execute the events in the same queue (i.e., those that take
 place "at the same time") in FIFO order because it is in fact the case that the
@@ -1325,7 +1326,7 @@ and-gate observes the change to ~a1~ while it is scheduling ~a2~.
              (set-output! 1))))))
 #+END_SRC
 
-*** 3.3.5: [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-22.html#%_sec_3.3.4][Propagation of Constraints]]
+*** DONE 3.3.5: [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-22.html#%_sec_3.3.4][Propagation of Constraints]]
 
 Implementation of constraint objects from book. Includes the primitive
 procedures
@@ -1497,7 +1498,7 @@ and some commonly used constraints, implemented in terms of the primitives:
     me)
 #+END_SRC
 
-**** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-22.html#%25_thm_3.33][Exercise 3.33.]]
+**** DONE [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-22.html#%25_thm_3.33][Exercise 3.33.]]
 
 #+BEGIN_SRC scheme :tangle ex-3-33.scm
   (define (averager a b c)
@@ -1509,7 +1510,7 @@ and some commonly used constraints, implemented in terms of the primitives:
       'ok))
 #+END_SRC
 
-**** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-22.html#%25_thm_3.34][Exercise 3.34.]]
+**** DONE [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-22.html#%25_thm_3.34][Exercise 3.34.]]
 
 The procedure suggested by Louis won't work when propagation from the
 product to the multiplicands is needed. ~multiplier~ needs at least two of
@@ -1517,7 +1518,7 @@ product to the multiplicands is needed. ~multiplier~ needs at least two of
 the set values to the unset value. However, if one of the multiplicands is
 unset, both are, a situation that ~multiplier~ can't handle.
 
-**** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-22.html#%25_thm_3.35][Exercise 3.35.]]
+**** DONE [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-22.html#%25_thm_3.35][Exercise 3.35.]]
 
 Straightforward implementation based on ~multiplier~:
 
@@ -1546,11 +1547,11 @@ Straightforward implementation based on ~multiplier~:
     me)
 #+END_SRC
 
-**** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-22.html#%25_thm_3.36][Exercise 3.36.]]
+**** DONE [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-22.html#%25_thm_3.36][Exercise 3.36.]]
 
 Do in class.
 
-**** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-22.html#%25_thm_3.37][Exercise 3.37.]]
+**** DONE [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-22.html#%25_thm_3.37][Exercise 3.37.]]
 
 The expression-oriented constraint adder is defined thus in the book:
 
@@ -1602,6 +1603,13 @@ constant values:
 
 ** TODO 3.4: Concurrency: Time Is of the Essence
 
+*** DONE Read Section 3.4
+    SCHEDULED: <2014-11-22 Sat>
+    - State "DONE"       from "STARTED"    [2014-11-22 Sat 15:07]
+    CLOCK: [2014-11-22 Sat 14:43]--[2014-11-22 Sat 15:07] =>  0:24
+    - State "STARTED"    from "TODO"       [2014-11-22 Sat 14:42]
+    [2014-11-22 Sat]
+
 *** TODO 3.4.1: The Nature of Time in Concurrent Systems
 
 Complexity of concurrent systems comes from:
@@ -1619,6 +1627,15 @@ Concurrency models:
   order (not guaranteed what order is used).
   - There can still be more than one "correct" answer -- may need to restrict
     some parts of the program further depending on requirements.
+
+   CLOCK: [2014-11-22 Sat 16:42]--[2014-11-22 Sat 17:09] =>  0:27
+   - State "STARTED"    from "STARTED"    [2014-11-22 Sat 16:41] \\
+   - State "STARTED"    from "TODO"       [2014-11-22 Sat 14:26]
+     Want SRFI-18 to support concurrency.
+   :PROPERTIES:
+   :Effort:   0:30
+   :END:
+   [2014-11-22 Sat]
 
 **** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-23.html#%25_thm_3.38][Exercise 3.38.]]
 
@@ -1697,6 +1714,19 @@ Here's an implementation of the threading tools ~parallel-execute~ and
       '()))
 #+END_SRC
 
+   - State "HOLD"       from "STARTED"    [2014-12-10 Wed 19:54] \\
+     Do at some point
+   CLOCK: [2014-12-07 Sun 23:25]--[2014-12-07 Sun 23:48] =>  0:23
+   - State "STARTED"    from "STARTED"    [2014-11-22 Sat 17:31] \\
+     Implemented those two functions.
+   CLOCK: [2014-11-22 Sat 17:11]--[2014-11-22 Sat 17:30] =>  0:19
+   - State "STARTED"    from "TODO"       [2014-11-22 Sat 17:11]
+   Need to implement ~make-serializer~ and perhaps ~parallel-execute~.
+   :PROPERTIES:
+   :Effort:   3:00
+   :END:
+   [2014-11-22 Sat]
+
 **** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-23.html#%25_thm_3.39][Exercise 3.39.]]
 **** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-23.html#%25_thm_3.40][Exercise 3.40.]]
 **** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-23.html#%25_thm_3.41][Exercise 3.41.]]
@@ -1774,8 +1804,8 @@ fact, both ~map~ and ~filter~ can be implemented in terms of ~fold~:
                      (apply stream-fold kons knil (map stream-cdr streams)))))
 #+END_SRC
 
-*** TODO 3.5.1: Streams Are Delayed Lists
-**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-24.html#%25_thm_3.50][Exercise 3.50.]]
+*** DONE 3.5.1: Streams Are Delayed Lists
+**** DONE [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-24.html#%25_thm_3.50][Exercise 3.50.]]
 
 The ~apply~ procedure can be used to call a function with arguments drawn from
 a list, and we can iterate along the argument streams in turn (which are all
@@ -1797,7 +1827,7 @@ assumed to be of the same length):
   (use test)
 #+END_SRC
 
-**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-24.html#%25_thm_3.51][Exercise 3.51.]]
+**** DONE [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-24.html#%25_thm_3.51][Exercise 3.51.]]
 
 #+BEGIN_SRC scheme :tangle ex-3-51-test.scm
   (include "stream")
@@ -1807,7 +1837,7 @@ assumed to be of the same length):
   (stream-ref x 7)
 #+END_SRC
 
-**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-24.html#%25_thm_3.52][Exercise 3.52.]]
+**** DONE [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-24.html#%25_thm_3.52][Exercise 3.52.]]
 
 We have these definitions, which in particular include a mutating procedure
 ~accum~:
@@ -1858,6 +1888,13 @@ executed would therefore all be increased by 136, producing a different stream
 for ~z~ and a final sum of \(136 + 210 = 346\).
 
 
+   CLOCK: [2014-12-14 Sun 15:04]--[2014-12-14 Sun 16:11] =>  1:07
+   CLOCK: [2014-12-14 Sun 15:01]--[2014-12-14 Sun 15:04] =>  0:03
+   :PROPERTIES:
+   :Effort:   1:00
+   :END:
+   [2014-11-22 Sat]
+
 *** TODO 3.5.2: Infinite Streams
 
 The book defines several miscellaneous procedures that are useful for exercises
@@ -1879,7 +1916,13 @@ in this section:
   <<stream-partial-sums>>
 #+END_SRC
 
-**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-24.html#%25_thm_3.53][Exercise 3.53.]]
+   CLOCK: [2015-01-03 Sat 20:05]--[2015-01-03 Sat 21:19] =>  1:14
+   :PROPERTIES:
+   :Effort:   3:00
+   :END:
+   [2014-11-22 Sat]
+
+**** DONE [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-24.html#%25_thm_3.53][Exercise 3.53.]]
 
 This produces a stream consisting of the powers of 2: ~1 2 4 8 16 ...~.
 
@@ -1889,7 +1932,7 @@ This produces a stream consisting of the powers of 2: ~1 2 4 8 16 ...~.
 
 #+END_SRC
 
-**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-24.html#%25_thm_3.55][Exercise 3.55.]]
+**** DONE [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-24.html#%25_thm_3.55][Exercise 3.55.]]
 
 In order to calculate the partial sum corresponding to an element in the input
 stream, you need two pieces of information: the partial sum of the elements
@@ -1919,7 +1962,7 @@ returns the entire output stream.
         (stream-ref (partial-sums integers) 4))
 #+END_SRC
 
-**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-24.html#%25_thm_3.56][Exercise 3.56.]]
+**** DONE [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-24.html#%25_thm_3.56][Exercise 3.56.]]
 
 The ~merge~ procedure combines two streams ordered in ascending order,
 eliminating repetitions:
@@ -1964,7 +2007,7 @@ Given this, we can create ~S~, the list of integers with no prime factors but
 
 *** TODO 3.5.3: Exploiting the Stream Paradigm
 
-**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-24.html#%25_thm_3.63][Exercise 3.63.]]
+**** DONE [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-24.html#%25_thm_3.63][Exercise 3.63.]]
 
 *TODO*: Explain better.
 
@@ -1974,7 +2017,7 @@ memoization, the ~guesses~ variable is bound in the environment of
 ~sqrt-stream~, so the delayed cdr of the stream returned by ~cons-stream~ is
 memoized after the first call.
 
-**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-24.html#%25_thm_3.64][Exercise 3.64.]]
+**** DONE [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-24.html#%25_thm_3.64][Exercise 3.64.]]
 
 A straightforward recursive procedure:
 
@@ -1994,7 +2037,7 @@ A straightforward recursive procedure:
 
 #+END_SRC
 
-**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-24.html#%25_thm_3.65][Exercise 3.65.]]
+**** DONE [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-24.html#%25_thm_3.65][Exercise 3.65.]]
 
 This is the original sequence:
 
