@@ -5,11 +5,11 @@
 #+PROPERTY: header-args :comments link :noweb no-export
 #+PROPERTY: header-args:scheme :shebang #!/usr/bin/env chicken-scheme
 
-* TODO Chapter 3: Modularity, Objects, and State
+* TODO Chapter 3: [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-19.html#%_chap_3][Modularity, Objects, and State]]
 
-** DONE 3.1: Assignment and Local State
+** DONE 3.1: [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-20.html#%_sec_3.1][Assignment and Local State]]
 
-*** DONE 3.1.1: Local State Variables
+*** DONE 3.1.1: [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-20.html#%_sec_3.1.1][Local State Variables]]
 
 **** DONE [[view-source:http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-20.html#%_thm_3.1][Exercise 3.1.]]
 
@@ -137,7 +137,7 @@ decided to do so for ease of testing.
         ((acc 'some-other-password 'withdraw) 100))
 #+END_SRC
 
-*** DONE 3.1.2: The Benefits of Introducing Assignment
+*** DONE 3.1.2: [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-20.html#%_sec_3.1.2][The Benefits of Introducing Assignment]]
 
 **** DONE [[view-source:http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-20.html#%_thm_3.5][Exercise 3.5.]]
 
@@ -199,7 +199,7 @@ the seed is initialized.
            command)))
 #+END_SRC
 
-*** DONE 3.1.3: The Costs of Introducing Assignment
+*** DONE 3.1.3: [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-20.html#%_sec_3.1.3][The Costs of Introducing Assignment]]
 
 **** DONE [[view-source:http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-20.html#%_thm_3.7][Exercise 3.7.]]
 
@@ -210,7 +210,6 @@ the seed is initialized.
       ;; The underlying account accepts only original-password, so accept
       ;; new-password by passing original-password. Otherwise, let the underlying
       ;; account deal with error handling for a wrong password.
-      (display p) (newline)
       (if (equal? p new-password)
           (account original-password m)
           (account p m)))
@@ -275,13 +274,15 @@ the seed is initialized.
 #+END_SRC
 
 
-** DONE 3.2: The Environment Model of Evaluation
+** DONE 3.2: [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-21.html#%_sec_3.2][The Environment Model of Evaluation]]
 
-*** DONE 3.2.1: The Rules for Evaluation
+*** DONE 3.2.1: [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-21.html#%_sec_3.2.1][The Rules for Evaluation]]
 
 No exercises
 
-*** DONE 3.2.2: Applying Simple Procedures
+
+*** DONE 3.2.2: [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-21.html#%_sec_3.2.2][Applying Simple Procedures]]
+
 **** DONE [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-21.html#%25_thm_3.9][Exercise 3.9.]]
 
 I don't want to draw, so I'll use Scheme S-expressions instead.
@@ -379,7 +380,8 @@ changes basically as described in the pseudocode below:
 Notice above that we've really simulated a stack, with ~set-car!~ performing a
 mutation-in-place of the top entry of the stack.
 
-*** DONE 3.2.3: Frames as the Repository of Local State
+*** DONE 3.2.3: [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-21.html#%_sec_3.2.3][Frames as the Repository of Local State]]
+
 **** DONE [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-21.html#%25_thm_3.10][Exercise 3.10.]]
 
 The procedure to be analyzed,
@@ -415,7 +417,8 @@ environment formed by the call of ~make-withdraw~. When the returned
 ~(lambda (amount) ⋯)~ is called, it therefore has a pointer to the environment
 of ~(lambda (balance) ⋯)~, which points to the global environment.
 
-*** DONE 3.2.4: Internal Definitions
+*** DONE 3.2.4: [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-21.html#%_sec_3.2.4][Internal Definitions]]
+
 **** DONE [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-21.html#%25_thm_3.11][Exercise 3.11.]]
 
 The environment for ~make-account~ points to the global environment. In this
@@ -429,10 +432,11 @@ strictly be necessary to retain a reference to ~dispatch~ since a reference to
 that procedure is returned.)
 
 
-** TODO 3.3: Modeling with Mutable Data
+** TODO 3.3: [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-22.html#%_sec_3.3][Modeling with Mutable Data]]
 
-*** TODO 3.3.1: Applying Simple Procedures
-**** DONE [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-22.html#%25_thm_3.12][Exercise 3.12.]]
+*** TODO 3.3.1: [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-22.html#%_sec_3.3.1][Mutable List Structure]]
+
+**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-22.html#%25_thm_3.12][Exercise 3.12.]]
 
 #+BEGIN_SRC scheme :tangle ex-3-12-test.scm
   (use test)
@@ -664,6 +668,934 @@ other (i.e., compare equal via ~eq?~ after the initial call).
         (cycle? pairs-cycle))
 #+END_SRC
 
+**** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-22.html#%25_thm_3.20][Exercise 3.20.]]
+
+Given the implementation of the primitive list functions in terms of
+dispatching, now including mutation,
+
+#+BEGIN_SRC scheme :tangle ex-3-20-cons-dispatch.scm
+  ;;; -d for dispatching.
+  (define (cons-d x y)
+    (define (set-x! v) (set! x v))
+    (define (set-y! v) (set! y v))
+    (define (dispatch m)
+      (cond ((eq? m 'car) x)
+            ((eq? m 'cdr) y)
+            ((eq? m 'set-car!) set-x!)
+            ((eq? m 'set-cdr!) set-y!)
+            (else (error "Undefined operation -- CONS" m))))
+    dispatch)
+  (define (car-d z) (z 'car))
+  (define (cdr-d z) (z 'cdr))
+  (define (set-car-d! z new-value)
+    ((z 'set-car!) new-value)
+    z)
+  (define (set-cdr-d! z new-value)
+    ((z 'set-cdr!) new-value)
+    z)
+#+END_SRC
+
+we can understand the environment diagram of the following code
+
+#+BEGIN_SRC scheme :tangle ex-3-20-test.scm
+  (use test)
+  (include "ex-3-20-cons-dispatch")
+  (define x (cons 1 2))
+  (define z (cons x x))
+  (set-car! (cdr z) 17)
+  (test 17
+        (car x))
+#+END_SRC
+
+as follows:
+
+- Every call to ~cons-d~ returns a ~dispatch~ closure which has a pointer to
+  the environment of the ~cons-d~ closure, which holds the arguments to
+  ~cons-d~, ~x~ and ~y~.
+- All messages to the ~dispatch~ closure read or write to the environment of
+  the original ~cons-d~ call, which is preserved by the link from ~dispatch~.
+- ~x~ and ~y~, the arguments to ~cons-d~, are acted upon in precisely the same
+  way as the ~car~ and ~cdr~ of a normal ~cons~ cell.
+
+
+*** 3.3.2: [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-22.html#%_sec_3.3.2][Representing Queues]]
+
+#+BEGIN_SRC scheme :tangle queue-cons.scm
+  (define (front-ptr queue) (car queue))
+  (define (rear-ptr queue) (cdr queue))
+  (define (set-front-ptr! queue item) (set-car! queue item))
+  (define (set-rear-ptr! queue item) (set-cdr! queue item))
+  (define (empty-queue? queue) (null? (front-ptr queue)))
+  (define (make-queue) (cons '() '()))
+  (define (front-queue queue)
+    (if (empty-queue? queue)
+        (error "FRONT called with an empty queue" queue)
+        (car (front-ptr queue))))
+  (define (insert-queue! queue item)
+    (let ((new-pair (cons item '())))
+      (cond ((empty-queue? queue)
+             (set-front-ptr! queue new-pair)
+             (set-rear-ptr! queue new-pair)
+             queue)
+            (else
+             (set-cdr! (rear-ptr queue) new-pair)
+             (set-rear-ptr! queue new-pair)
+             queue))))
+  (define (delete-queue! queue)
+    (cond ((empty-queue? queue)
+           (error "DELETE! called with an empty queue" queue))
+          (else
+           (set-front-ptr! queue (cdr (front-ptr queue)))
+           queue)))
+#+END_SRC
+
+**** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-22.html#%25_thm_3.21][Exercise 3.21.]]
+
+The standard Lisp printer recursively prints the contents of a list (or cons
+cell) in order. In particular, this implementation does not treat two pointers
+to the same underlying object specially. With the mutation used to implement
+the queue, ~(rear-ptr queue)~ points to the last item in the queue, while
+~(front-ptr queue)~ points to the head of the list that actually stores the
+items in the queue. Since the last item is in the queue list, it is printed
+twice, once as an element of the list and once as a lone item. (As an aside, it
+appears that the queue is keeping the last item alive longer than necessary
+through the pointer ~rear-ptr~ after the queue is empty. The implementation
+should set ~rear-ptr~ to nil (or some other small, primitive, immutable value)
+to fix this.)
+
+Since ~front-ptr~ returns a pointer to the list that represents the queue, all
+we need to do to print the queue properly is print that list:
+
+#+BEGIN_SRC scheme :tangle ex-3-21-print-queue.scm
+  (define (print-queue q)
+    (display (front-ptr q)))
+#+END_SRC
+
+**** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-22.html#%25_thm_3.22][Exercise 3.22.]]
+
+A straightforward implementation uses the same approach as implementing cons
+cells using dispatch -- the arguments to the constructor, retained by the
+~dispatch~ closure, are manipulated by subprocedures in ~dispatch~ in the same
+way as the car and cdr of the cons cell we use to implement the queue above.
+
+#+BEGIN_SRC scheme :tangle ex-3-22-queue-dispatch.scm
+  (define (make-queue-d)
+    (let ((front-ptr '())
+          (rear-ptr '()))
+      ;; Some of these procedures are defined to return a reference to the queue
+      ;; on which the procedure was invoked. For consistency, we define all these
+      ;; procedures to take `queue`.
+      (define (set-front-ptr! queue item) (set! front-ptr item))
+      (define (set-rear-ptr! queue item) (set! rear-ptr item))
+      (define (empty-queue? queue) (null? front-ptr))
+      (define (front-queue queue)
+        (if (empty-queue? queue)
+            (error "FRONT called with an empty queue" queue)
+            (car front-ptr)))
+      (define (insert-queue! queue item)
+        (let ((new-pair (cons item '())))
+          (cond ((empty-queue? queue)
+                 (set-front-ptr! queue new-pair)
+                 (set-rear-ptr! queue new-pair)
+                 queue)
+                (else
+                 (set-cdr! rear-ptr new-pair)
+                 (set-rear-ptr! queue new-pair)
+                 queue))))
+      (define (delete-queue! queue)
+        (cond ((empty-queue? queue)
+               (error "DELETE! called with an empty queue" queue))
+              (else
+               (set-front-ptr! queue (cdr front-ptr))
+               ;; If the queue becomes empty, clear `rear-ptr` to avoid
+               ;; unnecessarily retaining a reference to it.
+               (when (null? front-ptr)
+                     (set-rear-ptr! queue '()))
+               queue)))
+      (define (dispatch m)
+        (cond ((eq? m 'front-ptr) front-ptr)
+              ((eq? m 'rear-ptr) rear-ptr)
+              ((eq? m 'set-front-ptr!)
+               (lambda (item) (set-front-ptr! dispatch item)))
+              ((eq? m 'set-rear-ptr!)
+               (lambda (item) (set-rear-ptr! dispatch item)))
+              ((eq? m 'empty-queue?)
+               (empty-queue? dispatch))
+              ((eq? m 'front-queue)
+               (front-queue dispatch))
+              ((eq? m 'insert-queue!)
+               (lambda (item) (insert-queue! dispatch item)))
+              ((eq? m 'delete-queue!)
+               (delete-queue! dispatch))
+              (else
+               error "Undefined operation - QUEUE" m)))
+      dispatch))
+#+END_SRC
+
+#+BEGIN_SRC scheme :tangle ex-3-22-test.scm
+  (use test)
+  (include "ex-3-22-queue-dispatch")
+  (define q (make-queue-d))
+  ((q 'insert-queue!) 0)
+  (test 0
+        (q 'front-queue))
+  ((q 'insert-queue!) 1)
+  ((q 'insert-queue!) 2)
+  (test 2
+        (car (q 'rear-ptr)))
+  (q 'delete-queue!)
+  (test 1
+        (q 'front-queue))
+  (q 'delete-queue!)
+  (q 'delete-queue!)
+  (test #t
+        (q 'empty-queue?))
+  (test #t
+        (null? (q 'rear-ptr)))
+#+END_SRC
+
+**** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-22.html#%25_thm_3.23][Exercise 3.23.]]
+
+Represent as doubly-linked list. Will need selectors for DLL:
+
+#+BEGIN_SRC scheme :tangle ex-3-23.scm
+  (define (make-deque)
+    (let ((header (cons '() '())))
+      ;; Internal procedures on internal representation of deque.
+      (define (make-node item prev next)
+        (cons (cons item prev) next))
+      (define (front) (car header))
+      (define (rear) (cdr header))
+      (define (set-front! node) (set-car! header node))
+      (define (set-rear! node) (set-cdr! header node))
+      (define (item node) (caar node))
+      (define (prev node) (cdar node))
+      (define (next node) (cdr node))
+      (define (set-prev! this that) (set-cdr! (car this) that))
+      (define (set-next! this that) (set-cdr! this that))
+
+      ;; Exported procedures
+      (define (empty? self)
+        (eq? (front) '()))
+      (define (front-deque self)
+        (item (front)))
+      (define (rear-deque self)
+        (item (rear)))
+      (define (front-insert! self item)
+        (set-front! (make-node item '() (front))))
+      (define (rear-insert! self item)
+        (set-rear! (make-node item (rear) '())))
+      (define (front-delete! self)
+        (set-front! (next (front))))
+      (define (rear-delete! self)
+        (set-rear! (prev (rear))))
+
+      (define (dispatch m)
+        (cond ((eq? m 'empty?) (empty? header))
+              ((eq? m 'front-deque) (front-deque header))
+              ((eq? m 'rear-deque) (rear-deque header))
+              ((eq? m 'front-insert!) (front-insert! header item))
+              ((eq? m 'rear-insert!) (rear-insert! header item))
+              ((eq? m 'front-delete!) (front-delete! header))
+              ((eq? m 'rear-delete!) (rear-delete! header))
+              (else (error "Undefined operation -- DEQUE" m))))
+      dispatch))
+#+END_SRC
+
+
+*** 3.3.3: [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-22.html#%_sec_3.3.3][Representing Tables]]
+
+**** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-22.html#%25_thm_3.24][Exercise 3.24.]]
+
+#+BEGIN_SRC scheme :tangle ex-3-24.scm
+  (define (make-table same-key?)
+    (let ((tbl (cons '*table* '())))
+      ;; Internal procedure
+      (define (assoc key records)
+        (cond ((null? records) #f)
+              ((same-key? key (caar records)) (car records))
+              (else (assoc key (cdr records)))))
+      ;; Exported procedures
+      (define (lookup key)
+        (let ((record (assoc key (cdr tbl))))
+          (if record
+              (cdr record)
+              #f)))
+      (define (insert! key value)
+        (let ((record (assoc key (cdr tbl))))
+          (if record
+              (set! (cdr record) value)
+              (set! (cdr tbl) (cons (cons key value) (cdr tbl))))))
+      ;; Dispatch
+      (define (dispatch msg)
+        (cond ((equal? msg 'lookup) lookup)
+              ((equal? msg 'insert!) insert!)
+              (else (error "TABLE -- unknown message")))))
+      dispatch)
+#+END_SRC
+
+#+BEGIN_SRC scheme :tangle ex-3-24-test.scm
+  (include "ex-3-24")
+  (use test)
+
+  (define tbl-exact (make-table (lambda (x y) (equal? x y))))
+  (test #f
+        ((tbl-exact 'lookup) 'foo))
+
+  ((tbl-exact 'insert!) 'a 1)
+  ((tbl-exact 'insert!) 'b 2)
+  ((tbl-exact 'insert!) 'c 3)
+  (test 1
+        ((tbl-exact 'lookup) 'a))
+  (test 2
+        ((tbl-exact 'lookup) 'b))
+  (test 3
+        ((tbl-exact 'lookup) 'c))
+
+  (define tbl-inexact (make-table (lambda (x y)
+                                    (< (abs (- x y)) .1))))
+  (test #f
+        ((tbl-inexact 'lookup) 'foo))
+  ((tbl-inexact 'insert!) 1.0 'x)
+  (test 'x
+        ((tbl-inexact 'lookup) 1.05))
+#+END_SRC
+
+**** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-22.html#%25_thm_3.25][Exercise 3.25.]]
+
+#+BEGIN_SRC scheme :tangle ex-3-25.scm
+  (define (make-table same-key?)
+    (let ((tbl (cons '*table* '())))
+      (define (assoc key records)
+        (cond ((null? records) #f)
+              ((same-key? key (caar records)) (car records))
+              (else (assoc key (cdr records)))))
+      (define (lookup keys)
+        (let recur ((elems (cdr tbl))
+                    (keys keys))
+          (let ((record (assoc (car keys) elems)))
+            (if record
+                (cond
+                 ;; If the current key maps to a list, there must be more keys to
+                 ;; continue the search.
+                 ((and (pair? (cdr keys)) (pair? (cdr record)))
+                  (recur (cdr record) (cdr keys)))
+                 ;; Ensure that e.g. `(lookup '(a b))` does not succeed if
+                 ;; `(lookup '(a))` does not return a list.
+                 ((null? (cdr keys))
+                  (cdr record))
+                 (else #f))
+                #f))))
+      (define (insert! keys value)
+        (when (null? keys)
+              (error "INSERT! -- keys cannot be empty"))
+        (let recur ((header tbl)
+                    (keys keys))
+          (define (recursively-insert record)
+            (if (null? (cdr keys))
+                (set! (cdr record) value)
+                (begin
+                  ;; Obliterate any non-list associated with the current key,
+                  ;; since it will need to be replaced.
+                  (when (not (pair? (cdr record)))
+                        (set! (cdr record) '()))
+                  (recur record (cdr keys)))))
+          (let ((record (assoc (car keys) (cdr header))))
+            (if (pair? record)
+                (recursively-insert record)
+                (let ((inserted (if record
+                                    record
+                                    (cons (car keys) '()))))
+                  (when (not record)
+                        (set! (cdr header) (cons inserted (cdr header))))
+                  (recursively-insert inserted))))))
+      (define (dispatch msg)
+        (cond ((equal? msg 'lookup) lookup)
+              ((equal? msg 'insert!) insert!)
+              (else (error "TABLE -- unknown message"))))
+      dispatch))
+#+END_SRC
+
+#+BEGIN_SRC scheme :tangle ex-3-25-test.scm
+  (include "ex-3-25")
+  (use test)
+
+  (define (lookup tbl keys)
+    ((tbl 'lookup) keys))
+  (define (insert! tbl keys value)
+    ((tbl 'insert!) keys value))
+  (define tbl (make-table equal?))
+  (test #f
+        (lookup tbl '(a)))
+  (test #f
+        (lookup tbl '(0 1 2)))
+
+  (insert! tbl '(a) 'foo)
+  (insert! tbl '(0 1 2) 'bar)
+  (test 'foo
+        (lookup tbl '(a)))
+  (test #f
+        (lookup tbl '(a b)))
+  (test 'bar
+        (lookup tbl '(0 1 2)))
+  (test #t
+        (pair? (lookup tbl '(0))))
+
+  (insert! tbl '(a b) 'baz)
+  (test 'baz
+        (lookup tbl '(a b)))
+  (test #t
+        (pair? (lookup tbl '(a))))
+#+END_SRC
+
+**** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-22.html#%25_thm_3.26][Exercise 3.26.]]
+
+#+BEGIN_SRC scheme :tangle ex-3-26.scm
+  (define (make-table cmp)
+    (let ((tbl (cons '*table* '())))
+      ;; Accessor functions
+      (define (key node) (caar node))
+      (define (value node) (cdar node))
+      (define (left node) (cadr node))
+      (define (right node) (cddr node))
+      (define (set-value! node v) (set-cdr! (car node) v))
+      (define (set-left! node n) (set-car! (cdr node) n))
+      (define (set-right! node n) (set-cdr! (cdr node) n))
+      (define (make-node k v) (cons #|payload|#  (cons k v)
+                                    #|children|# (cons '() '())))
+
+      (define (lookup k)
+        (let recur ((node (cdr tbl)))
+          (cond ((null? node) #f)
+                ((< (cmp k (key node)) 0) (recur (left node)))
+                ((> (cmp k (key node)) 0) (recur (right node)))
+                (else (value node)))))
+      (define (insert! k v)
+        (set! (cdr tbl)
+              (let recur ((node (cdr tbl)))
+                (cond ((null? node) (make-node k v))
+                      ((< (cmp k (key node)) 0)
+                       (set-left! node (recur (left node)))
+                       node)
+                      ((> (cmp k (key node)) 0)
+                       (set-right! node (recur (right node)))
+                       node)
+                      (else (set-value! node v)
+                            node)))))
+      (define (dispatch msg)
+        (cond ((equal? msg 'lookup) lookup)
+              ((equal? msg 'insert!) insert!)
+              (else (error "TABLE -- unknown message"))))
+      dispatch))
+#+END_SRC
+
+#+BEGIN_SRC scheme :tangle ex-3-26-test.scm
+  (include "ex-3-26")
+  (use test)
+
+  (define (lookup tbl key)
+    ((tbl 'lookup) key))
+  (define (insert! tbl key value)
+    ((tbl 'insert!) key value))
+  (define tbl (make-table (lambda (x y)
+                            (cond ((< x y) -1)
+                                  ((> x y) 1)
+                                  (else 0)))))
+
+  (test #f
+        (lookup tbl 0))
+  (insert! tbl 0 'foo)
+  (test 'foo
+        (lookup tbl 0))
+  (test #f
+        (lookup tbl 1))
+  (insert! tbl -3 'bar)
+  (test 'foo
+        (lookup tbl 0))
+  (test 'bar
+        (lookup tbl -3))
+#+END_SRC
+
+**** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-22.html#%25_thm_3.27][Exercise 3.27.]]
+
+Ehh...
+
+
+*** 3.3.4: [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-22.html#%_sec_3.3.4][A Simulator for Digital Circuits]]
+
+Some common procedures, most copied from the book.
+
+#+BEGIN_SRC scheme :tangle logic-gates-common.scm
+  (include "logic-gates-agenda")
+
+  (define (make-wire)
+    (let ((signal-value 0) (action-procedures '()))
+      (define (set-my-signal! new-value)
+        (if (not (= signal-value new-value))
+            (begin (set! signal-value new-value)
+                   (call-each action-procedures))
+            'done))
+      (define (accept-action-procedure! proc)
+        (set! action-procedures (cons proc action-procedures))
+        (proc))
+      (define (dispatch m)
+        (cond ((eq? m 'get-signal) signal-value)
+              ((eq? m 'set-signal!) set-my-signal!)
+              ((eq? m 'add-action!) accept-action-procedure!)
+              (else (error "Unknown operation -- WIRE" m))))
+      dispatch))
+  (define (call-each procedures)
+    (if (null? procedures)
+        'done
+        (begin
+          ((car procedures))
+          (call-each (cdr procedures)))))
+  (define (get-signal wire)
+    (wire 'get-signal))
+  (define (set-signal! wire new-value)
+    ((wire 'set-signal!) new-value))
+  (define (add-action! wire action-procedure)
+    ((wire 'add-action!) action-procedure))
+
+
+#+END_SRC
+
+#+BEGIN_SRC scheme
+  (define (make-probe log)
+    (define (probe name wire)
+      (add-action! wire
+                   (lambda ()
+                     (cons (list name
+                                 (current-time the-agenda)
+                                 (get-signal wire))
+                           log))))
+    probe)
+
+#+END_SRC
+
+**** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-22.html#%25_thm_3.28][Exercise 3.28.]]
+
+#+NAME: ex-3-28-or-gate
+#+BEGIN_SRC scheme
+  (define (or-gate a1 a2 output)
+    (define (logical-or s1 s2)
+      (define (signal-valid s)
+        (or (= s 0) (= s 1)))
+      (cond ((not (signal-valid s1)) (error "Invalid signal on a1" s1))
+            ((not (signal-valid s2)) (error "Invalid signal on a2" s2))
+            ((and (= s1 0) (= s2 0)) 0)
+            ((and (= s1 1) (= s2 0)) 1)
+            ((and (= s1 0) (= s2 1)) 1)
+            ((and (= s1 1) (= s2 1)) 1)
+            (else (error "Unreachable"))))
+    (define (or-action-procedure)
+      (let ((new-value
+             (logical-or (get-signal a1) (get-signal a2))))
+        (after-delay or-gate-delay
+                     (lambda ()
+                       (set-signal! output new-value)))))
+    (add-action! a1 or-action-procedure)
+    (add-action! a2 or-action-procedure)
+    'ok)
+#+END_SRC
+
+**** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-22.html#%25_thm_3.29][Exercise 3.29.]]
+
+We use this result from De Morgan's laws
+
+\begin{equation*}
+a \vee b = \neg \left( \neg a \wedge \neg b \right)
+\end{equation*}
+
+to implement the or-gate in terms of and-gates and inverters:
+
+#+BEGIN_SRC scheme
+  (define (or-gate a1 a2 output)
+    (let ((na (make-wire)) (nb (make-wire))
+          (c (make-wire)))
+      (inverter a na)
+      (inverter b nb)
+      (and-gate na nb c)
+      (inverter c output)
+      'ok))
+#+END_SRC
+
+This construction is simpler than the primitive and-gate constructed
+above. However, its propagation times are more complex -- the formula for the
+total propagation time \(t_{\mathrm{total}}\), where \(t_{x}\) is the
+propagation delay due to the gate that begins the wire \(x\), is
+
+\begin{equation*}
+t_{\mathrm{total}} = \t_{output} + \t_{c} + \max{(na, nb)}
+\end{equation*}
+
+This may be a larger delay than that of the primitive or-gate if the primitive
+gate can be manufactured to have a delay similar to that of the and-gate, for
+example. On the other hand, if the composition of inverters and and-gates has
+enough of an advantage, such as individual speed or cost, over a single
+primitive or-gate or-gate for whatever reason, the composed or-gate may still
+be preferable.
+
+**** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-22.html#%25_thm_3.30][Exercise 3.30.]]
+
+Straightforward implementation of the diagram:
+
+#+BEGIN_SRC scheme :tangle ex-3-30.scm
+  (define (ripple-carry-adder as bs ss carry)
+    (let ((cs
+           ;; Construct the n internal wires needed to link the full-adders
+           ;; internally and verify that as, bs, and ss all have the same length.
+           (let make-cs ((as as) (bs bs) (ss ss) (cs '()))
+                (cond ((and (null? as) (null? bs) (null? ss)) cs)
+                      ((null? as) (error "Too few bits in as"))
+                      ((null? bs) (error "Too few bits in bs"))
+                      ((null? ss) (error "Too few bits in ss"))
+                      (else (make-cs (cdr as) (cdr bs) (cdr ss)
+                                   (cons (make-wire) cs)))))))
+      (let make-adder ((as as) (bs bs) (cs cs) (ss ss) (carry carry))
+        (cond ((null? as) 'ok)  ; Only test `as` since all lists have same length.
+            (else (full-adder (car as) (car bs) (car cs) (car ss) carry)
+                  (make-adder (cdr as) (cdr bs) (cdr cs) (cdr ss) (car cs)))))))
+#+END_SRC
+
+#+BEGIN_SRC scheme :tangle ex-3-30-test.scm
+  (include "ex-3-30")
+  (use test)
+#+END_SRC
+
+The delay is troublesome -- \(n \mathrm{delay}_{\mathrm{full-adder}}\).
+
+**** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-22.html#%25_thm_3.31][Exercise 3.31.]]
+
+If the procedure is merely added without executing it, the state of the circuit
+can become inconsistent until the first change to the inputs is made. For
+example, consider the execution of ~(half-adder a b s c)~, with ~a~ and ~b~
+initially ~1~ and ~s~ and ~c~ initially ~0~. Without the argument ~proc~ being
+called immediately on the call to ~accept-action-procedure!~, no calls to
+~set-my-signal!~, which is the only means now to call any of the
+~action-procedures~, are made, so ~s~ and ~c~ remain set to ~0~ until the first
+input is set.
+
+**** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-22.html#%25_thm_3.32][Exercise 3.32.]]
+
+It is necessary to execute the events in the same queue (i.e., those that take
+place "at the same time") in FIFO order because it is in fact the case that the
+and-gate observes the change to ~a1~ while it is scheduling ~a2~.
+
+#+NAME: FIFO-agenda
+#+BEGIN_SRC scheme
+  (define agenda
+    '((0 ((lambda () (set-a1! 0))
+          (lambda () (set-a2! 1))))
+      ;; Stable value of and-gate output after initialization.
+      (5 ((lambda () (assert-output 0))))
+      ;; Change a1 and a2 simultaneously.
+      (10 ((lambda () (set-a1! 1))
+           (lambda () (set-a2! 0))))
+      (13 ((lambda ()
+             ;; Lexical capture of new-value at t = 10 after setting just a1.
+             (set-output! 1))
+           (lambda ()
+             ;; Lexical capture of new-value at t = 10 after setting a1 followed
+             ;; by a2.
+             (set-output! 0))))))
+#+END_SRC
+
+#+NAME: LIFO-agenda
+#+BEGIN_SRC scheme
+  (define agenda
+    '((0 ((lambda () (set-a1! 0))
+          (lambda () (set-a2! 1))))
+      ;; Stable value of and-gate output after initialization.
+      (5 ((lambda () (assert-output 0))))
+      ;; Change a1 and a2 simultaneously.
+      (10 ((lambda () (set-a1! 1))
+           (lambda () (set-a2! 0))))
+      (13 ((lambda ()
+             ;; Lexical capture of new-value at t = 10 after setting a1 followed
+             ;; by a2.
+             (set-output! 0))
+           (lambda ()
+             ;; Lexical capture of new-value at t = 10 after setting just a1.
+             ;; THIS IS THE INCORRECT RESULT.
+             (set-output! 1))))))
+#+END_SRC
+
+*** 3.3.5: [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-22.html#%_sec_3.3.4][Propagation of Constraints]]
+
+Implementation of constraint objects from book. Includes the primitive
+procedures
+
+#+BEGIN_SRC scheme :tangle constraint-primitive.scm
+  ;;; Primitive connector construction
+  (define (make-connector)
+    (let ((value #f) (informant #f) (constraints '()))
+      (define (set-my-value newval setter)
+        (cond ((not (has-value? me))
+               (set! value newval)
+               (set! informant setter)
+               (for-each-except setter
+                                inform-about-value
+                                constraints))
+              ((not (= value newval))
+               (error "Contradiction" (list value newval)))
+              (else 'ignored)))
+      (define (forget-my-value retractor)
+        (if (eq? retractor informant)
+            (begin (set! informant #f)
+                   (for-each-except retractor
+                                    inform-about-no-value
+                                    constraints))
+            'ignored))
+      (define (connect new-constraint)
+        (if (not (memq new-constraint constraints))
+            (set! constraints
+                  (cons new-constraint constraints)))
+        (if (has-value? me)
+            (inform-about-value new-constraint))
+        'done)
+      (define (me request)
+        (cond ((eq? request 'has-value?)
+               (if informant #t #f))
+              ((eq? request 'value) value)
+              ((eq? request 'set-value!) set-my-value)
+              ((eq? request 'forget) forget-my-value)
+              ((eq? request 'connect) connect)
+              (else (error "Unknown operation -- CONNECTOR"
+                           request))))
+      me))
+
+  ;;; Convenience procedures for make-connector.
+  (define (for-each-except exception procedure list)
+    (define (loop items)
+      (cond ((null? items) 'done)
+            ((eq? (car items) exception) (loop (cdr items)))
+            (else (procedure (car items))
+                  (loop (cdr items)))))
+    (loop list))
+  (define (has-value? connector)
+    (connector 'has-value?))
+  (define (get-value connector)
+    (connector 'value))
+  (define (set-value! connector new-value informant)
+    ((connector 'set-value!) new-value informant))
+  (define (forget-value! connector retractor)
+    ((connector 'forget) retractor))
+  (define (connect connector new-constraint)
+    ((connector 'connect) new-constraint))
+  (define (inform-about-value constraint)
+    (constraint 'I-have-a-value))
+  (define (inform-about-no-value constraint)
+    (constraint 'I-lost-my-value))
+#+END_SRC
+
+and some commonly used constraints, implemented in terms of the primitives:
+
+#+BEGIN_SRC scheme :tangle constraint-common.scm
+  (include "constraint-primitive")
+
+  ;;; Adder constraint between summands and sum
+  (define (adder a1 a2 sum)
+    (define (process-new-value)
+      (cond ((and (has-value? a1) (has-value? a2))
+             (set-value! sum
+                         (+ (get-value a1) (get-value a2))
+                         me))
+            ((and (has-value? a1) (has-value? sum))
+             (set-value! a2
+                         (- (get-value sum) (get-value a1))
+                         me))
+            ((and (has-value? a2) (has-value? sum))
+             (set-value! a1
+                         (- (get-value sum) (get-value a2))
+                         me))))
+    (define (process-forget-value)
+      (forget-value! sum me)
+      (forget-value! a1 me)
+      (forget-value! a2 me)
+      (process-new-value))
+    (define (me request)
+      (cond ((eq? request 'I-have-a-value)
+             (process-new-value))
+            ((eq? request 'I-lost-my-value)
+             (process-forget-value))
+            (else
+             (error "Unknown request -- ADDER" request))))
+    (connect a1 me)
+    (connect a2 me)
+    (connect sum me)
+    me)
+
+  ;;; Multiplier constraint between multiplicands and product.
+  (define (multiplier m1 m2 product)
+    (define (process-new-value)
+      (cond ((or (and (has-value? m1) (= (get-value m1) 0))
+                 (and (has-value? m2) (= (get-value m2) 0)))
+             (set-value! product 0 me))
+            ((and (has-value? m1) (has-value? m2))
+             (set-value! product
+                         (* (get-value m1) (get-value m2))
+                         me))
+            ((and (has-value? product) (has-value? m1))
+             (set-value! m2
+                         (/ (get-value product) (get-value m1))
+                         me))
+            ((and (has-value? product) (has-value? m2))
+             (set-value! m1
+                         (/ (get-value product) (get-value m2))
+                         me))))
+    (define (process-forget-value)
+      (forget-value! product me)
+      (forget-value! m1 me)
+      (forget-value! m2 me)
+      (process-new-value))
+    (define (me request)
+      (cond ((eq? request 'I-have-a-value)
+             (process-new-value))
+            ((eq? request 'I-lost-my-value)
+             (process-forget-value))
+            (else
+             (error "Unknown request -- MULTIPLIER" request))))
+    (connect m1 me)
+    (connect m2 me)
+    (connect product me)
+    me)
+
+  ;;; Constrain connector to a constant
+  (define (constant value connector)
+    (define (me request)
+      (error "Unknown request -- CONSTANT" request))
+    (connect connector me)
+    (set-value! connector value me)
+    me)
+
+  ;;; Print a message about setting or unsetting of a connector (e.g., for
+  ;;; testing).
+  (define (probe name connector)
+    (define (print-probe value)
+      (display "Probe: ")
+      (display name)
+      (display " = ")
+      (display value)
+      (newline))
+    (define (process-new-value)
+      (print-probe (get-value connector)))
+    (define (process-forget-value)
+      (print-probe "?"))
+    (define (me request)
+      (cond ((eq? request 'I-have-a-value)
+             (process-new-value))
+            ((eq? request 'I-lost-my-value)
+             (process-forget-value))
+            (else
+             (error "Unknown request -- PROBE" request))))
+    (connect connector me)
+    me)
+#+END_SRC
+
+**** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-22.html#%25_thm_3.33][Exercise 3.33.]]
+
+#+BEGIN_SRC scheme :tangle ex-3-33.scm
+  (define (averager a b c)
+    (let ((half (make-connector))
+          (sum (make-connector)))
+      (constant 0.5 half)
+      (adder a b sum)
+      (multiplier half sum c)
+      'ok))
+#+END_SRC
+
+**** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-22.html#%25_thm_3.34][Exercise 3.34.]]
+
+The procedure suggested by Louis won't work when propagation from the
+product to the multiplicands is needed. ~multiplier~ needs at least two of
+~m1~, ~m2~, and ~product~ to be set in order to propagate the constraint from
+the set values to the unset value. However, if one of the multiplicands is
+unset, both are, a situation that ~multiplier~ can't handle.
+
+**** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-22.html#%25_thm_3.35][Exercise 3.35.]]
+
+Straightforward implementation based on ~multiplier~:
+
+#+BEGIN_SRC scheme :tangle ex-3-35.scm
+  (define (squarer a b)
+    (define (process-new-value)
+      (if (has-value? b)
+          (if (< (get-value b) 0)
+              (error "square less than 0 -- SQUARER" (get-value b))
+              (set-value! a (sqrt b)))
+          (let ((aval (get-value a)))
+            (set-value! b (* aval aval))))
+    (define (process-forget-value)
+      (forget-value! b me)
+      (forget-value! a me)
+      (process-new-value))
+    (define (me request)
+      (cond ((eq? request 'I-have-a-value)
+             (process-new-value))
+            ((eq? request 'I-lost-my-value)
+             (process-forget-value))
+            (else
+             (error "Unknown request -- SQUARER" request))))
+    (connect a me)
+    (connect b me)
+    me)
+#+END_SRC
+
+**** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-22.html#%25_thm_3.36][Exercise 3.36.]]
+
+Do in class.
+
+**** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-22.html#%25_thm_3.37][Exercise 3.37.]]
+
+The expression-oriented constraint adder is defined thus in the book:
+
+#+NAME: constraint-adder-expression
+#+BEGIN_SRC scheme
+  (define (c+ x y)
+    (let ((z (make-connector)))
+      (adder x y z)
+      z))
+#+END_SRC
+
+We define similar procedures for subtraction, multiplication, division, and
+constant values:
+
+#+BEGIN_SRC scheme :tangle ex-3-37.scm
+  (include "constraint-common")
+
+  <<constraint-adder-expression>>
+
+  ;;; Constant
+  (define (cv x)
+    (let ((z (make-connector)))
+      (constant x z)
+      z))
+
+  ;;; Subtraction
+  (define (c- x y)
+    ;; $x - y = z \Rightarrow x = y + z$ to avoid having to introduce an
+    ;; additional multiplier and constant constraint.
+    (let ((z (make-connector)))
+      (adder y z x)
+      z))
+
+  ;;; Multiplication
+  (define (c* x y)
+    (let ((z (make-connector)))
+      (multiplier x y z)
+      z))
+
+  ;;; Division
+  (define (c/ x y)
+    ;; $x / y = z \Rightarrow x = y * z$ to avoid having to implement division as
+    ;; a primitive constraint. Pray that $y \neq 0$.
+    (let ((z (make-connector)))
+      (multiplier y z x)
+      z))
+#+END_SRC
+
+
 ** TODO 3.4: Concurrency: Time Is of the Essence
 
 *** TODO 3.4.1: The Nature of Time in Concurrent Systems
@@ -697,38 +1629,26 @@ a. There are 6 combinations of Peter (A), Paul (B), and Mary (C):
    | (C, A, B) |           40 |
    | (C, B, A) |           40 |
 
-b. For each transaction, there are 3 steps:
+b. For transactions A and B, there are 3 steps:
 
-   - Read the current balance from the shared account.
-   - Modify the balance of the individual account.
-   - Write the new balance to the shared account.
+   - Read the current balance from the shared account [Xr].
+   - Perform the calculation.
+   - Write the new balance to the shared account [Xw].
 
-   However, the second step doesn't modify a shared variable, so the relevant
-   combinations for each transaction can be represented by two operations (Xr
-   for read and Xw for write for person X). The six combinations where each
-   account is read and then immediately written by the same person is
-   represented above.
+   However, transaction C reads the shared variable ~balance~ twice, so there
+   are 5 steps:
 
-   Here are some things to notice about concurrency in this scenario:
+   - Read the current balance from the shared account [Cr1].
+   - Perform the division.
+   - Read the current balance from the shared account [Cr2].
+   - Perform the subtraction.
+   - Write the new balance to the shared account [Cw].
 
-   - The actions of A and B don't depend on the current balance, only those
-     of C.
-   - Because of this, it only matters when C reads relative to the times that A
-     or B read, for which there are 4 distinct possibilities.
-     - If C reads before or after both A and B write, the final
-       balance will be the same no matter what order A and B write.
-
-   Here is the table for completeness. Note that no final balances appear here
-   that did not appear above.
-
-   | Order        | Final amount |
-   |--------------+--------------|
-   | (Aw, Bw, Cr) |           45 |
-   | (Bw, Aw, Cr) |           45 |
-   | (Cr, Aw, Bw) |           40 |
-   | (Cr, Bw, Aw) |           40 |
-   | (Aw, Cr, Bw) |           35 |
-   | (Bw, Cr, Aw) |           50 |
+   The calculations don't modify a shared variable, so the relevant
+   combinations for each transaction are combinations of Ar, Aw, Br, Bw, Cr1,
+   Cr2, and Cw, with the constraint that \(t(Ar) \leq t(Aw)\),
+   \(t(Br) \leq t(Bw)\), and \(t(Cr1) \leq t(Cr2) \leq t(Cw)\) or
+   \(t(Cr2) \leq t(Cr1) \leq t(Cw)\).
 
 *** TODO 3.4.2: Mechanisms for Controlling Concurrency
 
