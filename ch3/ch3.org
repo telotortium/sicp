@@ -57,6 +57,10 @@
 
 **** DONE [[view-source:http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-20.html#%_thm_3.3][Exercise 3.3.]]
 
+Modify the ~make-account~ procedure so that it creates password-protected
+accounts. That is, ~make-account~ should take a symbol as an additional
+argument, as in
+
 #+BEGIN_SRC scheme :tangle ex-3-3.scm
   (define (make-account balance password)
     (define (withdraw amount)
