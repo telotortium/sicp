@@ -1914,6 +1914,7 @@ in this section:
     (stream-map (lambda (x) (* x factor)) stream))
 
   <<stream-partial-sums>>
+  <<stream-pairs>>
 #+END_SRC
 
    CLOCK: [2015-01-03 Sat 20:05]--[2015-01-03 Sat 21:19] =>  1:14
@@ -2006,6 +2007,27 @@ Given this, we can create ~S~, the list of integers with no prime factors but
 **** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-24.html#%25_thm_3.62][Exercise 3.62.]]
 
 *** TODO 3.5.3: Exploiting the Stream Paradigm
+    CLOCK: [2015-01-19 Mon 16:53]
+    CLOCK: [2015-01-19 Mon 15:27]--[2015-01-19 Mon 15:48] =>  0:21
+    CLOCK: [2015-01-19 Mon 13:27]--[2015-01-19 Mon 15:27] =>  2:00
+
+For convenience:
+
+#+NAME: stream-pairs
+#+BEGIN_SRC scheme
+  (define (interleave s1 s2)
+    (if (stream-null? s1)
+        s2
+        (cons-stream (stream-car s1)
+                     (interleave s2 (stream-cdr s1)))))
+  (define (pairs s t)
+    (cons-stream
+     (list (stream-car s) (stream-car t))
+     (interleave
+      (stream-map (lambda (x) (list (stream-car s) x))
+                  (stream-cdr t))
+      (pairs (stream-cdr s) (stream-cdr t)))))
+#+END_SRC
 
 **** DONE [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-24.html#%25_thm_3.63][Exercise 3.63.]]
 
@@ -2103,13 +2125,199 @@ for the second accelerated sequence.
   (define acc2 (accelerated-sequence euler-transform acc1))
 #+END_SRC
 
-**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-24.html#%25_thm_3.66][Exercise 3.66.]]
-**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-24.html#%25_thm_3.67][Exercise 3.67.]]
+**** DONE [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-24.html#%25_thm_3.66][Exercise 3.66.]]
+
+Here are the first twenty pairs:
+
+#+BEGIN_SRC scheme :tangle ex-3-66-test.scm
+  (include "stream")
+  (include "stream-util")
+
+  (test (map (lambda (i) (stream-ref (pairs integers integers) i))
+             (iota 20))
+        '((1 1) (1 2) (2 2) (1 3) (2 3) (1 4) (3 3) (1 5) (2 4) (1 6)
+          (3 4) (1 7) (2 5) (1 8) (4 4) (1 9) (2 6) (1 10) (3 5) (1 11)))
+#+END_SRC
+
+Notice that two streams seem to be interleaved:
+
+- A stream of pairs ~(1 k)~ in the second, fourth, etc. positions; i.e., where
+  \(i\) is odd (starting from \(0\)). More
+  precisely, if ~(odd? i)~, ~(stream-ref pairs-stream i)~ is
+  ~(+ 1 (quotient (- i 1) 2))~.
+- A stream of pairs where all pairs that sum to \(n\) are generated before those
+  that sum to \(n + 1\). In these pairs, \(i\) decreases from \(\lfloor n / 2 \rfloor\) to \(2\),
+  since \(i = 1\) is already taken.
+
+**** DONE [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-24.html#%25_thm_3.67][Exercise 3.67.]]
+
+We proceed by induction. Consider the case where all pairs \((S_{k < i}, T_{j})\)
+have been generated. Then the stream to generate consists of the following
+three parts:
+
+- The single element \((S_{i}, T_{0})\).
+- The pairs of \(S_{i}\) with the rest of the elements in \(T\): \((S_{i}, T_{j > 0})\).
+- The pairs the remaining elements of \(S\) with everything: \((S_{k > i}, T_{j})\).
+
+The pair \((S_{0}, T_{0})\) is obviously in the stream to be generated, so our
+construction in fact does produce all the pairs \((S_{i}, T_{j})\). The Scheme
+implementation below straightforwardly generates these three parts of the
+stream (see the comments):
+
+#+BEGIN_SRC scheme :tangle ex-3-67.scm
+  (include "stream")
+  (include "stream-util")
+
+  (define (both-pairs s t)
+    (cons-stream
+     ;; (S_{i}, T_{0})
+     (list (stream-car s) (stream-car t))
+     (interleave
+      ;; (S_{i}, T_{j > 0})
+      (stream-map (lambda (x) (list (stream-car s) x))
+                  (stream-cdr t))
+      ;; (S_{k > i}, T_{j})
+      (both-pairs (stream-cdr s) t))))
+#+END_SRC
+
+#+BEGIN_SRC scheme :tangle ex-3-67-test.scm
+  (use test)
+  (include "ex-3-67")
+#+END_SRC
+
 **** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-24.html#%25_thm_3.68][Exercise 3.68.]]
+
+This does not work---it generates the list \((S_{i}, T_{j}), i \leq j\).
+
 **** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-24.html#%25_thm_3.69][Exercise 3.69.]]
+
+#+BEGIN_SRC scheme ex-3-69.scm
+  (define (triples s t u)
+    )
+#+END_SRC
+
 **** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-24.html#%25_thm_3.70][Exercise 3.70.]]
+
+Here, we want to construct a list of all pairs \((S_{i}, T_{j})\) just as in Exercise
+3.67, but we want to make sure that instead of interleaving streams one after
+the other, we interleave according to whichever stream has a first element with
+a smaller weight.
+
+#+BEGIN_SRC scheme
+  (include "stream")
+  (include "stream-util")
+
+  (define (merge-weighted s1 s2 weight)
+    (let recur ((s1 s1) (s2 s2))
+      (cond ((stream-null? s1) s2)
+            ((stream-null? s2) s1)
+            (else
+             (let* ((s1car (stream-car s1))
+                    (w1 (weight s1))
+                    (s2car (stream-car s2))
+                    (w2 (weight s2)))
+               (cond ((< w1 w2)
+                      (cons-stream s1car (recur (stream-cdr s1) s2)))
+                     ((> w1 w2)
+                      (cons-stream s2car (recur s1 (stream-cdr s2))))
+                     (else
+                      (cons-stream s1car
+                                   (recur (stream-cdr s1)
+                                          (stream-cdr s2))))))))))
+#+END_SRC
+
+#+BEGIN_SRC scheme :tangle ex-3-70.scm
+  (define (weighted-pairs s t weight)
+    (cons-stream
+     ;; (S_{i}, T_{0})
+     (list (stream-car s) (stream-car t))
+     (merge-weighted
+      ;; (S_{i}, T_{j > 0})
+      (stream-map (lambda (x) (list (stream-car s) x))
+                  (stream-cdr t))
+      ;; (S_{k > i}, T_{j})
+      (both-pairs (stream-cdr s) t)
+      weight)))
+#+END_SRC
+
+Now we can compute:
+
+a. the stream of all pairs of positive integers \((i, j)\) with \((i \leq j)\)
+   ordered according to the sum \(i + j\):
+
+   #+BEGIN_SRC scheme :tangle ex-3-70-test.scm
+     (use test)
+     (include "ex-3-70")
+
+   #+END_SRC
+
 **** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-24.html#%25_thm_3.71][Exercise 3.71.]]
 **** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-24.html#%25_thm_3.72][Exercise 3.72.]]
+**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-24.html#%25_thm_3.73][Exercise 3.73.]]
+
+#+BEGIN_SRC scheme :tangle stream-integral.scm
+  (include "stream")
+  (include "stream-util")
+
+  (define (integral integrand initial-value dt)
+    (define int
+      (cons-stream initial-value
+                   (add-streams (scale-stream integrand dt)
+                                int)))
+    int)
+#+END_SRC
+
+
+#+BEGIN_SRC scheme :tangle ex-3-73.scm
+  (include "stream")
+  (include "stream-util")
+
+  (define (RC R C dt)
+    (define (circuit i v0)
+      (add-streams (scale-stream i R)
+                   (integral (scale-stream i (/ 1.0 C)) v0)))
+    circuit)
+#+END_SRC
+
+**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-24.html#%25_thm_3.74][Exercise 3.74.]]
+
+#+BEGIN_SRC scheme ex-3-74.scm
+  (define zero-crossings
+    (stream-map sign-change-detector
+                sense-data
+                (stream-cdr sense-data)))
+#+END_SRC
+
+**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-24.html#%25_thm_3.75][Exercise 3.75.]]
+
+Louis' program is incorrect because you don't
+
+**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-24.html#%25_thm_3.76][Exercise 3.76.]]
+
+#+BEGIN_SRC scheme
+  (define (smooth input-stream)
+    (define (inner input-stream last-value)
+      (let ((avpt (/ (+ (stream-car input-stream)
+                        last-value)
+                     2)))
+        (cons-stream avpt
+                     (inner (stream-cdr input-stream) last-value))))
+    (inner input-stream 0))
+
+  (define zero-crossings
+    (let ((s (smooth sense-stream)))
+      (stream-map sign-change-detector
+                  s (cdr s))))
+#+END_SRC
+
 
 *** TODO 3.5.4: Streams and Delayed Evaluation
+    CLOCK: [2015-01-19 Mon 13:19]--[2015-01-19 Mon 13:25] =>  0:06
+**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-24.html#%25_thm_3.77][Exercise 3.77.]]
+**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-24.html#%25_thm_3.78][Exercise 3.78.]]
+**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-24.html#%25_thm_3.79][Exercise 3.79.]]
+**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-24.html#%25_thm_3.80][Exercise 3.80.]]
+
 *** TODO 3.5.5: Modularity of Functional Programs and Modularity of Objects
+**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-24.html#%25_thm_3.81][Exercise 3.81.]]
+**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-24.html#%25_thm_3.82][Exercise 3.82.]]
