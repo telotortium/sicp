@@ -2005,7 +2005,6 @@ Given this, we can create ~S~, the list of integers with no prime factors but
 **** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-24.html#%25_thm_3.60][Exercise 3.60.]]
 **** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-24.html#%25_thm_3.61][Exercise 3.61.]]
 **** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-24.html#%25_thm_3.62][Exercise 3.62.]]
-
 *** TODO 3.5.3: Exploiting the Stream Paradigm
     CLOCK: [2015-01-19 Mon 16:53]
     CLOCK: [2015-01-19 Mon 15:27]--[2015-01-19 Mon 15:48] =>  0:21
@@ -2213,12 +2212,12 @@ a smaller weight.
             ((stream-null? s2) s1)
             (else
              (let* ((s1car (stream-car s1))
-                    (w1 (weight s1))
                     (s2car (stream-car s2))
-                    (w2 (weight s2)))
-               (cond ((< w1 w2)
+                    (w (weight s1car s2car))
+                    (wrev (weight s2car s1car)))
+               (cond ((< w wrev)
                       (cons-stream s1car (recur (stream-cdr s1) s2)))
-                     ((> w1 w2)
+                     ((> w wrev)
                       (cons-stream s2car (recur s1 (stream-cdr s2))))
                      (else
                       (cons-stream s1car
@@ -2249,11 +2248,23 @@ a. the stream of all pairs of positive integers \((i, j)\) with \((i \leq j)\)
      (use test)
      (include "ex-3-70")
 
+     (define stream-a (weighted-pairs integers integers <))
+     (define stream-b
+       (stream-filter (lambda (p)
+                        (not (apply or
+                                    (map (lambda (q)
+                                           (= 0 (remainder p q)))
+                                         '(2 3 5)))))
+                      (weighted-pairs integers integers
+                                      (lambda (i j)
+                                        (+ (* 2 i)
+                                           (* 3 j)
+                                           (* 5 i j))))))
    #+END_SRC
 
 **** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-24.html#%25_thm_3.71][Exercise 3.71.]]
 **** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-24.html#%25_thm_3.72][Exercise 3.72.]]
-**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-24.html#%25_thm_3.73][Exercise 3.73.]]
+**** DONE [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-24.html#%25_thm_3.73][Exercise 3.73.]]
 
 #+BEGIN_SRC scheme :tangle stream-integral.scm
   (include "stream")
@@ -2279,7 +2290,7 @@ a. the stream of all pairs of positive integers \((i, j)\) with \((i \leq j)\)
     circuit)
 #+END_SRC
 
-**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-24.html#%25_thm_3.74][Exercise 3.74.]]
+**** DONE [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-24.html#%25_thm_3.74][Exercise 3.74.]]
 
 #+BEGIN_SRC scheme ex-3-74.scm
   (define zero-crossings
@@ -2288,20 +2299,38 @@ a. the stream of all pairs of positive integers \((i, j)\) with \((i \leq j)\)
                 (stream-cdr sense-data)))
 #+END_SRC
 
-**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-24.html#%25_thm_3.75][Exercise 3.75.]]
+**** DONE [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-24.html#%25_thm_3.75][Exercise 3.75.]]
 
-Louis' program is incorrect because you don't
+Alyssa wants to run the sign change detector on the smoothed stream. In other
+words, the sign change detector should be run on two values: first, the average
+of the current and last points; second, the average between the last and
+previous-to-last points. However, Louis' program runs the sign change detector
+between the average point and the previous, unsmoothed point. Here is the
+correct version, which needs to preserve the average between the last and
+previous-to-last points:
 
-**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-24.html#%25_thm_3.76][Exercise 3.76.]]
+#+BEGIN_SRC scheme
+  (define (make-zero-crossings input-stream last-value last-avpt)
+    (let* ((current (stream-car input-stream))
+           (avpt (/ (+ current last-value) 2)))
+      (cons-stream
+       (sign-change-detector avpt last-avpt)
+       (make-zero-crossings
+        (stream-cdr input-stream) current avpt))))
+#+END_SRC
+
+**** DONE [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-24.html#%25_thm_3.76][Exercise 3.76.]]
+
+Here, we exploit the inherent independence between the smoothing process and
+the sign-change detection to compose the two transformations:
 
 #+BEGIN_SRC scheme
   (define (smooth input-stream)
     (define (inner input-stream last-value)
-      (let ((avpt (/ (+ (stream-car input-stream)
-                        last-value)
-                     2)))
+      (let* ((current (stream-car input-stream))
+             (avpt (/ (+ current last-value) 2)))
         (cons-stream avpt
-                     (inner (stream-cdr input-stream) last-value))))
+                     (inner (stream-cdr input-stream) current))))
     (inner input-stream 0))
 
   (define zero-crossings
