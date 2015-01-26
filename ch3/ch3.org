@@ -2007,7 +2007,7 @@ Given this, we can create ~S~, the list of integers with no prime factors but
 **** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-24.html#%25_thm_3.62][Exercise 3.62.]]
 
 *** TODO 3.5.3: Exploiting the Stream Paradigm
-    CLOCK: [2015-01-19 Mon 16:53]
+    CLOCK: [2015-01-19 Mon 16:53]--[2015-01-19 Mon 17:15] =>  0:22
     CLOCK: [2015-01-19 Mon 15:27]--[2015-01-19 Mon 15:48] =>  0:21
     CLOCK: [2015-01-19 Mon 13:27]--[2015-01-19 Mon 15:27] =>  2:00
 
