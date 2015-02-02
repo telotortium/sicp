@@ -2,12 +2,19 @@
 #+AUTHOR: Robert Irelan
 #+EMAIL: rirelan@gmail.com
 #+OPTIONS: author:t email:t f:t
-#+PROPERTY: header-args :comments link :noweb no-export
+#+PROPERTY: header-args :comments noweb :noweb no-export
 #+PROPERTY: header-args:scheme :shebang #!/usr/bin/env chicken-scheme
 
 * TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-25.html#%_chap_4][Chapter 4: Metalinguistic Abstraction]] [%]
 
 ** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-26.html#%_sec_4.1][4.1: The Metacircular Evaluator]] [14%]
+   - Note taken on [2015-02-01 Sun 19:22] \\
+     We seem to have a working evaluator now.
+   CLOCK: [2015-02-01 Sun 18:19]--[2015-02-01 Sun 19:22] =>  1:03
+   CLOCK: [2015-02-01 Sun 18:00]--[2015-02-01 Sun 18:18] =>  0:18
+   - Note taken on [2015-02-01 Sun 17:51] \\
+     Will take a pass through this section to implement the entire evaluator before
+     doing more of the exercises.
 
 *** Code
     :PROPERTIES:
@@ -16,9 +23,11 @@
 
 For convenience, put the entire metacircular interpreter here:
 
-#+BEGIN_SRC scheme :tangle interp-sec-4-1
+#+BEGIN_SRC scheme :tangle interp-sec-4-1.scm
   <<primitive-expressions>>
   <<derived-expressions>>
+  <<evaluator-structs>>
+  <<evaluator-running>>
   <<eval-sec-4-1>>
 #+END_SRC
 
@@ -42,8 +51,8 @@ For convenience, put the entire metacircular interpreter here:
              (eval-sequence (begin-actions exp) env))
             ((cond? exp) (eval-4-1 (cond->if exp) env))
             ((application? exp)
-             (apply (eval-4-1 (operator exp) env)
-                    (list-of-values (operands exp) env)))
+             (apply-4-1 (eval-4-1 (operator exp) env)
+                        (list-of-values (operands exp) env)))
             (else
              (error "Unknown expression type -- EVAL" exp))))
   #+END_SRC
@@ -64,7 +73,7 @@ For convenience, put the entire metacircular interpreter here:
                (procedure-environment procedure))))
             (else
              (error
-              "Unknown procedure type -- APPLY" procedure))))
+              "Unknown procedure type -- APPLY-4-1" procedure))))
 
     (define (list-of-values exps env)
       (if (no-operands? exps)
@@ -184,6 +193,7 @@ Test to confirm:
      :Effort:   0:30
      :END:
 *** NEXT [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-26.html#%_sec_4.1.2][4.1.2: Representing Expressions]] [2/10]
+    SCHEDULED: <2015-02-01 Sun>
 **** Code
      :PROPERTIES:
      :VISIBILITY: folded
@@ -194,37 +204,37 @@ the text:
 
 - Primitive expressions:
 
-#+NAME: primitive-expressions
-#+BEGIN_SRC scheme
-<<self-evaluating>>
-<<variables>>
-<<quotations>>
-<<assignments>>
-<<definitions>>
-<<lambda-expressions>>
-<<conditionals>>
-<<sequences>>
-<<procedure-application>>
-#+END_SRC
+  #+NAME: primitive-expressions
+  #+BEGIN_SRC scheme
+    <<self-evaluating>>
+    <<variables>>
+    <<quotations>>
+    <<assignments>>
+    <<definitions>>
+    <<lambda-expressions>>
+    <<conditionals>>
+    <<sequences>>
+    <<procedure-application>>
+  #+END_SRC
 
-  - Self-evaluating items:
+- Self-evaluating items:
 
   #+NAME: self-evaluating
   #+BEGIN_SRC scheme
     (define (self-evaluating? exp)
-      (cond ((number? exp) true)
-            ((string? exp) true)
-            (else false)))
+      (cond ((number? exp) #t)
+            ((string? exp) #t)
+            (else #f)))
   #+END_SRC
 
-  - Variables:
+- Variables:
 
   #+NAME: variables
   #+BEGIN_SRC scheme
     (define (variable? exp) (symbol? exp))
   #+END_SRC
 
-  - Quotations:
+- Quotations:
 
   #+NAME: quotations
   #+BEGIN_SRC scheme
@@ -236,11 +246,10 @@ the text:
     (define (tagged-list? exp tag)
       (if (pair? exp)
           (eq? (car exp) tag)
-          false))
-
+          #f))
   #+END_SRC
 
-  - Assignments:
+- Assignments:
 
   #+NAME: assignments
   #+BEGIN_SRC scheme
@@ -280,7 +289,7 @@ the text:
 
   #+END_SRC
 
-  - Conditionals:
+- Conditionals:
 
   #+NAME: conditionals
   #+BEGIN_SRC scheme
@@ -296,7 +305,7 @@ the text:
       (list 'if predicate consequent alternative))
   #+END_SRC
 
-  - Sequences:
+- Sequences:
 
   #+NAME: sequences
   #+BEGIN_SRC scheme
@@ -313,7 +322,7 @@ the text:
     (define (make-begin seq) (cons 'begin seq))
   #+END_SRC
 
-  - Procedure application:
+- Procedure application:
 
   #+NAME: procedure-application
   #+BEGIN_SRC scheme
@@ -325,56 +334,56 @@ the text:
     (define (rest-operands ops) (cdr ops))
   #+END_SRC
 
-- Derived expressions:
+  - Derived expressions:
 
-#+NAME: derived-expressions
-#+BEGIN_SRC scheme
-<<derived-expressions-cond>>
-<<derived-expressions-let>>
-#+END_SRC
-
-  - ~cond~:
-
-  #+NAME: derived-expressions-cond
+  #+NAME: derived-expressions
   #+BEGIN_SRC scheme
-    (define (cond? exp) (tagged-list? exp 'cond))
-    (define (cond-clauses exp) (cdr exp))
-    (define (cond-else-clause? clause)
-      (eq? (cond-predicate clause) 'else))
-    (define (cond-predicate clause) (car clause))
-    (define (cond-actions clause) (cdr clause))
-    (define (cond->if exp)
-      (expand-clauses (cond-clauses exp)))
-
-    (define (expand-clauses clauses)
-      (if (null? clauses)
-          'false                          ; no else clause
-          (let ((first (car clauses))
-                (rest (cdr clauses)))
-            (if (cond-else-clause? first)
-                (if (null? rest)
-                    (sequence->exp (cond-actions first))
-                    (error "ELSE clause isn't last -- COND->IF"
-                           clauses))
-                (make-if (cond-predicate first)
-                         (sequence->exp (cond-actions first))
-                         (expand-clauses rest))))))
+    <<derived-expressions-cond>>
+    <<derived-expressions-let>>
   #+END_SRC
 
-  - ~let~:
+    - ~cond~:
 
-  #+NAME: derived-expressions-let
-  #+BEGIN_SRC scheme
-    <<ex-4-6>>
-  #+END_SRC
+    #+NAME: derived-expressions-cond
+    #+BEGIN_SRC scheme
+      (define (cond? exp) (tagged-list? exp 'cond))
+      (define (cond-clauses exp) (cdr exp))
+      (define (cond-else-clause? clause)
+        (eq? (cond-predicate clause) 'else))
+      (define (cond-predicate clause) (car clause))
+      (define (cond-actions clause) (cdr clause))
+      (define (cond->if exp)
+        (expand-clauses (cond-clauses exp)))
+
+      (define (expand-clauses clauses)
+        (if (null? clauses)
+            'false                          ; no else clause
+            (let ((first (car clauses))
+                  (rest (cdr clauses)))
+              (if (cond-else-clause? first)
+                  (if (null? rest)
+                      (sequence->exp (cond-actions first))
+                      (error "ELSE clause isn't last -- COND->IF"
+                             clauses))
+                  (make-if (cond-predicate first)
+                           (sequence->exp (cond-actions first))
+                           (expand-clauses rest))))))
+    #+END_SRC
+
+    - ~let~:
+
+    #+NAME: derived-expressions-let
+    #+BEGIN_SRC scheme
+      <<ex-4-6>>
+    #+END_SRC
 
 **** DONE Read SICP 4.1.2
-     SCHEDULED: <2015-01-10 Sat>
-     CLOCK: [2015-01-10 Sat 17:54]--[2015-01-10 Sat 18:09] =>  0:15
+    SCHEDULED: <2015-01-10 Sat>
+    CLOCK: [2015-01-10 Sat 17:54]--[2015-01-10 Sat 18:09] =>  0:15
 
-     :PROPERTIES:
-     :Effort:   0:15
-     :END:
+    :PROPERTIES:
+    :Effort:   0:15
+    :END:
 **** DONE [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-26.html#%_thm_4.2][Exercise 4.2]]
      SCHEDULED: <2015-01-10 Sat>
      CLOCK: [2015-01-10 Sat 18:13]--[2015-01-10 Sat 18:26] =>  0:13
@@ -392,25 +401,28 @@ way to do this is to denote procedure application by the special form
 ~call~. This can be accomplished by the following modification to the
 interpreter:
 
-#+BEGIN_SRC scheme
-  (define (application? exp)
-    (and (pair? exp)
-         (tagged-list? exp 'call)))
-  (define (operator exp) (cadr exp))
-  (define (operands exp) (cddr exp))
-#+END_SRC
+  #+BEGIN_SRC scheme
+    (define (application? exp)
+      (and (pair? exp)
+           (tagged-list? exp 'call)))
+    (define (operator exp) (cadr exp))
+    (define (operands exp) (cddr exp))
+  #+END_SRC
 
-     :PROPERTIES:
+  :PROPERTIES:
      :Effort:   0:15
      :END:
 **** NEXT [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-26.html#%_thm_4.3][Exercise 4.3]]
+     SCHEDULED: <2015-02-01 Sun>
+     CLOCK: [2015-02-01 Sun 16:45]--[2015-02-01 Sun 17:12] =>  0:27
      CLOCK: [2015-01-10 Sat 18:41]--[2015-01-10 Sat 19:18] =>  0:37
 
      #+BEGIN_SRC scheme :tangle symbol-table.scm
+       (use debug)
        (define (put table op type proc)
-         (hash-table-set! table (list op type) proc))
+         (hash-table-set! table (cons op type) proc))
        (define (get table op type)
-         (hash-table-ref/default table (list op type) '()))
+         (hash-table-ref/default table (cons op type) '()))
      #+END_SRC
 
      #+BEGIN_SRC scheme :tangle ex-4-3.scm
@@ -421,14 +433,14 @@ interpreter:
        (include "symbol-table")
        (define *eval-4-1-op-table* (make-parameter (make-hash-table equal?)))
        (define (eval-4-1-get type)
-         (get *eval-4-1-op-table* 'eval type))
+         (get (*eval-4-1-op-table*) 'eval type))
        (define (eval-4-1-put type proc)
-         (put *eval-4-1-op-table* 'eval type proc))
+         (put (*eval-4-1-op-table*) 'eval type proc))
 
        (define (eval-4-1 exp env)
          (cond ((self-evaluating? exp) exp)
                ((variable? exp) (lookup-variable-value exp env))
-               (else (let ((method (eval-4-1-get(car exp))))
+               (else (let ((method (eval-4-1-get (car exp))))
                        (cond ((not (null? method))
                               (method exp env))
                              ((application? exp)
@@ -467,31 +479,139 @@ interpreter:
      :Effort:   0:30
      :END:
 **** NEXT [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-26.html#%_thm_4.4][Exercise 4.4]]
+     SCHEDULED: <2015-02-01 Sun>
+
+#+BEGIN_SRC scheme ex-3-4.scm
+
+#+END_SRC
+
      :PROPERTIES:
      :Effort:   0:15
      :END:
 **** NEXT [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-26.html#%_thm_4.5][Exercise 4.5]]
+     SCHEDULED: <2015-02-01 Sun>
      :PROPERTIES:
      :Effort:   0:15
      :END:
 **** NEXT [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-26.html#%_thm_4.6][Exercise 4.6]]
+     SCHEDULED: <2015-02-01 Sun>
      :PROPERTIES:
      :Effort:   0:15
      :END:
 **** NEXT [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-26.html#%_thm_4.7][Exercise 4.7]]
+     SCHEDULED: <2015-02-01 Sun>
      :PROPERTIES:
      :Effort:   0:15
      :END:
 **** NEXT [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-26.html#%_thm_4.8][Exercise 4.8]]
+     SCHEDULED: <2015-02-01 Sun>
      :PROPERTIES:
      :Effort:   0:15
      :END:
 **** NEXT [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-26.html#%_thm_4.9][Exercise 4.9]]
+     SCHEDULED: <2015-02-01 Sun>
      :PROPERTIES:
      :Effort:   0:30
      :END:
 **** NEXT [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-26.html#%_thm_4.10][Exercise 4.10]]
+     SCHEDULED: <2015-02-01 Sun>
 *** NEXT [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-26.html#%_sec_4.1.3][4.1.3: Evaluator Data Structures]] [/]
+**** Code
+
+#+NAME: evaluator-structs
+#+BEGIN_SRC scheme
+  <<evaluator-structs-predicates>>
+  <<evaluator-structs-procedures>>
+  <<evaluator-structs-environments>>
+#+END_SRC
+
+#+NAME: evaluator-structs-predicates
+#+BEGIN_SRC scheme
+  ;;; Define true and false inside the interpreter, to show that it's not
+  ;;; necessary to conflate the representation of booleans in the interpreter
+  ;;; with the implementing language's representation.
+  (define true 'sec-4-1-true)
+  (define false 'sec-4-1-false)
+  (define (true? x)
+    (not (eq? x false)))
+  (define (false? x)
+    (eq? x false))
+#+END_SRC
+
+#+NAME: evaluator-structs-procedures
+#+BEGIN_SRC scheme
+  (define (make-procedure parameters body env)
+    (list 'procedure parameters body env))
+  (define (compound-procedure? p)
+    (tagged-list? p 'procedure))
+  (define (procedure-parameters p) (cadr p))
+  (define (procedure-body p) (caddr p))
+  (define (procedure-environment p) (cadddr p))
+#+END_SRC
+
+#+NAME: evaluator-structs-environments
+#+BEGIN_SRC scheme
+  (define (enclosing-environment env) (cdr env))
+  (define (first-frame env) (car env))
+  (define the-empty-environment '())
+
+  (define (make-frame variables values)
+    (cons variables values))
+  (define (frame-variables frame) (car frame))
+  (define (frame-values frame) (cdr frame))
+  (define (add-binding-to-frame! var val frame)
+    (set-car! frame (cons var (car frame)))
+    (set-cdr! frame (cons val (cdr frame))))
+
+  (define (extend-environment vars vals base-env)
+    (if (= (length vars) (length vals))
+        (cons (make-frame vars vals) base-env)
+        (if (< (length vars) (length vals))
+            (error "Too many arguments supplied" vars vals)
+            (error "Too few arguments supplied" vars vals))))
+
+  (define (lookup-variable-value var env)
+    (define (env-loop env)
+      (define (scan vars vals)
+        (cond ((null? vars)
+               (env-loop (enclosing-environment env)))
+              ((eq? var (car vars))
+               (car vals))
+              (else (scan (cdr vars) (cdr vals)))))
+      (if (eq? env the-empty-environment)
+          (error "Unbound variable" var)
+          (let ((frame (first-frame env)))
+            (scan (frame-variables frame)
+                  (frame-values frame)))))
+    (env-loop env))
+
+  (define (set-variable-value! var val env)
+    (define (env-loop env)
+      (define (scan vars vals)
+        (cond ((null? vars)
+               (env-loop (enclosing-environment env)))
+              ((eq? var (car vars))
+               (set-car! vals val))
+              (else (scan (cdr vars) (cdr vals)))))
+      (if (eq? env the-empty-environment)
+          (error "Unbound variable -- SET!" var)
+          (let ((frame (first-frame env)))
+            (scan (frame-variables frame)
+                  (frame-values frame)))))
+    (env-loop env))
+
+  (define (define-variable! var val env)
+    (let ((frame (first-frame env)))
+      (define (scan vars vals)
+        (cond ((null? vars)
+               (add-binding-to-frame! var val frame))
+              ((eq? var (car vars))
+               (set-car! vals val))
+              (else (scan (cdr vars) (cdr vals)))))
+      (scan (frame-variables frame)
+            (frame-values frame))))
+#+END_SRC
+
 **** TODO Read SICP 4.1.3
      :PROPERTIES:
      :Effort:   0:15
@@ -500,6 +620,103 @@ interpreter:
 **** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-26.html#%_thm_4.12][Exercise 4.12]]
 **** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-26.html#%_thm_4.13][Exercise 4.13]]
 *** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-26.html#%_sec_4.1.4][4.1.4: Running the Evaluator as a Program]] [/]
+**** Code
+
+#+NAME: evaluator-running
+#+BEGIN_SRC scheme
+  <<evaluator-running-primitives>>
+  <<evaluator-running-setup>>
+  <<evaluator-running-driver>>
+#+END_SRC
+
+- Set up the environment:
+
+  #+NAME: evaluator-running-setup
+  #+BEGIN_SRC scheme
+    (define (setup-environment)
+      (let ((initial-env
+             (extend-environment (primitive-procedure-names)
+                                 (primitive-procedure-objects)
+                                 the-empty-environment)))
+        (define-variable! 'true true initial-env)
+        (define-variable! 'false false initial-env)
+        initial-env))
+    (define the-global-environment (setup-environment))
+  #+END_SRC
+
+- Implement primitive procedures:
+
+  #+NAME: evaluator-running-primitives
+  #+BEGIN_SRC scheme
+    (define (primitive-procedure? proc)
+      (tagged-list? proc 'primitive))
+
+    (define (primitive-implementation proc) (cadr proc))
+
+    (define primitive-procedures
+      (list (list 'car car)
+            (list 'cdr cdr)
+            (list 'cons cons)
+            (list 'null? null?)
+            ;; <more primitives>
+            ))
+    (define (primitive-procedure-names)
+      (map car
+           primitive-procedures))
+
+    (define (primitive-procedure-objects)
+      (map (lambda (proc) (list 'primitive (cadr proc)))
+           primitive-procedures))
+
+    ;;; Save the APPLY procedure from the underlying Scheme. This separates out the
+    ;;; APPLY procedure in the interpreter from that of the underlying Scheme. (I
+    ;;; have renamed the interpreter's version APPLY-4-1 as well, instead of just
+    ;;; APPLY, as used in the original text.)
+    (define apply-in-underlying-scheme apply)
+    (define (apply-primitive-procedure proc args)
+      (apply-in-underlying-scheme
+       (primitive-implementation proc) args))
+  #+END_SRC
+
+- Driver loop:
+
+  #+NAME: evaluator-running-driver
+  #+BEGIN_SRC scheme
+    (define input-prompt ";;; M-Eval input:")
+    (define output-prompt ";;; M-Eval value:")
+    (define (driver-loop)
+      ;;; Define a temporary port duplicated from standard input in order to allow
+      ;;; exiting the driver loop on EOF without exiting the interpreter as well.
+      (define temp-port '())
+      (dynamic-wind
+          (lambda ()
+            (use posix)
+            (set! temp-port (open-input-file* (duplicate-fileno fileno/stdin))))
+          (lambda ()
+            (let iter ()
+              (prompt-for-input input-prompt)
+              (let ((input (read temp-port)))
+                (when (not (eof-object? input))
+                      (let ((output (eval-4-1 input the-global-environment)))
+                        (announce-output output-prompt)
+                        (user-print output))
+                      (iter)))))
+          (lambda () (close-input-port temp-port))))
+    (define (prompt-for-input string)
+      (newline) (newline) (display string) (newline))
+
+    (define (announce-output string)
+      (newline) (display string) (newline))
+
+    (define (user-print object)
+      (if (compound-procedure? object)
+          (display (list 'compound-procedure
+                         (procedure-parameters object)
+                         (procedure-body object)
+                         '<procedure-env>))
+          (display object)))
+  #+END_SRC
+
 **** TODO Read SICP 4.1.4
 **** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-26.html#%_thm_4.14][Exercise 4.14]]
 *** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-26.html#%_sec_4.1.5][4.1.5: Data as Programs]] [/]
@@ -602,8 +819,3 @@ No exercises.
 **** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-29.html#%_thm_4.77][Exercise 4.77]]
 **** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-29.html#%_thm_4.78][Exercise 4.78]]
 **** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-29.html#%_thm_4.79][Exercise 4.79]]
-* Tasks
-** TODO Important Programming Concepts (Even on Embedded Systems)
-   [2015-01-10 Sat]
-** TODO Important Programming Concepts (Even on Embedded Systems)
-   [2015-01-10 Sat]
