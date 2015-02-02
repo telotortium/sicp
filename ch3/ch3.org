@@ -2370,17 +2370,36 @@ This should just be a matter of delaying the evaluation of ~integrand~ until
 the ~cdr~ of the ~cons-stream~ is forced, the same way as is done for the
 implicit definition:
 
-#+BEGIN_SRC scheme
-  (define (integral delayed-integrand initial-value dt)
-    (cons-stream initial-value
-                 (let ((integrand (force delayed-integrand)))
-                   (if (stream-null? integrand)
-                             the-empty-stream
-                             (integral (stream-cdr integrand)
-                                       (+ (* dt (stream-car integrand))
-                                          initial-value)
-                                       dt)))))
+#+BEGIN_SRC scheme :tangle ex-3-77.scm
+  (include "stream")
+  (include "stream-util")
 
+  (define (integral delayed-integrand initial-value dt)
+    (cons-stream
+     initial-value
+     (let ((integrand (force delayed-integrand)))
+       (if (stream-null? integrand)
+           the-empty-stream
+           (integral
+            ;; The first argument to INTEGRAL is a *delayed* integrand.
+            (delay (stream-cdr integrand))
+            (+ (* dt (stream-car integrand))
+               initial-value)
+            dt)))))
+
+#+END_SRC
+
+#+BEGIN_SRC scheme :tangle ex-3-77-test.scm
+  (include "ex-3-77")
+  (use test)
+
+  (define (solve f y0 dt)
+    (define y (integral (delay dy) y0 dt))
+    (define dy (stream-map f y))
+    y)
+
+  (test 2.716924
+        (stream-ref (solve (lambda (y) y) 1 0.001) 1000))
 #+END_SRC
 
 **** DONE [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-24.html#%25_thm_3.78][Exercise 3.78.]]
@@ -2448,7 +2467,6 @@ Another transcription of the equations/signal-flow diagram:
                       (stream-ref vC 10))
                 (test -1.2153
                       (stream-ref iL 10)))
-
 #+END_SRC
 
 *** DONE 3.5.5: Modularity of Functional Programs and Modularity of Objects
@@ -2470,20 +2488,27 @@ Another transcription of the equations/signal-flow diagram:
   ;;; which can take two forms:
   ;;;
   ;;; - GENERATE: emit the next number in the random number sequence
-  ;;; - a number: reset the sequence using the number as the seed
+  ;;; - a number: reset the sequence using the number as the seed. Should be
+  ;;;   between 0 and 1.
   ;;;
   ;;; REQUEST-STREAM must start with a number to initialize the seed.
   (define (rand-stream request-stream)
-    (define (reset? request) (num? request))
-    (when (not (reset? request))
+    ;; Linear congruential generator -- glibc coefficients
+    (define (rand-update x)
+      (define m (expt 2 31))
+      (/ (modulo (+ (* 1103515245 (floor (* x m))) 12345) (expt 2 31))
+         m))
+    (define (reset? request) (number? request))
+    (when (not (or (stream-null? request-stream)
+                   (reset? (stream-car request-stream))))
           (error "RAND-STREAM -- first element must be random seed"))
-    (let rec ((request-stream request-stream)
-              (value-stream the-empty-stream))
+    (let recur ((request-stream request-stream)
+                (value-stream the-empty-stream))
       (if (stream-null? request-stream)
-          the-empty-list
+          the-empty-stream
           (let ((request (stream-car request-stream)))
             (define output-stream
-              (cond ((eq request 'generate) value-stream)
+              (cond ((eq? request 'generate) value-stream)
                     ((reset? request)
                      (cons-stream request
                                   (stream-map rand-update output-stream)))
@@ -2491,6 +2516,11 @@ Another transcription of the equations/signal-flow diagram:
             (cons-stream (stream-car output-stream)
                          (rec (stream-cdr request-stream)
                               (stream-cdr output-stream)))))))
+#+END_SRC
+
+
+#+BEGIN_SRC scheme :tangle
+
 #+END_SRC
 
 **** DONE [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-24.html#%25_thm_3.82][Exercise 3.82.]]
