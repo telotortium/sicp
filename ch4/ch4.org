@@ -684,16 +684,13 @@ interpreter:
 
   #+NAME: evaluator-running-driver
   #+BEGIN_SRC scheme
+    (use posix)
     (define input-prompt ";;; M-Eval input:")
     (define output-prompt ";;; M-Eval value:")
     (define (driver-loop)
       ;;; Define a temporary port duplicated from standard input in order to allow
       ;;; exiting the driver loop on EOF without exiting the interpreter as well.
-      (define temp-port '())
-      (dynamic-wind
-          (lambda ()
-            (use posix)
-            (set! temp-port (open-input-file* (duplicate-fileno fileno/stdin))))
+      (with-input-from-port (open-input-file* (duplicate-fileno fileno/stdin))
           (lambda ()
             (let iter ()
               (prompt-for-input input-prompt)
@@ -702,8 +699,7 @@ interpreter:
                       (let ((output (eval-4-1 input the-global-environment)))
                         (announce-output output-prompt)
                         (user-print output))
-                      (iter)))))
-          (lambda () (close-input-port temp-port))))
+                      (iter)))))))
     (define (prompt-for-input string)
       (newline) (newline) (display string) (newline))
 
