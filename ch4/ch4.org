@@ -658,6 +658,8 @@ interpreter:
             (list 'cdr cdr)
             (list 'cons cons)
             (list 'null? null?)
+            (list '+ +)
+            (list '- -)
             ;; <more primitives>
             ))
     (define (primitive-procedure-names)
