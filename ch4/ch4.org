@@ -708,7 +708,7 @@ interpreter:
           (lambda ()
             (let iter ()
               (prompt-for-input input-prompt)
-              (let ((input (read temp-port)))
+              (let ((input (read)))
                 (when (not (eof-object? input))
                       (let ((output (eval-4-1 input the-global-environment)))
                         (announce-output output-prompt)
