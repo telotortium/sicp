@@ -4,6 +4,7 @@
 #+OPTIONS: author:t email:t f:t
 #+PROPERTY: header-args :comments noweb :noweb no-export
 #+PROPERTY: header-args:scheme :shebang #!/usr/bin/env chicken-scheme
+#+FILETAGS: :SICP:
 
 * TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-25.html#%_chap_4][Chapter 4: Metalinguistic Abstraction]] [%]
 

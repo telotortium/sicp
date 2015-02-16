@@ -4,6 +4,7 @@
 #+OPTIONS: author:t email:t f:t
 #+PROPERTY: header-args :comments link :noweb no-export
 #+PROPERTY: header-args:scheme :shebang #!/usr/bin/env chicken-scheme
+#+FILETAGS: :SICP:
 
 * TODO Chapter 3: [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-19.html#%_chap_3][Modularity, Objects, and State]]
 
