@@ -38,6 +38,7 @@ For convenience, put the entire metacircular interpreter here:
     <<eval-sec-4-1-aux>>
     (define (eval-4-1 exp env)
       (cond ((self-evaluating? exp) exp)
+            ((boolean? exp) (make-boolean exp))
             ((variable? exp) (lookup-variable-value exp env))
             ((quoted? exp) (text-of-quotation exp))
             ((assignment? exp) (eval-assignment exp env))
@@ -207,6 +208,7 @@ the text:
   #+NAME: primitive-expressions
   #+BEGIN_SRC scheme
     <<self-evaluating>>
+    <<booleans>>
     <<variables>>
     <<quotations>>
     <<assignments>>
@@ -225,6 +227,18 @@ the text:
       (cond ((number? exp) #t)
             ((string? exp) #t)
             (else #f)))
+  #+END_SRC
+
+- Boolean:
+
+  #+NAME: booleans
+  #+BEGIN_SRC scheme
+    (define (boolean? exp)
+      (or (eq? exp #t) (eq? exp #f)))
+    (define (make-boolean exp)
+      (cond ((eq? exp #t) true)
+            ((eq? exp #f) false)
+            (else (error "MAKE-BOOLEAN -- passed non-boolean"))))
   #+END_SRC
 
 - Variables:
