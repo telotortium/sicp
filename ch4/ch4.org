@@ -93,6 +93,8 @@ For convenience, put the entire metacircular interpreter here:
             (else (eval-4-1 (first-exp exps) env)
                   (eval-sequence (rest-exps exps) env))))
 
+    <<ex-4-4-eval-and-or>>
+
     (define (eval-assignment exp env)
       (set-variable-value! (assignment-variable exp)
                            (eval-4-1 (assignment-value exp) env)
@@ -194,7 +196,7 @@ Test to confirm:
      :PROPERTIES:
      :Effort:   0:30
      :END:
-*** NEXT [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-26.html#%_sec_4.1.2][4.1.2: Representing Expressions]] [2/10]
+*** NEXT [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-26.html#%_sec_4.1.2][4.1.2: Representing Expressions]] [4/10]
     SCHEDULED: <2015-02-01 Sun>
 **** Code
      :PROPERTIES:
@@ -427,8 +429,8 @@ interpreter:
   :PROPERTIES:
      :Effort:   0:15
      :END:
-**** NEXT [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-26.html#%_thm_4.3][Exercise 4.3]]
-     SCHEDULED: <2015-02-07 Sat>
+**** DONE [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-26.html#%_thm_4.3][Exercise 4.3]]
+     SCHEDULED: <2015-02-16 Mon>
      CLOCK: [2015-02-01 Sun 16:45]--[2015-02-01 Sun 17:12] =>  0:27
      CLOCK: [2015-01-10 Sat 18:41]--[2015-01-10 Sat 19:18] =>  0:37
 
@@ -493,43 +495,288 @@ interpreter:
      :PROPERTIES:
      :Effort:   0:30
      :END:
-**** NEXT [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-26.html#%_thm_4.4][Exercise 4.4]]
-     SCHEDULED: <2015-02-07 Sat>
+**** DONE [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-26.html#%_thm_4.4][Exercise 4.4]]
+     SCHEDULED: <2015-02-16 Mon>
+     CLOCK: [2015-02-16 Mon 13:49]--[2015-02-16 Mon 14:02] =>  0:13
 
-#+BEGIN_SRC scheme ex-3-4.scm
+#+NAME: ex-4-4-eval-and-or
+#+BEGIN_SRC scheme ex-4-4.scm
+  (define (eval-and exps env)
+    (if (null? exps)
+        true
+        (let (first (first-exp exps))
+             (cond ((last-exp? exps) (eval-4-1 first env))
+                   ((not (true? first)) false)
+                   (else (eval-and (rest-exps exps) env))))))
 
+  (define (eval-or exps env)
+    (if (null? exps)
+        false
+        (let (first (first-exp exps))
+             (cond ((true? first) first)
+                   (else (eval-or (rest-exps exps) env))))))
 #+END_SRC
 
      :PROPERTIES:
      :Effort:   0:15
      :END:
 **** NEXT [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-26.html#%_thm_4.5][Exercise 4.5]]
-     SCHEDULED: <2015-02-07 Sat>
+     SCHEDULED: <2015-02-16 Mon>
+     CLOCK: [2015-02-16 Mon 14:02]--[2015-02-16 Mon 14:19] =>  0:17
+
+#+NAME: ex-4-5-cond-recipient
+#+BEGIN_SRC scheme
+  (define (cond? exp) (tagged-list? exp 'cond))
+  (define (cond-clauses exp) (cdr exp))
+  (define (cond-else-clause? clause)
+    (eq? (cond-predicate clause) 'else))
+  (define (cond-recipient-clause? clause)
+    (eq? (cadr clause) '=>))
+  (define (cond-predicate clause) (car clause))
+  (define (cond-actions clause) (cdr clause))
+  (define (cond->if exp)
+    (expand-clauses (cond-clauses exp)))
+
+  (define (expand-clauses clauses)
+    (if (null? clauses)
+        'false                          ; no else clause
+        (let ((first (car clauses))
+              (rest (cdr clauses)))
+          (cond ((cond-else-clause? first)
+                 (if (null? rest)
+                     (sequence->exp (cond-actions first))
+                     (error "ELSE clause isn't last -- COND->IF"
+                            clauses)))
+                ((cond-recipient-clause? first)
+                 (make-if ()))
+                (else (make-if (cond-predicate first)
+                               (sequence->exp (cond-actions first))
+                               (expand-clauses rest)))))))
+
+  (cond ((pred1) => foobar)
+        ((pred2) quux)
+        (else baz))
+
+  (let (res1 (pred1))
+    (if res1
+        (foobar res1)
+        (if (pred2)
+            quux
+            baz)))
+
+  ((lambda (res1)
+     (if res1
+         (foobar res1)
+         (if (pred2)
+             quux
+             baz)))
+   (pred1))
+#+END_SRC
+
      :PROPERTIES:
-     :Effort:   0:15
+     :Effort:   0:30
      :END:
 **** NEXT [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-26.html#%_thm_4.6][Exercise 4.6]]
-     SCHEDULED: <2015-02-07 Sat>
+     SCHEDULED: <2015-02-16 Mon>
+     CLOCK: [2015-02-16 Mon 14:19]--[2015-02-16 Mon 14:22] =>  0:03
+
+#+NAME: ex-4-6
+#+BEGIN_SRC scheme
+
+#+END_SRC
+
      :PROPERTIES:
-     :Effort:   0:15
+     :Effort:   0:30
      :END:
 **** NEXT [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-26.html#%_thm_4.7][Exercise 4.7]]
-     SCHEDULED: <2015-02-07 Sat>
+     SCHEDULED: <2015-02-16 Mon>
      :PROPERTIES:
      :Effort:   0:15
      :END:
 **** NEXT [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-26.html#%_thm_4.8][Exercise 4.8]]
-     SCHEDULED: <2015-02-07 Sat>
+     SCHEDULED: <2015-02-16 Mon>
      :PROPERTIES:
      :Effort:   0:15
      :END:
 **** NEXT [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-26.html#%_thm_4.9][Exercise 4.9]]
-     SCHEDULED: <2015-02-07 Sat>
+     SCHEDULED: <2015-02-16 Mon>
      :PROPERTIES:
      :Effort:   0:30
      :END:
 **** NEXT [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-26.html#%_thm_4.10][Exercise 4.10]]
-     SCHEDULED: <2015-02-07 Sat>
+     SCHEDULED: <2015-02-16 Mon>
+     CLOCK: [2015-02-17 Tue 00:42]--[2015-02-17 Tue 00:59] =>  0:17
+     CLOCK: [2015-02-17 Tue 00:05]--[2015-02-17 Tue 00:39] =>  0:34
+     CLOCK: [2015-02-16 Mon 17:32]--[2015-02-16 Mon 17:46] =>  0:14
+     CLOCK: [2015-02-16 Mon 14:22]--[2015-02-16 Mon 16:05] =>  1:43
+
+I'm going to try to do this with M-expressions.
+
+#+BEGIN_EXAMPLE
+  S ::= ...
+
+  SEXPR ::= ATOM
+            | '(' SEXPR_END
+  SEXPR_END ::= ')'
+                | SEXPR_CDR
+                | SEXPR_REST
+  SEXPR_CDR ::= '.' SEXPR ')'
+  SEXPR_REST ::= SEXPRS ')'
+  SEXPRS ::= EMPTY
+             | SEXPR SEXPRS
+  ATOM ::= NUM | BOOL | SYMBOL
+  NUM ::= /[0-9]+(\.[0-9]*)?|\.[0-9]+/
+  BOOL ::= "#t" | "#f"
+  SYMBOL ::= /[-+*/_a-zA-Z][-+*/_a-zA-Z0-9]*/
+
+#+END_EXAMPLE
+
+#+BEGIN_SRC scheme :tangle ex-4-10.scm
+
+  (define (split-input port)
+    (reverse
+     (let iter ((words '()))
+       (let ((in (read-char port)))
+         (cond ((eof-object? in) words)
+               ((char-whitespace? in) (iter words))
+               (else
+                (iter
+                 (cons
+                  (list->string
+                   (reverse
+                    (let getchars ((chars (list in)))
+                      (let ((in (peek-char port)))
+                        (cond ((eof-object? in) chars)
+                              ((char-whitespace? in) chars)
+                              (else (getchars (cons (read-char port) chars))))))))
+                  words))))))))
+
+  (define (scan-terminal port start? continue? string->result)
+    (let ((in (peek-char port)))
+      (if (or (eof-object? in) (not (start? in)))
+          '()
+          (let iter ((chars (list (read-char port))))
+            (let ((in (peek-char port)))
+              (if (or (eof-object? in) (not (continue? in)))
+                  (string->result
+                   ((compose list->string reverse) chars))
+                  (iter (cons (read-char port) chars))))))))
+
+  (define (scan-symbol port)
+    (define (symbol-start? c)
+      (or (char-alphabetic? c)
+          (any identity (map (lambda (x) (char=? c x))
+                             '(#\+ #\- #\* #\/ #\_)))))
+    (define (symbol-continue? c)
+      (or (symbol-start? c) (char-numeric? c)))
+    (scan-terminal port symbol-start? symbol-continue? string->symbol))
+
+  (define (scan-num port)
+    (scan-terminal port char-numeric? char-numeric? string->number))
+
+  (define true #t)
+  (define false #f)
+  (define (scan-bool port)
+    (scan-terminal port
+                   (lambda (c) (char=? c #\#))
+                   (lambda (c) (or (char-ci=? #\t) (char-ci=? #\f)))
+                   (lambda (s) (cond ((string-ci=? "#t") true)
+                                     (else false)))))
+
+  (define (consume-whitespace port)
+    (scan-terminal port char-whitespace? char-whitespace? (lambda (s) 'whitespace)))
+  (define (consume-line-comment port)
+    (scan-terminal port
+                   (lambda (c) (char=? #\; c))
+                   (lambda (c) (not (char=? #\newline c)))
+                   (lambda (s) 'line-comment)))
+  (define (consume-space port)
+    (if (or (null? (consume-whitespace port))
+            (null? (consume-line-comment port)))
+        '()
+        (consume-space port)))
+
+  (define lparen #\()
+  (define (scan-lparen port)
+    (scan-terminal port
+                   (lambda (c) (char=? c #\())
+                   (lambda (c) #f)
+                   (lambda (s) lparen)))
+  (define rparen #\))
+  (define (scan-rparen port)
+    (scan-terminal port
+                   (lambda (c) (char=? c #\)))
+                   (lambda (c) #f)
+                   (lambda (s) rparen)))
+  (define lbracket #\[)
+  (define (scan-lbracket port)
+    (scan-terminal port
+                   (lambda (c) (char=? c #\[))
+                   (lambda (c) #f)
+                   (lambda (s) lbracket)))
+  (define rbracket #\])
+  (define (scan-rbracket port)
+    (scan-terminal port
+                   (lambda (c) (char=? c #\]))
+                   (lambda (c) #f)
+                   (lambda (s) rbracket)))
+  (define dot #\.)
+  (define (scan-dot port)
+    (scan-terminal port
+                   (lambda (c) (char=? c #\]))
+                   (lambda (c) #f)
+                   (lambda (s) dot)))
+
+  (define (identity x) x)
+  (define (nonnull? x) (not (null? x)))
+  (define (atom? x)
+    (or (number? x) (symbol? x) (boolean? x)))
+  (define (scan-next-token port)
+    (consume-space port)
+    (cond ((nonnull? (scan-lparen port)) => identity)
+          ((nonnull? (scan-rparen port)) => identity)
+          ((nonnull? (scan-lbracket port)) => identity)
+          ((nonnull? (scan-rbracket port)) => identity)
+          ((nonnull? (scan-dot port)) => identity)
+          ((nonnull? (scan-symbol port)) => identity)
+          ((nonnull? (scan-num port)) => identity)
+          ((nonnull? (scan-bool port)) => identity)
+
+          ((eof-object? (peek-char port)) => identity)
+          (else (error "SCAN-NEXT-TOKEN: Next token not found"))))
+  (define (make-next-token port)
+    (define lookahead '())
+    (define (get)
+      (if (nonnull? lookahead)
+          (let ((token lookahead))
+            (set! lookahead '())
+            token)
+          (scan-next-token port)))
+    (define (unget token)
+      (if (null? token)
+          (set! lookahead token)
+          (error "NEXT-TOKEN -- tried to unget with no lookahead")))
+    (define (dispatch msg)
+      (cond ((eq? msg 'get) get)
+            ((eq? msg 'unget) unget)
+            (else (error "NEXT-TOKEN -- unrecognized message"))))
+    dispatch)
+
+  (define (read-sexpr next-token)
+    (let ((token ((next-token 'get))))
+      (cond ((atom? token) token)
+            ((eq? token lparen) (read-sexpr-end next-token))
+            (else "READ-SEXPR: No parse"))))
+  (define (read-sexpr-end next-token)
+    (let ((token ((next-token 'get))))
+      (cond ((eq? token rparen) '())
+            ((eq? token) (read-sexpr-end next-token))
+            (else "READ-SEXPR: No parse"))))
+#+END_SRC
+
+     :PROPERTIES:
+     :Effort:   3:00
+     :END:
 *** NEXT [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-26.html#%_sec_4.1.3][4.1.3: Evaluator Data Structures]] [/]
 **** Code
 
