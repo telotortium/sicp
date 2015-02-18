@@ -605,6 +605,9 @@ interpreter:
      :END:
 **** NEXT [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-26.html#%_thm_4.10][Exercise 4.10]]
      SCHEDULED: <2015-02-16 Mon>
+     - Note taken on [2015-02-17 Tue 17:24] \\
+       I've got the lexer done. Onto the parser.
+     CLOCK: [2015-02-17 Tue 16:32]--[2015-02-17 Tue 17:25] =>  0:53
      CLOCK: [2015-02-17 Tue 00:42]--[2015-02-17 Tue 00:59] =>  0:17
      CLOCK: [2015-02-17 Tue 00:05]--[2015-02-17 Tue 00:39] =>  0:34
      CLOCK: [2015-02-16 Mon 17:32]--[2015-02-16 Mon 17:46] =>  0:14
@@ -632,29 +635,18 @@ I'm going to try to do this with M-expressions.
 #+END_EXAMPLE
 
 #+BEGIN_SRC scheme :tangle ex-4-10.scm
+  <<mexpr-lexer>>
+  <<mexpr-parser>>
+#+END_SRC
 
-  (define (split-input port)
-    (reverse
-     (let iter ((words '()))
-       (let ((in (read-char port)))
-         (cond ((eof-object? in) words)
-               ((char-whitespace? in) (iter words))
-               (else
-                (iter
-                 (cons
-                  (list->string
-                   (reverse
-                    (let getchars ((chars (list in)))
-                      (let ((in (peek-char port)))
-                        (cond ((eof-object? in) chars)
-                              ((char-whitespace? in) chars)
-                              (else (getchars (cons (read-char port) chars))))))))
-                  words))))))))
+#+NAME: mexpr-lexer
+#+BEGIN_SRC scheme
+  (use srfi-1)
 
   (define (scan-terminal port start? continue? string->result)
     (let ((in (peek-char port)))
       (if (or (eof-object? in) (not (start? in)))
-          '()
+          #f
           (let iter ((chars (list (read-char port))))
             (let ((in (peek-char port)))
               (if (or (eof-object? in) (not (continue? in)))
@@ -662,70 +654,101 @@ I'm going to try to do this with M-expressions.
                    ((compose list->string reverse) chars))
                   (iter (cons (read-char port) chars))))))))
 
+  (define (atomize atom) `(atom ,atom))
   (define (scan-symbol port)
     (define (symbol-start? c)
       (or (char-alphabetic? c)
-          (any identity (map (lambda (x) (char=? c x))
-                             '(#\+ #\- #\* #\/ #\_)))))
+          (find (lambda (x) (char=? c x)) '(#\+ #\- #\* #\/ #\_))))
     (define (symbol-continue? c)
       (or (symbol-start? c) (char-numeric? c)))
-    (scan-terminal port symbol-start? symbol-continue? string->symbol))
+    (scan-terminal port symbol-start? symbol-continue? (compose atomize string->symbol)))
 
   (define (scan-num port)
-    (scan-terminal port char-numeric? char-numeric? string->number))
+    (scan-terminal port char-numeric? char-numeric? (compose atomize string->number)))
 
   (define true #t)
   (define false #f)
   (define (scan-bool port)
     (scan-terminal port
                    (lambda (c) (char=? c #\#))
-                   (lambda (c) (or (char-ci=? #\t) (char-ci=? #\f)))
-                   (lambda (s) (cond ((string-ci=? "#t") true)
-                                     (else false)))))
+                   (lambda (c) (or (char-ci=? c #\t) (char-ci=? c #\f)))
+                   (lambda (s) (cond ((string-ci=? s "#t") (atomize true))
+                                     (else (atomize false))))))
 
   (define (consume-whitespace port)
-    (scan-terminal port char-whitespace? char-whitespace? (lambda (s) 'whitespace)))
+    (scan-terminal port char-whitespace? char-whitespace? (constant 'whitespace)))
   (define (consume-line-comment port)
     (scan-terminal port
                    (lambda (c) (char=? #\; c))
                    (lambda (c) (not (char=? #\newline c)))
-                   (lambda (s) 'line-comment)))
+                   (constant 'line-comment)))
   (define (consume-space port)
-    (if (or (null? (consume-whitespace port))
-            (null? (consume-line-comment port)))
-        '()
+    (if (not (and (consume-whitespace port)
+                  (consume-line-comment port)))
+        #f
         (consume-space port)))
 
+  (define (constant value) (lambda (x) value))
   (define lparen #\()
   (define (scan-lparen port)
     (scan-terminal port
                    (lambda (c) (char=? c #\())
                    (lambda (c) #f)
-                   (lambda (s) lparen)))
+                   (constant lparen)))
   (define rparen #\))
   (define (scan-rparen port)
     (scan-terminal port
                    (lambda (c) (char=? c #\)))
                    (lambda (c) #f)
-                   (lambda (s) rparen)))
+                   (constant rparen)))
   (define lbracket #\[)
   (define (scan-lbracket port)
     (scan-terminal port
                    (lambda (c) (char=? c #\[))
                    (lambda (c) #f)
-                   (lambda (s) lbracket)))
+                   (constant lbracket)))
   (define rbracket #\])
   (define (scan-rbracket port)
     (scan-terminal port
                    (lambda (c) (char=? c #\]))
                    (lambda (c) #f)
-                   (lambda (s) rbracket)))
+                   (constant rbracket)))
   (define dot #\.)
   (define (scan-dot port)
     (scan-terminal port
-                   (lambda (c) (char=? c #\]))
+                   (lambda (c) (char=? c #\.))
                    (lambda (c) #f)
-                   (lambda (s) dot)))
+                   (constant dot)))
+  (define quote #\')
+  (define (scan-quote port)
+    (scan-terminal port
+                   (lambda (c) (char=? c #\'))
+                   (lambda (c) #f)
+                   (constant quote)))
+  (define quasiquote #\`)
+  (define (scan-quasiquote port)
+    (scan-terminal port
+                   (lambda (c) (char=? c #\`))
+                   (lambda (c) #f)
+                   (constant quasiquote)))
+  ;;; Parse both unquote operators here, since we need the lookahead to
+  ;;; distinguish between unquote (",") and unquote-splicing (",@").
+  (define unquote #\,)
+  (define unquote-splicing '(#\, #\@))
+  (define (scan-unquotes port)
+    (let ((in (peek-char port)))
+      (if (or (eof-object? in)
+              (not (char=? in #\,)))
+          #f
+          (begin
+            (read-char port)
+            (let ((in (peek-char port)))
+              (if (or (eof-object? in)
+                      (not (char=? in #\@)))
+                  unquote
+                  (begin
+                    (read-char port)
+                    unquote-splicing)))))))
 
   (define (identity x) x)
   (define (nonnull? x) (not (null? x)))
@@ -733,17 +756,27 @@ I'm going to try to do this with M-expressions.
     (or (number? x) (symbol? x) (boolean? x)))
   (define (scan-next-token port)
     (consume-space port)
-    (cond ((nonnull? (scan-lparen port)) => identity)
-          ((nonnull? (scan-rparen port)) => identity)
-          ((nonnull? (scan-lbracket port)) => identity)
-          ((nonnull? (scan-rbracket port)) => identity)
-          ((nonnull? (scan-dot port)) => identity)
-          ((nonnull? (scan-symbol port)) => identity)
-          ((nonnull? (scan-num port)) => identity)
-          ((nonnull? (scan-bool port)) => identity)
+    (cond ((scan-lparen port) => identity)
+          ((scan-rparen port) => identity)
+          ((scan-lbracket port) => identity)
+          ((scan-rbracket port) => identity)
+          ((scan-dot port) => identity)
 
-          ((eof-object? (peek-char port)) => identity)
-          (else (error "SCAN-NEXT-TOKEN: Next token not found"))))
+          ((scan-unquotes port) => identity)
+          ((scan-quasiquote port) => identity)
+          ((scan-quote port) => identity)
+
+          ((scan-symbol port) => identity)
+          ((scan-num port) => identity)
+          ((scan-bool port) => identity)
+
+          ((eof-object? (peek-char port)) (peek-char port))
+          (else (error "SCAN-NEXT-TOKEN: Next token not found")))
+    )
+#+END_SRC
+
+#+NAME: mexpr-parser
+#+BEGIN_SRC scheme
   (define (make-next-token port)
     (define lookahead '())
     (define (get)
