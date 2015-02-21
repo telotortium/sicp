@@ -605,6 +605,7 @@ interpreter:
      :END:
 **** NEXT [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-26.html#%_thm_4.10][Exercise 4.10]]
      SCHEDULED: <2015-02-16 Mon>
+     CLOCK: [2015-02-20 Fri 17:14]--[2015-02-20 Fri 19:01] =>  1:47
      - Note taken on [2015-02-17 Tue 17:24] \\
        I've got the lexer done. Onto the parser.
      CLOCK: [2015-02-17 Tue 16:32]--[2015-02-17 Tue 17:25] =>  0:53
@@ -619,14 +620,17 @@ I'm going to try to do this with M-expressions.
   S ::= ...
 
   SEXPR ::= ATOM
+            | '\'' SEXPR
+            | '`' SEXPR
+            | ',' SEXPR
+            | ',@' SEXPR
             | '(' SEXPR_END
-  SEXPR_END ::= ')'
-                | SEXPR_CDR
-                | SEXPR_REST
-  SEXPR_CDR ::= '.' SEXPR ')'
-  SEXPR_REST ::= SEXPRS ')'
-  SEXPRS ::= EMPTY
-             | SEXPR SEXPRS
+  SEXPR_BODY ::= ')'
+                | SEXPR SEXPR_END
+  SEXPR_END ::= '.' SEXPR ')'
+                | SEXPRS_REST
+  SEXPRS_REST ::= ')'
+                  | SEXPR SEXPRS_REST
   ATOM ::= NUM | BOOL | SYMBOL
   NUM ::= /[0-9]+(\.[0-9]*)?|\.[0-9]+/
   BOOL ::= "#t" | "#f"
@@ -654,11 +658,14 @@ I'm going to try to do this with M-expressions.
                    ((compose list->string reverse) chars))
                   (iter (cons (read-char port) chars))))))))
 
-  (define (atomize atom) `(atom ,atom))
+  (define (atomize atom) `(atom . ,atom))
+  (define (atom-token? token) (and (pair? token) (eq? (car token) 'atom)))
+  (define (atom-value token) (cdr token))
   (define (scan-symbol port)
     (define (symbol-start? c)
       (or (char-alphabetic? c)
-          (find (lambda (x) (char=? c x)) '(#\+ #\- #\* #\/ #\_))))
+          (char-numeric? c)
+          (find (lambda (x) (char=? c x)) '(#\+ #\- #\* #\/ #\= #\< #\> #\? #\_))))
     (define (symbol-continue? c)
       (or (symbol-start? c) (char-numeric? c)))
     (scan-terminal port symbol-start? symbol-continue? (compose atomize string->symbol)))
@@ -688,49 +695,36 @@ I'm going to try to do this with M-expressions.
         #f
         (consume-space port)))
 
+  ;; Single-character tokens
   (define (constant value) (lambda (x) value))
+  (define (make-scan-literal-char c)
+    (lambda (port)
+      (scan-terminal port
+                     (lambda (inc) (char=? c inc))
+                     (lambda (inc) #f)
+                     (constant c))))
+
   (define lparen #\()
-  (define (scan-lparen port)
-    (scan-terminal port
-                   (lambda (c) (char=? c #\())
-                   (lambda (c) #f)
-                   (constant lparen)))
+  (define scan-lparen (make-scan-literal-char lparen))
   (define rparen #\))
-  (define (scan-rparen port)
-    (scan-terminal port
-                   (lambda (c) (char=? c #\)))
-                   (lambda (c) #f)
-                   (constant rparen)))
-  (define lbracket #\[)
-  (define (scan-lbracket port)
-    (scan-terminal port
-                   (lambda (c) (char=? c #\[))
-                   (lambda (c) #f)
-                   (constant lbracket)))
-  (define rbracket #\])
-  (define (scan-rbracket port)
-    (scan-terminal port
-                   (lambda (c) (char=? c #\]))
-                   (lambda (c) #f)
-                   (constant rbracket)))
+  (define scan-rparen (make-scan-literal-char rparen))
+
+  (define lbracket #\()
+  (define scan-lbracket (make-scan-literal-char lbracket))
+  (define rbracket #\))
+  (define scan-rbracket (make-scan-literal-char rbracket))
+
   (define dot #\.)
-  (define (scan-dot port)
-    (scan-terminal port
-                   (lambda (c) (char=? c #\.))
-                   (lambda (c) #f)
-                   (constant dot)))
+  (define scan-dot (make-scan-literal-char dot))
+
+  (define semicolon #\;)
+  (define scan-semicolon (make-scan-literal-char semicolon))
+
   (define quote #\')
-  (define (scan-quote port)
-    (scan-terminal port
-                   (lambda (c) (char=? c #\'))
-                   (lambda (c) #f)
-                   (constant quote)))
+  (define scan-quote (make-scan-literal-char quote))
   (define quasiquote #\`)
-  (define (scan-quasiquote port)
-    (scan-terminal port
-                   (lambda (c) (char=? c #\`))
-                   (lambda (c) #f)
-                   (constant quasiquote)))
+  (define scan-quasiquote (make-scan-literal-char quasiquote))
+
   ;;; Parse both unquote operators here, since we need the lookahead to
   ;;; distinguish between unquote (",") and unquote-splicing (",@").
   (define unquote #\,)
@@ -786,9 +780,7 @@ I'm going to try to do this with M-expressions.
             token)
           (scan-next-token port)))
     (define (unget token)
-      (if (null? token)
-          (set! lookahead token)
-          (error "NEXT-TOKEN -- tried to unget with no lookahead")))
+      (set! lookahead token))
     (define (dispatch msg)
       (cond ((eq? msg 'get) get)
             ((eq? msg 'unget) unget)
@@ -797,14 +789,53 @@ I'm going to try to do this with M-expressions.
 
   (define (read-sexpr next-token)
     (let ((token ((next-token 'get))))
-      (cond ((atom? token) token)
-            ((eq? token lparen) (read-sexpr-end next-token))
-            (else "READ-SEXPR: No parse"))))
-  (define (read-sexpr-end next-token)
+                                          ; (display token) (newline)
+      (cond
+       ;; TODO: Why doesn't `(quasiquote ,expr) work?
+       ((eq? token quote)
+        (list 'quote (read-sexpr next-token)))
+       ((eq? token quasiquote)
+        (list 'quasiquote (read-sexpr next-token)))
+       ((eq? token unquote)
+        (list 'unquote (read-sexpr next-token)))
+       ((eq? token unquote-splicing)
+        (list 'unquote-splicing (read-sexpr next-token)))
+
+       ((atom-token? token)
+        (atom-value token))
+       ((eq? token lparen)
+        (read-sexpr-body next-token))
+       (else "READ-SEXPR: No parse"))))
+
+  (define (read-sexpr-body next-token)
     (let ((token ((next-token 'get))))
       (cond ((eq? token rparen) '())
-            ((eq? token) (read-sexpr-end next-token))
-            (else "READ-SEXPR: No parse"))))
+            (else
+             ((next-token 'unget) token)
+             (let* ((sexpr (read-sexpr next-token))
+                    (sexpr-end (read-sexpr-end next-token)))
+               (cons sexpr sexpr-end))))))
+
+  (define (read-sexpr-end next-token)
+    (let ((token ((next-token 'get))))
+      (cond ((eq? token dot)
+             (let* ((sexpr (read-sexpr next-token))
+                    (end ((next-token 'get))))
+               (if (eq? end rparen)
+                   sexpr
+                   (error "READ-SEXPR-END: Failed parse of dotted pair"))))
+            (else
+             ((next-token 'unget) token)
+             (read-sexprs-rest next-token)))))
+
+  (define (read-sexprs-rest next-token)
+    (let ((token ((next-token 'get))))
+      (cond ((eq? token rparen) '())
+            (else
+             ((next-token 'unget) token)
+             (let* ((sexpr (read-sexpr next-token))
+                    (sexprs-rest (read-sexprs-rest next-token)))
+               (cons sexpr sexprs-rest))))))
 #+END_SRC
 
      :PROPERTIES:
