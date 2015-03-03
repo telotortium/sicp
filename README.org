@@ -1,0 +1,5 @@
+#+TITLE: Structure and Interpretation of Computer Programs (SICP)
+#+AUTHOR: Robert Irelan
+#+EMAIL: rirelan@gmail.com
+
+Solutions to SICP exercises.
