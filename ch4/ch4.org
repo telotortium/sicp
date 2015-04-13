@@ -197,7 +197,6 @@ Test to confirm:
      :Effort:   0:30
      :END:
 *** NEXT [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-26.html#%_sec_4.1.2][4.1.2: Representing Expressions]] [4/10]
-    SCHEDULED: <2015-02-01 Sun>
 **** Code
      :PROPERTIES:
      :VISIBILITY: folded
@@ -521,7 +520,6 @@ interpreter:
      :Effort:   0:15
      :END:
 **** NEXT [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-26.html#%_thm_4.5][Exercise 4.5]]
-     SCHEDULED: <2015-02-16 Mon>
      CLOCK: [2015-02-16 Mon 14:02]--[2015-02-16 Mon 14:19] =>  0:17
 
 #+NAME: ex-4-5-cond-recipient
@@ -577,7 +575,6 @@ interpreter:
      :Effort:   0:30
      :END:
 **** NEXT [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-26.html#%_thm_4.6][Exercise 4.6]]
-     SCHEDULED: <2015-02-16 Mon>
      CLOCK: [2015-02-16 Mon 14:19]--[2015-02-16 Mon 14:22] =>  0:03
 
 #+NAME: ex-4-6
@@ -589,22 +586,18 @@ interpreter:
      :Effort:   0:30
      :END:
 **** NEXT [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-26.html#%_thm_4.7][Exercise 4.7]]
-     SCHEDULED: <2015-02-16 Mon>
      :PROPERTIES:
      :Effort:   0:15
      :END:
 **** NEXT [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-26.html#%_thm_4.8][Exercise 4.8]]
-     SCHEDULED: <2015-02-16 Mon>
      :PROPERTIES:
      :Effort:   0:15
      :END:
 **** NEXT [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-26.html#%_thm_4.9][Exercise 4.9]]
-     SCHEDULED: <2015-02-16 Mon>
      :PROPERTIES:
      :Effort:   0:30
      :END:
 **** NEXT [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-26.html#%_thm_4.10][Exercise 4.10]]
-     SCHEDULED: <2015-02-16 Mon>
      CLOCK: [2015-02-20 Fri 17:14]--[2015-02-20 Fri 19:01] =>  1:47
      - Note taken on [2015-02-17 Tue 17:24] \\
        I've got the lexer done. Onto the parser.
