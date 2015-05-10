@@ -1072,11 +1072,53 @@ I'm going to try to do this with M-expressions.
 **** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-29.html#%_thm_4.34][Exercise 4.34]]
 
 ** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-28.html#%_sec_4.3][4.3: Variations on a Scheme -- Nondeterministic Computing]] [%]
-*** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-28.html#%_sec_4.3.1][4.3.1: Amb and Search]] [/]
-**** TODO Read SICP 4.3.1
-**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-28.html#%_thm_4.35][Exercise 4.35]]
-**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-28.html#%_thm_4.35][Exercise 4.35]]
-**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-28.html#%_thm_4.37][Exercise 4.37]]
+*** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-28.html#%_sec_4.3.1][4.3.1: Amb and Search]] [3/4]
+**** DONE Read SICP 4.3.1
+**** DONE [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-28.html#%_thm_4.35][Exercise 4.35]]
+
+For
+
+#+BEGIN_SRC scheme
+  (define (a-pythagorean-triple-between low high)
+    (let ((i (an-integer-between low high)))
+      (let ((j (an-integer-between i high)))
+        (let ((k (an-integer-between j high)))
+          (require (= (+ (* i i) (* j j)) (* k k)))
+          (list i j k)))))
+#+END_SRC
+
+define ~an-integer-between~ as follows:
+
+#+BEGIN_SRC scheme
+  (define (an-integer-between low high)
+    (require (<= low high))
+    (amb low (an-integer-between (+ low 1) high)))
+#+END_SRC
+
+**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-28.html#%_thm_4.36][Exercise 4.36]]
+     - Note taken on [2015-05-04 Mon 17:51] \\
+       Need to actually do Exercise 3.69.
+
+In ~a-pythagorean-triple-between~, one cannot simply replace
+~an-integer-between~ with ~an-integer-starting-from~, a procedure that
+nondeterministically generates any integer starting from a lower bound, because
+~amb~ performs a depth-first search, meaning that the call of
+~an-integer-starting-from~ to generate one of the numbers (probably ~k~) will
+search through an infinite stream of integers, meaning the possibilities for
+the other numbers will never been explored.
+
+In order to generate an infinite number of Pythagorean triples, one must use a
+similar technique as Exercise 3.69.
+
+**** DONE [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-28.html#%_thm_4.37][Exercise 4.37]]
+
+Yes, this version is more efficient. With the version in 4.35, you must
+generate all triples of integers \( [l, h] \times [l, h] \times [l, h] \), where \(l\)
+and \(h\) are the ~low~ and ~high~ respectively passed to
+~a-pythagorean-triple-between~. This version, on the other hand, only requires
+generating pairs \( [l, h] \times [l, h] \), giving an asymptotic \(O(N^2)\) running
+time rather than \(O(N^3)\).
+
 *** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-28.html#%_sec_4.3.2][4.3.2: Examples of Nondeterministic Programs]] [/]
 **** TODO Read SICP 4.3.2
 **** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-28.html#%_thm_4.38][Exercise 4.38]]
