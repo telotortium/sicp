@@ -3,3 +3,5 @@
 #+EMAIL: rirelan@gmail.com
 
 Solutions to SICP exercises.
+
+See [[file:index.org][index.org]] for the published index page.
