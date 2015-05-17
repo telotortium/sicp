@@ -1,7 +1,7 @@
 #+TITLE: Structure and Interpretation of Computer Programs (SICP)
 #+AUTHOR: Robert Irelan
 #+EMAIL: rirelan@gmail.com
-#+OPTIONS: author:t email:t f:t
+#+OPTIONS: author:t email:t f:t num:nil H:4
 #+PROPERTY: header-args :comments link :noweb no-export
 #+PROPERTY: header-args:scheme :shebang #!/usr/bin/env chicken-scheme
 #+FILETAGS: :SICP:
@@ -58,6 +58,7 @@ one remains, giving the observed result, ~quote~.
 
 
 *** 2.3.2: Example: Symbolic Differentiation
+
 #+NAME: auxiliary-differentiation-procedures
 #+BEGIN_SRC scheme
   ;; Provided in the book
