@@ -56,7 +56,6 @@
 When this expression is evaluated, the outer ~quote~ is stripped, but the inner
 one remains, giving the observed result, ~quote~.
 
-
 *** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-16.html#%_sec_2.3.2][2.3.2: Example: Symbolic Differentiation]]
 
 #+NAME: auxiliary-differentiation-procedures
@@ -353,7 +352,6 @@ occurrence of a symbol rather than the first.
 *** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-16.html#%_sec_2.3.3][2.3.3: Example: Representing Sets]]
 *** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-16.html#%_sec_2.3.4][2.3.4: Example: Huffman Encoding Trees]]
 
-
 ** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-17.html#%_sec_2.4][2.4: Multiple Representations for Abstract Data]]
 
 #+BEGIN_SRC scheme :tangle dispatch-table.scm
@@ -541,7 +539,6 @@ Steps to add types or operations:
      can fall back to a default implementation or an error -- but adding new
      operations requires modifying every type.
 
-
 ** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-18.html#%_sec_2.5][2.5: Systems with Generic Operations]]
 
 *** Auxiliary definitions
@@ -572,7 +569,6 @@ Steps to add types or operations:
   (define (make-scheme-number n)
     ((get 'make '(scheme-number)) n))
 #+END_SRC
-
 
 *** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-18.html#%_sec_2.5.1][2.5.1: Generic Arithmetic Operations]]
 
@@ -712,7 +708,6 @@ different representations (e.g., for ~rat~ and ~polar~ numbers), the above
 definition will work. However, this requires another operation to be defined
 anyway, and makes it harder to override the ~=zero?~ operation per-type in the
 event that such an override is desirable for efficiency or correctness.
-
 
 *** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-18.html#%_sec_2.5.2][2.5.2: Combining Data of Different Types]]
 
@@ -879,7 +874,6 @@ attempt coercing the arguments as before
                                (no-method op type-tags))))))
                 (no-method op type-tags))))))
 #+END_SRC
-
 
 *** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-18.html#%_sec_2.5.3][2.5.3: Example: Symbolic Algebra]]
 
