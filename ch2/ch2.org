@@ -4,6 +4,7 @@
 #+OPTIONS: author:t email:t f:t
 #+PROPERTY: header-args :comments link :noweb no-export
 #+PROPERTY: header-args:scheme :shebang #!/usr/bin/env chicken-scheme
+#+FILETAGS: :SICP:
 
 * Chapter 2
 
