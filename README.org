@@ -1,7 +1,34 @@
-#+TITLE: Structure and Interpretation of Computer Programs (SICP)
+#+TITLE: Structure and Interpretation of Computer Programs (SICP) Exercise Solutions
 #+AUTHOR: Robert Irelan
 #+EMAIL: rirelan@gmail.com
+#+OPTIONS: author:t email:t f:t num:nil H:4 toc:nil
+#+PROPERTY: header-args :comments link :noweb no-export
+#+PROPERTY: header-args:scheme :shebang #!/usr/bin/env chicken-scheme
 
-Solutions to SICP exercises.
+* Exercise solutions
+** [[file:ch1/ch1.org][Chapter 1]]
+** [[file:ch2/ch2.org][Chapter 2]]
+** [[file:ch3/ch3.org][Chapter 3]]
+** [[file:ch4/ch4.org][Chapter 4]]
+** [[file:ch5/ch5.org][Chapter 5]]
 
-See [[file:index.org][index.org]] for the published index page.
+* Org-mode project                                                 :noexport:
+
+Run the following code to allow publishing this project:
+
+#+NAME: init-project
+#+BEGIN_SRC emacs-lisp :results silent :var project-dir=(file-name-directory (buffer-file-name))
+  (add-to-list 'org-publish-project-alist
+               '("sicp"
+                  :components ("sicp-content")))
+  (add-to-list 'org-publish-project-alist
+                 `("sicp-content"
+                  :base-directory ,project-dir
+                  :base-extension "org"
+                  :publishing-directory ,project-dir
+                  :recursive t
+                  :publishing-function org-html-publish-to-html
+                  :timestamp t
+                  :section-numbers nil
+                  :exclude-tags ("noexport")))
+#+END_SRC
