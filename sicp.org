@@ -1,0 +1,12 @@
+#+TITLE: Structure and Interpretation of Computer Programs (SICP)
+#+AUTHOR: Robert Irelan
+#+EMAIL: rirelan@gmail.com
+#+OPTIONS: author:t email:t f:t num:nil H:4 toc:nil
+#+PROPERTY: header-args :comments link :noweb no-export
+#+PROPERTY: header-args:scheme :shebang #!/usr/bin/env chicken-scheme
+
+* [[file:ch1/ch1.org][Chapter 1]]
+* [[file:ch2/ch2.org][Chapter 2]]
+* [[file:ch3/ch3.org][Chapter 3]]
+* [[file:ch4/ch4.org][Chapter 4]]
+* [[file:ch5/ch5.org][Chapter 5]]
