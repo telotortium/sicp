@@ -103,8 +103,10 @@ one remains, giving the observed result, ~quote~.
 #+END_SRC
 
 **** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-16.html#%25_thm_2.56][Exercise 2.56.]]
+
 We define the exponentiation procedure:
-#+NAME ex-2-56-exponentiation
+
+#+NAME: ex-2-56-exponentiation
 #+BEGIN_SRC scheme
   (define (make-exponentiation b e)
     (cond ((=number? b 1) 1)
@@ -120,7 +122,7 @@ We define the exponentiation procedure:
 
 and then re-define the top-level ~deriv~ procedure to include exponentiation.
 
-#+NAME ex-2-56-deriv
+#+NAME: ex-2-56-deriv
 #+BEGIN_SRC scheme
   (define (deriv exp var)
     (cond ((number? exp) 0)
@@ -151,7 +153,7 @@ and then re-define the top-level ~deriv~ procedure to include exponentiation.
 #+END_SRC
 
 **** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-16.html#%25_thm_2.57][Exercise 2.57.]]
-#+NAME ex-2-57
+#+NAME: ex-2-57
 #+BEGIN_SRC scheme
   (define (make-sum a . as)
     (define (rec a as)
