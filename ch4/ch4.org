@@ -503,7 +503,7 @@ interpreter:
   (define (eval-and exps env)
     (if (null? exps)
         true
-        (let (first (first-exp exps))
+        (let ((first (first-exp exps)))
              (cond ((last-exp? exps) (eval-4-1 first env))
                    ((not (true? first)) false)
                    (else (eval-and (rest-exps exps) env))))))
@@ -511,7 +511,7 @@ interpreter:
   (define (eval-or exps env)
     (if (null? exps)
         false
-        (let (first (first-exp exps))
+        (let ((first (first-exp exps)))
              (cond ((true? first) first)
                    (else (eval-or (rest-exps exps) env))))))
 #+END_SRC
