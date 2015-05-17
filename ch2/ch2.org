@@ -6,11 +6,11 @@
 #+PROPERTY: header-args:scheme :shebang #!/usr/bin/env chicken-scheme
 #+FILETAGS: :SICP:
 
-* Chapter 2
+* [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-13.html#%_chap_2][Chapter 2]]
 
-** 2.3: Symbolic Data
+** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-16.html#%_sec_2.3][2.3: Symbolic Data]]
 
-*** 2.3.1: Quotation
+*** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-16.html#%_sec_2.3.1][2.3.1: Quotation]]
 
 **** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-16.html#%25_thm_2.53][Exercise 2.53.]]
 #+NAME: ex-2-53-test
@@ -57,7 +57,7 @@ When this expression is evaluated, the outer ~quote~ is stripped, but the inner
 one remains, giving the observed result, ~quote~.
 
 
-*** 2.3.2: Example: Symbolic Differentiation
+*** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-16.html#%_sec_2.3.2][2.3.2: Example: Symbolic Differentiation]]
 
 #+NAME: auxiliary-differentiation-procedures
 #+BEGIN_SRC scheme
@@ -350,14 +350,11 @@ occurrence of a symbol rather than the first.
         (deriv expr 'z))
 #+END_SRC
 
-
-*** 2.3.3: Example: Representing Sets
-
-
-*** 2.3.4: Example: Huffman Encoding Trees
+*** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-16.html#%_sec_2.3.3][2.3.3: Example: Representing Sets]]
+*** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-16.html#%_sec_2.3.4][2.3.4: Example: Huffman Encoding Trees]]
 
 
-** 2.4: Multiple Representations for Abstract Data
+** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-17.html#%_sec_2.4][2.4: Multiple Representations for Abstract Data]]
 
 #+BEGIN_SRC scheme :tangle dispatch-table.scm
   ;; Operation, type -> procedure dispatch table.
@@ -385,15 +382,15 @@ occurrence of a symbol rather than the first.
                    (list op type-tags))))))))
 #+END_SRC
 
-*** 2.4.1: Representations for Complex Numbers
+*** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-17.html#%_sec_2.4.1][2.4.1: Representations for Complex Numbers]]
 
 No exercises.
 
-*** 2.4.2: Tagged data
+*** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-17.html#%_sec_2.4.2][2.4.2: Tagged data]]
 
 No exercises.
 
-*** 2.4.3: Data-Directed Programming and Additivity
+*** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-17.html#%_sec_2.4.3][2.4.3: Data-Directed Programming and Additivity]]
 
 **** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-17.html#%_thm_2.73][Exercise 2.73.]]
 
@@ -545,7 +542,7 @@ Steps to add types or operations:
      operations requires modifying every type.
 
 
-** 2.5: Systems with Generic Operations
+** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-18.html#%_sec_2.5][2.5: Systems with Generic Operations]]
 
 *** Auxiliary definitions
 
@@ -577,7 +574,7 @@ Steps to add types or operations:
 #+END_SRC
 
 
-*** 2.5.1: Generic Arithmetic Operations
+*** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-18.html#%_sec_2.5.1][2.5.1: Generic Arithmetic Operations]]
 
 **** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-17.html#%_thm_2.77][Exercise 2.77.]]
 
@@ -717,7 +714,7 @@ anyway, and makes it harder to override the ~=zero?~ operation per-type in the
 event that such an override is desirable for efficiency or correctness.
 
 
-*** 2.5.2: Combining Data of Different Types
+*** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-18.html#%_sec_2.5.2][2.5.2: Combining Data of Different Types]]
 
 **** Auxiliary definitions
 
@@ -884,7 +881,7 @@ attempt coercing the arguments as before
 #+END_SRC
 
 
-*** 2.5.3: Example: Symbolic Algebra
+*** [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-18.html#%_sec_2.5.3][2.5.3: Example: Symbolic Algebra]]
 
 I've decided to distinguish dense and sparse polynomials with the ~poly-dense~
 and ~poly-sparse~ tags to allow keeping functions for both variants defined at
