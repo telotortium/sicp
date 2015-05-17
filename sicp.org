@@ -30,6 +30,5 @@ Run the following code to allow publishing this project:
                   :publishing-function org-html-publish-to-html
                   :timestamp t
                   :section-numbers nil
-                  :auto-sitemap t
                   :exclude-tags ("noexport")))
 #+END_SRC
