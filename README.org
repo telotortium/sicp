@@ -18,6 +18,8 @@ Run the following code to allow publishing this project:
 
 #+NAME: init-project
 #+BEGIN_SRC emacs-lisp :results silent :var project-dir=(file-name-directory (buffer-file-name))
+  (when (not (boundp 'org-publish-project-alist))
+    (setq org-publish-project-alist '()))
   (add-to-list 'org-publish-project-alist
                '("sicp"
                   :components ("sicp-content")))
