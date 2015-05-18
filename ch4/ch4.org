@@ -1378,9 +1378,70 @@ The solution is:
   - Dr. Parker: Mary Ann
 
 **** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-28.html#%_thm_4.44][Exercise 4.44]]
+     - Note taken on [2015-05-17 Sun 19:29] \\
+       TODO: Verify that you can actually apply ~amb~ like I'm doing here.
 
-#+BEGIN_SRC scheme
+#+BEGIN_SRC scheme :tangle ex-4-44.scm
+  (use sicp)
 
+  (define (queens board-size)
+    (define (queen-cols k)
+      (if (= k 0)
+          (list empty-board)
+          (let ((positions
+                 (apply amb
+                        (flatmap
+                         (lambda (rest-of-queens)
+                           (map (lambda (new-row)
+                                  (adjoin-position new-row k rest-of-queens))
+                                (enumerate-interval 1 board-size)))
+                         (queen-cols (- k 1))))))
+            (require (safe? k positions))
+            positions)))
+    (queen-cols board-size))
+
+  ;; The representation of an empty board
+  (define empty-board '())
+  ;; Add a position (new-row . k) to the list rest-of-queens containing positions
+  ;; for queens.
+  (define (adjoin-position new-row k rest-of-queens)
+    (cons (cons new-row k) rest-of-queens))
+  ;; Is the position of the queen in column k safe with respect to the positions
+  ;; in the list positions?
+  (define (safe? k positions)
+    ;; Are positions p1 and p2 safe with respect to each other?
+    ;; p1 and p2 are pairs (x . y).
+    (define (pos-safe? p1 p2)
+      (let ((x1 (car p1))
+            (y1 (cdr p1))
+            (x2 (car p2))
+            (y2 (cdr p2)))
+        (let ((dx (- x2 x1))
+              (dy (- y2 y1)))
+          (or (and (= x1 x2) (= y1 y2))
+              (not (or (= 0 dx)
+                       (= 0 dy)
+                       (= (abs dx) (abs dy))))))))
+    ;; Each column has a queen in only one row - find the position in column k
+    (let ((last-position (find (lambda (position)
+                                 (= k (cdr position)))
+                               positions)))
+      ;; Filter list to contain only unsafe positions.
+      (not (find (lambda (point)
+                   (not (pos-safe? point last-position)))
+                 positions))))
+
+  (test '(1 0 0 2 10 4 40 92)
+        (map (lambda (x) (length (queens x))) (iota 8 1)))
+#+END_SRC
+
+#+BEGIN_SRC scheme :tangle ex-4-44-test.scm
+  (include "ex-4-44")
+
+  (use test)
+
+  (test '(1 0 0 2 10 4 40 92)
+        (map (lambda (x) (length (queens x))) (iota 8 1)))
 #+END_SRC
 
 **** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-28.html#%_thm_4.45][Exercise 4.45]]
