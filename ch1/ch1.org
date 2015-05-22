@@ -252,7 +252,99 @@ No exercises.
 ** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-11.html#%_sec_1.2][1.2: Procedures and the Processes They Generate]]
 
 *** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-11.html#%_sec_1.2.1][1.2.1: Linear Recursion and Iteration]]
-**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-11.html#%_thm_1.9][Exercise 1.9]]
+**** DONE [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-11.html#%_thm_1.9][Exercise 1.9]]
+
+Evaluate the following procedures using the substitution model:
+
+- ~new+-rec~
+
+  #+CAPTION: ex-1-9-rec
+  #+NAME: ex-1-9-rec
+  #+BEGIN_SRC scheme
+    (define (new+-rec a b)
+      (if (= a 0)
+        b
+        (inc (new+-rec (dec a) b))))
+  #+END_SRC
+
+  This procedure is fundamentally recursive because it defers the evaluation of
+  ~inc~ until ~new+-rec~ has reached its base case, resulting in a stack of
+  deferred operations:
+
+  #+CAPTION: ex-1-9-rec-test
+  #+NAME: ex-1-9-rec-test
+  #+BEGIN_SRC scheme
+    (test-chain "ex-1-9-rec"
+                '((new+-rec 4 5)
+                  (inc (new+-rec 3 5))
+                  (inc (inc (new+-rec 2 5)))
+                  (inc (inc (inc (new+-rec 1 5))))
+                  (inc (inc (inc (inc (new+-rec 0 5)))))
+                  (inc (inc (inc (inc 5))))
+                  (inc (inc (inc 6)))
+                  (inc (inc 7))
+                  (inc 8)
+                  9))
+  #+END_SRC
+
+- ~new+-iter~
+
+  #+CAPTION: ex-1-9-iter
+  #+NAME: ex-1-9-iter
+  #+BEGIN_SRC scheme
+    (define (new+-iter a b)
+      (if (= a 0)
+          b
+          (new+-iter (dec a) (inc b))))
+  #+END_SRC
+
+  This procedure is fundamentally iterative because ~new+-iter~ is in a
+  tail-call position. Because of this, each call to ~new+-iter~ can be replaced
+  with its result:
+
+  #+CAPTION: ex-1-9-iter-test
+  #+NAME: ex-1-9-iter-test
+  #+BEGIN_SRC scheme
+    (test-chain "ex-1-9-iter"
+                '((new+-iter 4 5)
+                  (new+-iter 3 6)
+                  (new+-iter 2 7)
+                  (new+-iter 1 8)
+                  (new+-iter 0 9)
+                  9))
+  #+END_SRC
+
+***** Auxiliary procedures
+
+#+BEGIN_SRC scheme :tangle ex-1-9.scm
+  (define (inc x) (+ x 1))
+  (define (dec x) (- x 1))
+
+  <<ex-1-9-rec>>
+  <<ex-1-9-iter>>
+#+END_SRC
+
+#+BEGIN_SRC scheme :tangle ex-1-9-test.scm
+  (include "ex-1-9")
+  (use test)
+  (use srfi-1)
+
+  ;;; TEST-CHAIN -- assert that all expressions in a list evaluate to the same
+  ;;; result.
+  (define (test-chain name exprs)
+    (eval (append `(test-group ,name)
+                  (unfold (lambda (p) (null? (cdr p)))
+                          (lambda (p) `(test-assert (= ,(car p) ,(cadr p))))
+                          cdr
+                          exprs))))
+
+  (test-group "ex-1-9-test"
+              <<ex-1-9-rec-test>>
+              <<ex-1-9-iter-test>>
+              )
+
+#+END_SRC
+
 **** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-11.html#%_thm_1.10][Exercise 1.10]]
 *** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-11.html#%_sec_1.2.2][1.2.2: Tree Recursion]]
 **** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-11.html#%_thm_1.14][Exercise 1.14]]
