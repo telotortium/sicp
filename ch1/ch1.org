@@ -245,7 +245,6 @@ Implement a cube root approximation formula based on Newton's method:
     (test 6.52 (cbrt 278)))
 #+END_SRC
 
-
 *** DONE [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-10.html#%_sec_1.1.8][1.1.8: Procedures as Black-Box Abstractions]]
 
 No exercises.
