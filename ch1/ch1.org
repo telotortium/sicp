@@ -8,38 +8,244 @@
 
 * TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-9.html#%_chap_1][Chapter 1]]
 
-** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-10.html#%_sec_1.1][1.1: Building Abstractions with Procedures]]
+** DONE [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-10.html#%_sec_1.1][1.1: Building Abstractions with Procedures]]
 
-*** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-10.html#%_sec_1.1.1][1.1.1: Expressions]]
-
-No exercises.
-
-*** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-10.html#%_sec_1.1.2][1.1.2: Naming and the Environment]]
+*** DONE [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-10.html#%_sec_1.1.1][1.1.1: Expressions]]
 
 No exercises.
 
-*** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-10.html#%_sec_1.1.3][1.1.3: Evaluating Combinations]]
+*** DONE [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-10.html#%_sec_1.1.2][1.1.2: Naming and the Environment]]
 
 No exercises.
 
-*** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-10.html#%_sec_1.1.4][1.1.4: Compound Procedures]]
+*** DONE [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-10.html#%_sec_1.1.3][1.1.3: Evaluating Combinations]]
 
 No exercises.
 
-*** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-10.html#%_sec_1.1.5][1.1.5: The Substitution Model for Procedure Application]]
+*** DONE [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-10.html#%_sec_1.1.4][1.1.4: Compound Procedures]]
 
 No exercises.
 
-*** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-10.html#%_sec_1.1.6][1.1.6: Conditional Expressions and Predicates]]
-**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-10.html#%_thm_1.1][Exercise 1.1]]
-**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-10.html#%_thm_1.2][Exercise 1.2]]
-**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-10.html#%_thm_1.3][Exercise 1.3]]
-**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-10.html#%_thm_1.4][Exercise 1.4]]
-**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-10.html#%_thm_1.5][Exercise 1.5]]
-*** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-10.html#%_sec_1.1.7][1.1.7: Example: Square Roots by Newton's Method]]
-**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-10.html#%_thm_1.6][Exercise 1.6]]
-**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-10.html#%_thm_1.7][Exercise 1.7]]
-**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-10.html#%_thm_1.8][Exercise 1.8]]
+*** DONE [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-10.html#%_sec_1.1.5][1.1.5: The Substitution Model for Procedure Application]]
+
+No exercises.
+
+*** DONE [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-10.html#%_sec_1.1.6][1.1.6: Conditional Expressions and Predicates]]
+**** DONE [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-10.html#%_thm_1.1][Exercise 1.1]]
+
+This exercise serves purely to familiarize the student with entering statements
+in the REPL. Verify the expected REPL output using tests.
+
+#+BEGIN_SRC scheme :tangle ex-1-1-test.scm
+  (use test)
+
+  (test 10 10)
+
+  (test 12
+        (+ 5 3 4))
+
+  (test 8
+        (- 9 1))
+
+  (test 3
+        (/ 6 2))
+
+  (test 6
+        (+ (* 2 4) (- 4 6)))
+
+  (define a 3)
+  (define b (+ a 1))
+
+  (test 19
+        (+ a b (* a b)))
+
+  (test #f
+        (= a b))
+
+  (test 4
+        (if (and (> b a) (< b (* a b)))
+            b
+            a))
+
+  (test 16
+        (cond ((= a 4) 6)
+              ((= b 4) (+ 6 7 a))
+              (else 25)))
+
+  (test 6
+        (+ 2 (if (> b a) b a)))
+
+  (test 16
+        (* (cond ((> a b) a)
+                 ((< a b) b)
+                 (else -1))
+           (+ a 1)))
+
+#+END_SRC
+
+**** DONE [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-10.html#%_thm_1.2][Exercise 1.2]]
+
+The book's expression translated to prefix notation is
+
+#+BEGIN_SRC scheme
+  (/ (+ 5 4 (- 2 (- 3 (+ 6 (/ 4 5)))))
+     (* 3 (- 6 2) (- 2 7)))
+#+END_SRC
+
+**** DONE [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-10.html#%_thm_1.3][Exercise 1.3]]
+
+#+BEGIN_SRC scheme :tangle ex-1-3.scm
+  (define (square x)
+    (* x x))
+  (define (sum-of-squares x y)
+    (+ (square x) (square y)))
+
+  ;;; Return sum of squares of two largest out of three arguments
+  (define (f a b c)
+    (cond
+      ((and (< a b) (< a c)) (sum-of-squares b c))
+      ((and (< b a) (< b c)) (sum-of-squares a c))
+      (else (sum-of-squares a b))))
+#+END_SRC
+
+#+BEGIN_SRC scheme :tangle ex-1-3-test.scm
+  (include "ex-1-3")
+  (use test)
+
+  (test 13 (f 1 2 3))
+  (test 13 (f 2 1 3))
+  (test 13 (f 3 2 1))
+  (test 18 (f 3 3 2))
+  (test 13 (f 3 2 2))
+  (test 8 (f 2 2 2))
+#+END_SRC
+
+**** DONE [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-10.html#%_thm_1.4][Exercise 1.4]]
+
+In the procedure
+
+#+BEGIN_SRC scheme
+  (define (a-plus-abs-b a b)
+    ((if (> b 0) + -) a b))
+#+END_SRC
+
+evaluation does not take place when the procedure is defined, but rather
+only after it is called. When it is called, evaluation proceeds from left to
+right and from inside out. Thus, the forms are evaluated in the following
+order:
+
+- ~(> b 0)~
+- ~(if ... + -)~
+- ~((if ...) a b)~
+
+Note that ~+~ and ~-~ are references to functions, which can in general be
+returned from a function.
+
+**** DONE [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-10.html#%_thm_1.5][Exercise 1.5]]
+
+The expression under consideration is the following:
+
+#+BEGIN_SRC scheme
+  (define (p) (p))
+
+  (define (test x y)
+    (if (= x 0)
+        0
+        y))
+
+  (test 0 (p))
+#+END_SRC
+
+
+With applicative order, a procedure is called after evaluating all its
+arguments. Therefore, the last expression in the above is evaluated as follows:
+
+- ~0 => 0~
+- ~(p) => ; Calls itself recursively forever~
+
+In normal form, all expressions are fully expanded and then reduced to
+obtain a value:
+
+- ~(test 0 (p))~
+- ~(if (= 0 0) 0 (p))~
+- ~0~
+
+Because the procedure ~p~ cannot be validly evaluated by substitution (due
+to infinite recursion), normal- and applicative-order evaluation give
+different results here.
+
+*** DONE [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-10.html#%_sec_1.1.7][1.1.7: Example: Square Roots by Newton's Method]]
+**** DONE [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-10.html#%_thm_1.6][Exercise 1.6]]
+
+When calling ~new-if~, its arguments are always evaluated. Thus, even if the
+else-branch, which calls ~sqrt-iter~, should not be taken, it is nevertheless
+evaluated due to strict evaluation, so calling ~sqrt-iter~ results in infinite
+recursion.
+
+**** DONE [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-10.html#%_thm_1.7][Exercise 1.7]]
+
+Here is the ~good-enough?~ function defined in the text:
+
+#+BEGIN_SRC scheme
+  (define (good-enough? guess x)
+    (< (abs (- (square guess) x)) 0.001))
+#+END_SRC
+
+Notably, the threshold is an absolute value, no matter the size of the
+guess. For small guesses, this will terminate even if 0.001 is of a
+non-negligible magnitude compared to the guess. For large guesses, if the guess
+doesn't have a precision of at least 0.001 at a certain magnitude, the test may
+not ever terminate because there may be no value of ~(square guess)~ that lies
+within 0.001 of x, due to limited precision.
+
+It is almost always better to define a threshold that is a multiple of the
+order of magnitude of x:
+
+#+BEGIN_SRC scheme
+  (define (good-enough? guess x)
+    (< (abs (/ (- (square guess) x)
+               (square guess)))
+       0.001))
+#+END_SRC
+
+**** DONE [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-10.html#%_thm_1.8][Exercise 1.8]]
+
+Implement a cube root approximation formula based on Newton's method:
+
+#+BEGIN_SRC scheme :tangle ex-1-8.scm
+  (define (square x)
+    (* x x))
+  (define (cube x)
+    (* x x x))
+
+  (define (improve guess x)
+    (/ (+ (/ x (square guess))
+          (* 2 guess))
+       3))
+  (define (good-enough? guess x)
+    (< (abs (/ (- (cube guess) x)
+               (cube guess)))
+       0.001))
+
+  (define (cbrt-iter guess x)
+    (if (good-enough? guess x)
+        guess
+        (cbrt-iter (improve guess x)
+                   x)))
+  (define (cbrt x)
+    (cbrt-iter 1.0 x))
+#+END_SRC
+
+#+BEGIN_SRC scheme :tangle ex-1-8-test.scm
+  (include "ex-1-8")
+  (use test)
+
+  (parameterize ((current-test-epsilon 0.01))
+    (test 3.00 (cbrt 27))
+    (test 6.52 (cbrt 278)))
+#+END_SRC
+
+
 *** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-10.html#%_sec_1.1.8][1.1.8: Procedures as Black-Box Abstractions]]
 
 No exercises.
