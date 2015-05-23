@@ -147,9 +147,9 @@ write both an explicitly left-to-right version
     (begin
       ;; First evaluate the leftmost expression, then the rest of the
       ;; expression on the right.
-      (define first (eval-4-1 (first-operand exps) env))
-      (define rest (list-of-values (rest-operands exps) env))
-      (cons first rest))))
+      (define first-expr (eval-4-1 (first-operand exps) env))
+      (define rest-expr (list-of-values (rest-operands exps) env))
+      (cons first-expr rest-expr))))
 #+END_SRC
 
 and a right-to-left version:
@@ -161,36 +161,33 @@ and a right-to-left version:
     (begin
       ;; First evaluate the expressions on the right, then the leftmost
       ;; expression.
-      (define rest (list-of-values (rest-operands exps) env))
-      (define first (eval-4-1 (first-operand exps) env))
-      (cons first rest))))
+      (define rest-expr (list-of-values (rest-operands exps) env))
+      (define first-expr (eval-4-1 (first-operand exps) env))
+      (cons first-expr rest-expr))))
 #+END_SRC
 
 Test to confirm:
 
 #+BEGIN_SRC scheme :tangle ex-4-1-test.scm
   (include "interp-sec-4-1")
+  (use test)
 
   ;; Override EVAL for ease of testing
   (define *test-list* '())
   (define eval-4-1
     (lambda (expr env)
-      (set! *test-list* (append *test-list* (list expr)))
-      (newline)))
+      (set! *test-list* (append *test-list* (list expr)))))
   (define input-list '(0 1 2 3 4 5))
 
   (include "ex-4-1-ltr")
   (set! *test-list* '())
   (list-of-values input-list '())
-  (display *test-list*)
-  ; (0 1 2 3 4 5)
+  (test '(0 1 2 3 4 5) *test-list*)
 
   (include "ex-4-1-rtl")
   (set! *test-list* '())
   (list-of-values input-list '())
-  (display *test-list*)
-  ; (5 4 3 2 1 0)
-
+  (test '(5 4 3 2 1 0) *test-list*)
 #+END_SRC
 
      :PROPERTIES:
