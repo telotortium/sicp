@@ -195,7 +195,7 @@ Test to confirm:
      :PROPERTIES:
      :Effort:   0:30
      :END:
-*** NEXT [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-26.html#%_sec_4.1.2][4.1.2: Representing Expressions]] [4/10]
+*** NEXT [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-26.html#%_sec_4.1.2][4.1.2: Representing Expressions]] [5/10]
 **** Code
      :PROPERTIES:
      :VISIBILITY: folded
@@ -546,7 +546,7 @@ Here's a short test to ensure that they work:
      :PROPERTIES:
      :Effort:   0:15
      :END:
-**** NEXT [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-26.html#%_thm_4.5][Exercise 4.5]]
+**** DONE [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-26.html#%_thm_4.5][Exercise 4.5]]
      CLOCK: [2015-02-16 Mon 14:02]--[2015-02-16 Mon 14:19] =>  0:17
 
 Let's desugar ~cond~ expressions. The ordinary ~cond~ can be desugared to a
@@ -558,17 +558,24 @@ chain of if-elses:
         )
 #+END_SRC
 
-The ~cond~ with recipient is a little more complex:
+The ~cond~ with recipient is a little more complex. The result of evaluating
+the test needs to be referred to twice, once to determine which branch to take
+and once to pass to the procedure evaluated if the "true" branch is
+taken. In order to make sure no variables in the test, the recipient, or the
+alternate shadow each other, use \alpha-conversion to convert an if-statement of
+expressions into a lambda taking these expressions as arguments. Since Scheme
+is lexically scoped, the bindings in the lambda will not shadow any bindings
+inside the arguments:
 
 #+BEGIN_SRC scheme
   (cond (a => proc) (else b)
         ;; Equivalent to (if a (proc a) b)
-        ;; Equivalent to ((lambda (x y) (if x (proc x) y)) a b)
+        ;; Equivalent to ((lambda (x y p) (if x (p x) y)) a b proc)
         )
 #+END_SRC
 
-Unfortunately, I don't have a gensym, so perhaps I need to introduce the
-environment here.
+With this realization, it's possible to transform this extended form of ~cond~
+into a chain of ~if~ statements without using the environment.
 
 #+NAME: ex-4-5-cond-recipient
 #+BEGIN_SRC scheme
@@ -594,30 +601,13 @@ environment here.
                      (error "ELSE clause isn't last -- COND->IF"
                             clauses)))
                 ((cond-recipient-clause? first)
-                 (let ((test-res (eval-4-1 ...)))
-                   (make-if (cond-predicate))))
+                 `(,(make-lambda
+                     '(test recipient alternate)
+                     `(,(make-if 'test '(recipient test) 'alternate)))
+                   ,(car first) ,(caddr first) ,(expand-clauses rest)))
                 (else (make-if (cond-predicate first)
                                (sequence->exp (cond-actions first))
                                (expand-clauses rest)))))))
-
-  ;; (cond ((pred1) => foobar)
-  ;;       ((pred2) quux)
-  ;;       (else baz))
-
-  ;; (let (res1 (pred1))
-  ;;   (if res1
-  ;;       (foobar res1)
-  ;;       (if (pred2)
-  ;;           quux
-  ;;           baz)))
-
-  ;; ((lambda (res1)
-  ;;    (if res1
-  ;;        (foobar res1)
-  ;;        (if (pred2)
-  ;;            quux
-  ;;            baz)))
-  ;;  (pred1))
 #+END_SRC
 
 #+NAME: ex-4-5-cond-recipient-dispatch
