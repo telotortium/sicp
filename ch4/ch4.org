@@ -390,7 +390,7 @@ the text:
 
     #+NAME: derived-expressions-let
     #+BEGIN_SRC scheme
-      <<ex-4-6>>
+      <<ex-4-6-let>>
     #+END_SRC
 
 **** DONE Read SICP 4.1.2
@@ -493,6 +493,7 @@ interpreter:
 
        <<ex-4-4-eval-and-or-dispatch>>
        <<ex-4-5-cond-recipient-dispatch>>
+       <<ex-4-6-let-dispatch>>
      #+END_SRC
 
      :PROPERTIES:
@@ -620,12 +621,47 @@ into a chain of ~if~ statements without using the environment.
      :PROPERTIES:
      :Effort:   0:30
      :END:
-**** NEXT [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-26.html#%_thm_4.6][Exercise 4.6]]
+**** DONE [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-26.html#%_thm_4.6][Exercise 4.6]]
      CLOCK: [2015-02-16 Mon 14:19]--[2015-02-16 Mon 14:22] =>  0:03
 
-#+NAME: ex-4-6
+#+NAME: ex-4-6-let
 #+BEGIN_SRC scheme
+  (use srfi-1)
 
+  (define (let->combination exp)
+    (let* ((clauses (cdr exp))
+           (bindings (car clauses))
+           (body (cdr clauses)))
+      (let* (
+             ;; Partition list of bindings ((a 1) (b 2) ...) into a pair of a
+             ;; parameter list and an argument list ((a b ...) . (1 2 ...)).
+             (res (fold-right
+                   (lambda (e ls)
+                     (cons
+                      (cons (car e) (car ls))
+                      (cons (cadr e) (cdr ls))))
+                   '(() . ())
+                   bindings))
+             (params (car res))
+             (args (cdr res)))
+        `(,(make-lambda params body)
+          ,@args))))
+#+END_SRC
+
+#+NAME: ex-4-6-let-dispatch
+#+BEGIN_SRC scheme
+  (eval-4-1-put 'let
+                (lambda (exp env)
+                  (eval-4-1 (let->combination exp) env)))
+#+END_SRC
+
+#+BEGIN_SRC scheme :tangle ex-4-6-test.scm
+  (include "ex-4-3")
+  (use test)
+
+  (test-group "test-4-6"
+              (test 5
+                    (eval-4-1 '(let ((x 2)) (+ x 3)) (setup-environment))))
 #+END_SRC
 
      :PROPERTIES:
