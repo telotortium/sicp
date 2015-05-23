@@ -713,15 +713,15 @@ I'm going to try to do this with M-expressions.
   (define semicolon #\;)
   (define scan-semicolon (make-scan-literal-char semicolon))
 
-  (define quote #\')
-  (define scan-quote (make-scan-literal-char quote))
-  (define quasiquote #\`)
-  (define scan-quasiquote (make-scan-literal-char quasiquote))
+  (define quote-sym #\')
+  (define scan-quote-sym (make-scan-literal-char quote-sym))
+  (define quasiquote-sym #\`)
+  (define scan-quasiquote-sym (make-scan-literal-char quasiquote-sym))
 
   ;;; Parse both unquote operators here, since we need the lookahead to
   ;;; distinguish between unquote (",") and unquote-splicing (",@").
-  (define unquote #\,)
-  (define unquote-splicing '(#\, #\@))
+  (define unquote-sym #\,)
+  (define unquote-splicing-sym '(#\, #\@))
   (define (scan-unquotes port)
     (let ((in (peek-char port)))
       (if (or (eof-object? in)
@@ -732,10 +732,10 @@ I'm going to try to do this with M-expressions.
             (let ((in (peek-char port)))
               (if (or (eof-object? in)
                       (not (char=? in #\@)))
-                  unquote
+                  unquote-sym
                   (begin
                     (read-char port)
-                    unquote-splicing)))))))
+                    unquote-splicing-sym)))))))
 
   (define (identity x) x)
   (define (nonnull? x) (not (null? x)))
@@ -750,8 +750,8 @@ I'm going to try to do this with M-expressions.
           ((scan-dot port) => identity)
 
           ((scan-unquotes port) => identity)
-          ((scan-quasiquote port) => identity)
-          ((scan-quote port) => identity)
+          ((scan-quasiquote-sym port) => identity)
+          ((scan-quote-sym port) => identity)
 
           ((scan-symbol port) => identity)
           ((scan-num port) => identity)
@@ -785,13 +785,13 @@ I'm going to try to do this with M-expressions.
                                           ; (display token) (newline)
       (cond
        ;; TODO: Why doesn't `(quasiquote ,expr) work?
-       ((eq? token quote)
+       ((eq? token quote-sym)
         (list 'quote (read-sexpr next-token)))
-       ((eq? token quasiquote)
+       ((eq? token quasiquote-sym)
         (list 'quasiquote (read-sexpr next-token)))
-       ((eq? token unquote)
+       ((eq? token unquote-sym)
         (list 'unquote (read-sexpr next-token)))
-       ((eq? token unquote-splicing)
+       ((eq? token unquote-splicing-sym)
         (list 'unquote-splicing (read-sexpr next-token)))
 
        ((atom-token? token)
