@@ -225,6 +225,7 @@ the text:
     (define (self-evaluating? exp)
       (cond ((number? exp) #t)
             ((string? exp) #t)
+            ((boolean? exp) #t)
             (else #f)))
   #+END_SRC
 
@@ -488,6 +489,7 @@ interpreter:
                      (lambda (exp env)
                        (eval-4-1 (cond->if exp) env)))
 
+       <<ex-4-4-eval-and-or-dispatch>>
      #+END_SRC
 
      :PROPERTIES:
@@ -497,8 +499,10 @@ interpreter:
      SCHEDULED: <2015-02-16 Mon>
      CLOCK: [2015-02-16 Mon 13:49]--[2015-02-16 Mon 14:02] =>  0:13
 
+We implement these short-circuiting special forms by iterating down the list:
+
 #+NAME: ex-4-4-eval-and-or
-#+BEGIN_SRC scheme ex-4-4.scm
+#+BEGIN_SRC scheme
   (define (eval-and exps env)
     (if (null? exps)
         true
@@ -513,6 +517,27 @@ interpreter:
         (let ((first (first-exp exps)))
              (cond ((true? first) first)
                    (else (eval-or (rest-exps exps) env))))))
+#+END_SRC
+
+Just add them to the data-dispatch interpreter like so:
+
+#+NAME: ex-4-4-eval-and-or-dispatch
+#+BEGIN_SRC scheme
+  (eval-4-1-put 'and
+                (lambda (exp env)
+                  (eval-and exp env)))
+  (eval-4-1-put 'or
+                (lambda (exp env)
+                  (eval-or exp env)))
+#+END_SRC
+
+Here's a short test to ensure that they work:
+
+#+BEGIN_SRC scheme :tangle ex-4-4-test.scm
+  (include "ex-4-3")
+  (use test)
+
+  (test #t (eval-4-1 '(and) '()))
 #+END_SRC
 
      :PROPERTIES:
