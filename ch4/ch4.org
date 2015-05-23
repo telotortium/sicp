@@ -94,6 +94,7 @@ For convenience, put the entire metacircular interpreter here:
                   (eval-sequence (rest-exps exps) env))))
 
     <<ex-4-4-eval-and-or>>
+    <<ex-4-5-cond-recipient>>
 
     (define (eval-assignment exp env)
       (set-variable-value! (assignment-variable exp)
@@ -490,6 +491,7 @@ interpreter:
                        (eval-4-1 (cond->if exp) env)))
 
        <<ex-4-4-eval-and-or-dispatch>>
+       <<ex-4-5-cond-recipient-dispatch>>
      #+END_SRC
 
      :PROPERTIES:
@@ -546,6 +548,27 @@ Here's a short test to ensure that they work:
 **** NEXT [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-26.html#%_thm_4.5][Exercise 4.5]]
      CLOCK: [2015-02-16 Mon 14:02]--[2015-02-16 Mon 14:19] =>  0:17
 
+Let's desugar ~cond~ expressions. The ordinary ~cond~ can be desugared to a
+chain of if-elses:
+
+#+BEGIN_SRC scheme
+  (cond (a b) (c d) (else e)
+        ;; Equivalent to (if a b (if c d e))
+        )
+#+END_SRC
+
+The ~cond~ with recipient is a little more complex:
+
+#+BEGIN_SRC scheme
+  (cond (a => proc) (else b)
+        ;; Equivalent to (if a (proc a) b)
+        ;; Equivalent to ((lambda (x y) (if x (proc x) y)) a b)
+        )
+#+END_SRC
+
+Unfortunately, I don't have a gensym, so perhaps I need to introduce the
+environment here.
+
 #+NAME: ex-4-5-cond-recipient
 #+BEGIN_SRC scheme
   (define (cond? exp) (tagged-list? exp 'cond))
@@ -570,29 +593,37 @@ Here's a short test to ensure that they work:
                      (error "ELSE clause isn't last -- COND->IF"
                             clauses)))
                 ((cond-recipient-clause? first)
-                 (make-if ()))
+                 (let ((test-res (eval-4-1 ...)))
+                   (make-if (cond-predicate))))
                 (else (make-if (cond-predicate first)
                                (sequence->exp (cond-actions first))
                                (expand-clauses rest)))))))
 
-  (cond ((pred1) => foobar)
-        ((pred2) quux)
-        (else baz))
+  ;; (cond ((pred1) => foobar)
+  ;;       ((pred2) quux)
+  ;;       (else baz))
 
-  (let (res1 (pred1))
-    (if res1
-        (foobar res1)
-        (if (pred2)
-            quux
-            baz)))
+  ;; (let (res1 (pred1))
+  ;;   (if res1
+  ;;       (foobar res1)
+  ;;       (if (pred2)
+  ;;           quux
+  ;;           baz)))
 
-  ((lambda (res1)
-     (if res1
-         (foobar res1)
-         (if (pred2)
-             quux
-             baz)))
-   (pred1))
+  ;; ((lambda (res1)
+  ;;    (if res1
+  ;;        (foobar res1)
+  ;;        (if (pred2)
+  ;;            quux
+  ;;            baz)))
+  ;;  (pred1))
+#+END_SRC
+
+#+NAME: ex-4-5-cond-recipient-dispatch
+#+BEGIN_SRC scheme
+  (eval-4-1-put 'cond
+                (lambda (exp env)
+                  (cond->if exp)))
 #+END_SRC
 
      :PROPERTIES:
