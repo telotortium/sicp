@@ -477,7 +477,7 @@ interpreter:
        (eval-4-1-put 'if
                      (lambda (exp env)
                        (eval-if exp env)))
-       (eval-4-1-put 'if
+       (eval-4-1-put 'lambda
                      (lambda (exp env)
                        (make-procedure (lambda-parameters exp)
                                        (lambda-body exp)
