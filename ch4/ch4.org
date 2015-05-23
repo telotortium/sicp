@@ -434,7 +434,7 @@ interpreter:
      CLOCK: [2015-01-10 Sat 18:41]--[2015-01-10 Sat 19:18] =>  0:37
 
      #+BEGIN_SRC scheme :tangle symbol-table.scm
-       (use debug)
+       (use srfi-69)                           ; Import hash table procs
        (define (put table op type proc)
          (hash-table-set! table (cons op type) proc))
        (define (get table op type)
@@ -444,6 +444,8 @@ interpreter:
      #+BEGIN_SRC scheme :tangle ex-4-3.scm
        <<primitive-expressions>>
        <<derived-expressions>>
+       <<evaluator-structs>>
+       <<evaluator-running>>
        <<eval-sec-4-1-aux>>
 
        (include "symbol-table")
