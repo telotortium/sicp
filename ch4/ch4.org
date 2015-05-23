@@ -195,7 +195,7 @@ Test to confirm:
      :PROPERTIES:
      :Effort:   0:30
      :END:
-*** NEXT [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-26.html#%_sec_4.1.2][4.1.2: Representing Expressions]] [5/10]
+*** NEXT [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-26.html#%_sec_4.1.2][4.1.2: Representing Expressions]] [7/10]
 **** Code
      :PROPERTIES:
      :VISIBILITY: folded
@@ -391,6 +391,7 @@ the text:
     #+NAME: derived-expressions-let
     #+BEGIN_SRC scheme
       <<ex-4-6-let>>
+      <<ex-4-7-let-star>>
     #+END_SRC
 
 **** DONE Read SICP 4.1.2
@@ -494,6 +495,7 @@ interpreter:
        <<ex-4-4-eval-and-or-dispatch>>
        <<ex-4-5-cond-recipient-dispatch>>
        <<ex-4-6-let-dispatch>>
+       <<ex-4-7-let-star-dispatch>>
      #+END_SRC
 
      :PROPERTIES:
@@ -667,7 +669,51 @@ into a chain of ~if~ statements without using the environment.
      :PROPERTIES:
      :Effort:   0:30
      :END:
-**** NEXT [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-26.html#%_thm_4.7][Exercise 4.7]]
+**** DONE [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-26.html#%_thm_4.7][Exercise 4.7]]
+     CLOCK: [2015-05-23 Sat 16:27]--[2015-05-23 Sat 16:47] =>  0:20
+
+#+NAME: ex-4-7-let-star
+#+BEGIN_SRC scheme
+  (use srfi-1)
+
+  (define (let*->nested-lets exp)
+    (let* ((clauses (cdr exp))
+           (bindings (car clauses))
+           (body (cdr clauses)))
+      ;; The let expressions must be wrapped in parentheses, while the body must
+      ;; be spliced into the innermost let clause. However, the recursion below
+      ;; doesn't allow the body to be spliced in, since that would require
+      ;; looking ahead past the current binding. So we wrap the generated let
+      ;; expressions in an extra pair of parentheses and splice in all results of
+      ;; ITER, making BODY spliced in but the LET expressions still wrapped in
+      ;; parentheses at the end. Finally, we need to remove the outermost layer
+      ;; of parentheses with the CAR.
+      (car
+       (let iter ((bindings bindings))
+         (if (null? bindings)
+             body
+             `((let ((,(caar bindings) ,(cadar bindings)))
+                 ,@(iter (cdr bindings)))))))))
+#+END_SRC
+
+#+NAME: ex-4-7-let-star-dispatch
+#+BEGIN_SRC scheme
+  (eval-4-1-put 'let*
+                (lambda (exp env)
+                  (eval-4-1 (let*->nested-lets exp) env)))
+#+END_SRC
+
+#+BEGIN_SRC scheme :tangle ex-4-7-test.scm
+  (include "ex-4-3")
+  (use test)
+
+  (test-group "test-4-7"
+              (test 9
+                    (eval-4-1 '(let* ((x 2)
+                                      (y (+ x 3)))
+                                 (+ y 4))
+                              (setup-environment))))
+#+END_SRC
      :PROPERTIES:
      :Effort:   0:15
      :END:
