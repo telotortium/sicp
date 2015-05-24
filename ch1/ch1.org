@@ -392,9 +392,9 @@ function, along with more concise definitions of what they compute:
 
 
 *** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-11.html#%_sec_1.2.2][1.2.2: Tree Recursion]]
-**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-11.html#%_thm_1.14][Exercise 1.14]]
-**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-11.html#%_thm_1.15][Exercise 1.15]]
-**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-11.html#%_thm_1.16][Exercise 1.16]]
+**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-11.html#%_thm_1.11][Exercise 1.11]]
+**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-11.html#%_thm_1.12][Exercise 1.12]]
+**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-11.html#%_thm_1.13][Exercise 1.13]]
 *** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-11.html#%_sec_1.2.3][1.2.3: Orders of Growth]]
 **** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-11.html#%_thm_1.14][Exercise 1.14]]
 **** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-11.html#%_thm_1.15][Exercise 1.15]]
