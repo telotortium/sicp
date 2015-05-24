@@ -531,11 +531,81 @@ Fib(4) = \phi * Fib(3) + \delta = 3  => \delta = 3 - 2 \phi
   number of steps to compute the sine, which is
   \(\lceil \log_3{a / 0.1} \rceil\).
 
-*** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-11.html#%_sec_1.2.4][1.2.4: Exponentiation]]
-**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-11.html#%_thm_1.16][Exercise 1.16]]
-**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-11.html#%_thm_1.17][Exercise 1.17]]
-**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-11.html#%_thm_1.18][Exercise 1.18]]
-**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-11.html#%_thm_1.19][Exercise 1.19]]
+*** DONE [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-11.html#%_sec_1.2.4][1.2.4: Exponentiation]]
+**** DONE [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-11.html#%_thm_1.16][Exercise 1.16]]
+
+#+BEGIN_SRC scheme
+(define (expt-int b n)
+  (define (expt-iter a b n)
+    (cond
+      ((= n 0) a)
+      ((= n 1) (* a b))
+      ((even? n)
+       (expt-iter a
+                  (* b b)
+                  (/ n 2)))
+      (else
+        (expt-iter (* a b)
+                   (* b b)
+                   (/ (- n 1) 2)))))
+  (expt-iter 1 b n))
+#+END_SRC
+
+**** DONE [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-11.html#%_thm_1.17][Exercise 1.17]]
+
+#+BEGIN_SRC scheme
+(define (double n) (* n 2))
+(define (halve n) (/ n 2))
+(define (fast-* a b)
+  (cond
+    ((= b 0) 0)
+    ((= b 1) a)
+    ((even? b)
+     (double (fast-* a (halve b))))
+    (else
+      (+ a
+         (double (fast-* a (halve (- b 1))))))))
+#+END_SRC
+
+**** DONE [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-11.html#%_thm_1.18][Exercise 1.18]]
+
+#+BEGIN_SRC scheme
+  (define (double n) (* n 2))
+  (define (halve n) (/ n 2))
+  (define (*-int a b)
+    (define (iter c a b)
+      (cond
+       ((= b 0) 0)
+       ((= b 1) (+ c a))
+       ((even? b)
+        (iter c (double a) (halve b)))
+       (else
+        (iter (+ c a) (double a) (halve (- b 1))))))
+    (iter 0 a b))
+#+END_SRC
+
+**** DONE [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-11.html#%_thm_1.19][Exercise 1.19]]
+
+#+BEGIN_SRC scheme
+  (define (fib n)
+    (fib-iter 1 0 0 1 n))
+  (define (fib-iter a b p q count)
+    (cond ((= count 0) b)
+          ((even? count)
+           (fib-iter a
+                     b
+                     (+ (* p p)     ; compute p'
+                        (* q q))
+                     (+ (* q q)     ; compute q'
+                        (* 2 p q))
+                     (/ count 2)))
+          (else (fib-iter (+ (* b q) (* a q) (* a p))
+                          (+ (* b p) (* a q))
+                          p
+                          q
+                          (- count 1)))))
+#+END_SRC
+
 *** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-11.html#%_sec_1.2.5][1.2.5: Greatest Common Divisors]]
 **** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-11.html#%_thm_1.20][Exercise 1.20]]
 *** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-11.html#%_sec_1.2.6][1.2.6: Example: Testing for Primality]]
