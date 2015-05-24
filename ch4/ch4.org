@@ -390,8 +390,8 @@ the text:
 
     #+NAME: derived-expressions-let
     #+BEGIN_SRC scheme
-      <<ex-4-6-let>>
       <<ex-4-7-let-star>>
+      <<ex-4-8-let-named>>
     #+END_SRC
 
 **** DONE Read SICP 4.1.2
@@ -494,8 +494,8 @@ interpreter:
 
        <<ex-4-4-eval-and-or-dispatch>>
        <<ex-4-5-cond-recipient-dispatch>>
-       <<ex-4-6-let-dispatch>>
        <<ex-4-7-let-star-dispatch>>
+       <<ex-4-8-let-named-dispatch>>
      #+END_SRC
 
      :PROPERTIES:
@@ -718,8 +718,123 @@ into a chain of ~if~ statements without using the environment.
      :Effort:   0:15
      :END:
 **** NEXT [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-26.html#%_thm_4.8][Exercise 4.8]]
+
+Let's try an example transformation:
+
+#+BEGIN_SRC scheme
+  (let f ((a b) (c d)) e
+       ;; Equivalent to (lambda () (define (f a c) e) (f b d))
+       )
+#+END_SRC
+
+However, that uses ~define~, which has to manipulate the symbol table. It would
+be easier to a purely syntactic transformation, which requires a fixed-point
+combinator to accomplish recursion without referring explicitly to the name of
+the recursing function. First we do an implementation for a function of one
+argument:
+
+#+BEGIN_SRC scheme
+  (use test)
+
+  ;;; With names to illustrate what's going on.
+  (define (fix f)
+    (lambda (x)
+      (f (fix f) x)))
+  (define (factabs fact x)
+    (if (= x 0)
+        1
+        (* x (fact (- x 1)))))
+  (test 120 ((fix factabs) 5))
+
+  ;;; Now purely with lambdas
+  ;; Y-combinator
+  (lambda (f)
+    ((lambda (x)
+       (f (x x)))
+     (lambda (x)
+       (f (x x)))))
+
+  (test
+   120
+   (
+    ;; FIX
+    (lambda (f)
+      (lambda (x)
+        (f ())))
+    5))
+#+END_SRC
+
+#+NAME: ex-4-8-let-named
+#+BEGIN_SRC scheme
+  (use srfi-1)
+
+  (define (let->combination exp)
+    (let* ((proc (if (symbol? (cadr exp))
+                     (cadr exp)
+                     #f))
+           (clauses (if (symbol? (cadr exp))
+                        (cddr exp)
+                        (cdr exp)))
+           (bindings (car clauses))
+           (body (cdr clauses)))
+      (let* (
+             ;; Partition list of bindings ((a 1) (b 2) ...) into a pair of a
+             ;; parameter list and an argument list ((a b ...) . (1 2 ...)).
+             (res (fold-right
+                   (lambda (e ls)
+                     (cons
+                      (cons (car e) (car ls))
+                      (cons (cadr e) (cdr ls))))
+                   '(() . ())
+                   bindings))
+             (params (car res))
+             (args (cdr res)))
+        (if proc
+            `((lambda ()
+                (define (,proc ,@params) ,@body)
+                (,proc ,@args)))
+            `((lambda ,params ,@body)
+              ,@args)))))
+#+END_SRC
+
+#+NAME: ex-4-8-let-named-dispatch
+#+BEGIN_SRC scheme
+  (eval-4-1-put 'let
+                (lambda (exp env)
+                  (eval-4-1 (let->combination exp) env)))
+#+END_SRC
+
+#+BEGIN_SRC scheme :tangle ex-4-8-test.scm
+  (include "ex-4-3")
+  (use test)
+
+  (test-group "test-4-8"
+              (test 5
+                    (eval-4-1 '(let ((x 2)) (+ x 3)) (setup-environment)))
+              (test 21
+                    (eval-4-1
+                     '(let fib-iter ((a 1)
+                                     (b 0)
+                                     (count 8))
+                        (if (= count 0)
+                            b
+                            (fib-iter (+ a b) a (- count 1))))
+                     (setup-environment)))
+              (test 21
+                    (eval-4-1
+                     '(let ((n 8))
+                        (let fib-iter ((a 1)
+                                       (b 0)
+                                       (count n))
+                          (if (= count 0)
+                              b
+                              (fib-iter (+ a b) a (- count 1)))))
+                     (setup-environment))))
+#+END_SRC
+
+     CLOCK: [2015-05-23 Sat 16:47]--[2015-05-23 Sat 18:05] =>  1:18
      :PROPERTIES:
-     :Effort:   0:15
+     :Effort:   0:30
      :END:
 **** NEXT [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-26.html#%_thm_4.9][Exercise 4.9]]
      :PROPERTIES:
@@ -1107,6 +1222,9 @@ I'm going to try to do this with M-expressions.
             (list 'null? null?)
             (list '+ +)
             (list '- -)
+            (list '* *)
+            (list '/ /)
+            (list '= =)
             ;; <more primitives>
             ))
     (define (primitive-procedure-names)
