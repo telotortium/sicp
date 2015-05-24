@@ -529,7 +529,7 @@ Fib(4) = \phi * Fib(3) + \delta = 3  => \delta = 3 - 2 \phi
 - b. Since sine is not in a tail-call position when being called within its
   definition, the order of space growth is directly proportional to the
   number of steps to compute the sine, which is
-  \(\lceil \log_3{a / 0.1} \racily\).
+  \(\lceil \log_3{(a / 0.1)} \rceil\).
 
 *** DONE [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-11.html#%_sec_1.2.4][1.2.4: Exponentiation]]
 **** DONE [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-11.html#%_thm_1.16][Exercise 1.16]]
@@ -623,10 +623,10 @@ In the applicative-order evaluation, a remainder is taken for each iteration
 of ~gcd~,
 
 \[
-d(#rem) / d(#iter) = 1
+d(\#rem) / d(\#iter) = 1
 \]
 
-Since \(#iter \prop log(a)\), the number of remainders taken is
+Since \(\#iter \propto log(a)\), the number of remainders taken is
 \(\Theta(log(a))\).
 
 In the normal-order evaluation, each expansion of ~gcd~ produces a number of
@@ -634,10 +634,10 @@ calls to remainder that is a constant multiple of the calls to remainder in the
 previous iteration.
 
 \[
-  d(#rem) / d(#iter) = k #rem
+  d(\#rem) / d(\#iter) = k \#rem
 \]
 
-Thus, \(#rem \prop e^{#iter}\), and therefore \(#rem = \Theta(a)\).
+Thus, \(\#rem \propto e^{\#iter}\), and therefore \(\#rem = \Theta(a)\).
 
 The normal-order evaluation expansion looks like this:
 
