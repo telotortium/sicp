@@ -606,8 +606,62 @@ Fib(4) = \phi * Fib(3) + \delta = 3  => \delta = 3 - 2 \phi
                           (- count 1)))))
 #+END_SRC
 
-*** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-11.html#%_sec_1.2.5][1.2.5: Greatest Common Divisors]]
-**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-11.html#%_thm_1.20][Exercise 1.20]]
+*** DONE [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-11.html#%_sec_1.2.5][1.2.5: Greatest Common Divisors]]
+**** DONE [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-11.html#%_thm_1.20][Exercise 1.20]]
+
+Number of remainder operations performed with applicative vs. normal order
+evaluation in ~(gcd 206 40)~, and in general?
+
+#+BEGIN_SRC scheme
+  (define (gcd a b)
+    (if (= b 0)
+        a
+        (gcd b (remainder a b))))
+#+END_SRC
+
+In the applicative-order evaluation, a remainder is taken for each iteration
+of ~gcd~,
+
+\[
+d(#rem) / d(#iter) = 1
+\]
+
+Since \(#iter \prop log(a)\), the number of remainders taken is
+\(\Theta(log(a))\).
+
+In the normal-order evaluation, each expansion of ~gcd~ produces a number of
+calls to remainder that is a constant multiple of the calls to remainder in the
+previous iteration.
+
+\[
+  d(#rem) / d(#iter) = k #rem
+\]
+
+Thus, \(#rem \prop e^{#iter}\), and therefore \(#rem = \Theta(a)\).
+
+The normal-order evaluation expansion looks like this:
+
+#+BEGIN_SRC scheme
+  (gcd 206 40)
+  (if (= 40 0)
+    206
+    (gcd 40 (remainder 206 40)))
+  (if (= 40 0)
+    206
+    (if (= (remainder 206 40) 0)
+      40
+      (gcd (remainder 206 40)
+           (remainder 40 (remainder 206 40)))))
+  (if (= 40 0)
+    206
+    (if (= (remainder 206 40) 0)
+      40
+      (if (= (remainder 40 (remainder 206 40)) 0)
+          (remainder 206 40)
+          (gcd (remainder 40 (remainder 206 40))
+               (remainder (remainder 206 40) (remainder 40 (remainder 206 40)))))))
+#+END_SRC
+
 *** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-11.html#%_sec_1.2.6][1.2.6: Example: Testing for Primality]]
 **** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-11.html#%_thm_1.21][Exercise 1.21]]
 **** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-11.html#%_thm_1.22][Exercise 1.22]]
