@@ -663,13 +663,101 @@ The normal-order evaluation expansion looks like this:
 #+END_SRC
 
 *** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-11.html#%_sec_1.2.6][1.2.6: Example: Testing for Primality]]
-**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-11.html#%_thm_1.21][Exercise 1.21]]
+**** DONE [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-11.html#%_thm_1.21][Exercise 1.21]]
+
+#+BEGIN_SRC scheme :tangle ex-1-21.scm
+  (define (square x) (* x x))
+  (define (smallest-divisor n)
+    (find-divisor n 2))
+  (define (find-divisor n test-divisor)
+    (cond ((> (square test-divisor) n) n)
+          ((divides? test-divisor n) test-divisor)
+          (else (find-divisor n (+ test-divisor 1)))))
+  (define (divides? a b)
+    (= (remainder b a) 0))
+#+END_SRC
+
+#+BEGIN_SRC scheme :tangle ex-1-21-test.scm
+  (include "ex-1-21")
+  (use test)
+
+  (test-group "ex-1-21-test"
+              (test 199 (smallest-divisor 199))
+              (test 1999 (smallest-divisor 1999))
+              (test 7 (smallest-divisor 19999)))
+#+END_SRC
+
 **** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-11.html#%_thm_1.22][Exercise 1.22]]
 **** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-11.html#%_thm_1.23][Exercise 1.23]]
 **** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-11.html#%_thm_1.24][Exercise 1.24]]
 **** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-11.html#%_thm_1.25][Exercise 1.25]]
 **** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-11.html#%_thm_1.26][Exercise 1.26]]
-**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-11.html#%_thm_1.27][Exercise 1.27]]
+**** DONE [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-11.html#%_thm_1.27][Exercise 1.27]]
+
+Carmichael numbers -- fool the Fermat primality test
+
+#+BEGIN_SRC scheme :tangle ex-1-27.scm
+  ;;; Ancillary functions {{{
+  ;; Perfect primality test
+  (define (smallest-divisor n)
+    (find-divisor n 2))
+  (define (find-divisor n test-divisor)
+    (cond ((> (square test-divisor) n) n)
+          ((divides? test-divisor n) test-divisor)
+          (else (find-divisor n (+ test-divisor 1)))))
+  (define (divides? a b)
+    (= (remainder b a) 0))
+  (define (prime? n)
+    (= n (smallest-divisor n)))
+
+  ;; Probabalistic primality test
+  (define (expmod base exp m)
+    (cond ((= exp 0) 1)
+          ((even? exp)
+           (remainder (square (expmod base (/ exp 2) m))
+                      m))
+          (else
+            (remainder (* base (expmod base (- exp 1) m))
+                       m))))
+  (define (fermat-test n)
+    (define (try-it a)
+      (= (expmod a n n) a))
+    (try-it (+ 1 (random (- n 1)))))
+
+  (define (fast-prime? n times)
+    (cond ((= times 0) true)
+          ((fermat-test n) (fast-prime? n (- times 1)))
+          (else false)))
+  ;;;}}}
+
+  (define (carmichael? n)
+    (define (iter a)
+      (cond ((= a n) true)
+            ((= a (expmod a n n))
+             (iter (+ a 1)))
+            (else false)))
+    (define (try) (iter 0))
+    (define fermat-res (try))
+    (define prime-res (prime? n))
+    (or (and (not fermat-res) prime-res)
+        (and fermat-res (not prime-res))))
+#+END_SRC
+
+#+BEGIN_SRC scheme :tangle ex-1-27-test.scm
+  (include "ex-1-27")
+  (use test)
+
+  ;; All of these return #t, indicating that they are composite numbers even
+  ;; though the fool the Fermat primality test.
+  (test-group "ex-1-27-test"
+              (test-assert (carmichael? 561))
+              (test-assert (carmichael? 1105))
+              (test-assert (carmichael? 1729))
+              (test-assert (carmichael? 2465))
+              (test-assert (carmichael? 2821))
+              (test-assert (carmichael? 6601)))
+#+END_SRC
+
 **** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-11.html#%_thm_1.28][Exercise 1.28]]
 
 ** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-12.html#%_sec_1.3][1.3: Formulating Abstractions with Higher-Order Procedures]]
