@@ -1136,14 +1136,14 @@ I'm going to try to do this with M-expressions.
      :PROPERTIES:
      :Effort:   3:00
      :END:
-*** NEXT [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-26.html#%_sec_4.1.3][4.1.3: Evaluator Data Structures]] [1/4]
+*** NEXT [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-26.html#%_sec_4.1.3][4.1.3: Evaluator Data Structures]] [3/4]
 **** Code
 
 #+NAME: evaluator-structs
 #+BEGIN_SRC scheme
   <<evaluator-structs-predicates>>
   <<evaluator-structs-procedures>>
-  <<evaluator-structs-environments>>
+  <<ex-4-12-environments>>
 #+END_SRC
 
 #+NAME: evaluator-structs-predicates
@@ -1237,8 +1237,143 @@ I'm going to try to do this with M-expressions.
      :PROPERTIES:
      :Effort:   0:15
      :END:
-**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-26.html#%_thm_4.11][Exercise 4.11]]
-**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-26.html#%_thm_4.12][Exercise 4.12]]
+**** DONE [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-26.html#%_thm_4.11][Exercise 4.11]]
+     CLOCK: [2015-05-23 Sat 20:57]--[2015-05-23 Sat 21:05] =>  0:08
+     :PROPERTIES:
+     :Effort:   0:15
+     :END:
+
+Redundant with [[Exercise 4.12]].
+
+**** DONE [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-26.html#%_thm_4.12][Exercise 4.12]]
+     CLOCK: [2015-05-23 Sat 21:43]--[2015-05-23 Sat 22:30] =>  0:47
+
+Implement environment bindings as a list of name-value pairs (implemented as a
+list of two elements to allow for deleting a binding from an environment, see
+[[Exercise 4.13]]) instead of as a pair of lists:
+
+#+NAME: ex-4-12-environments
+#+BEGIN_SRC scheme
+  (define (enclosing-environment env) (cdr env))
+  (define (first-frame env) (car env))
+  (define the-empty-environment '())
+
+  (define (get-bindings frame) (car frame))
+  (define (make-binding var val) (list var val))
+
+  (define (make-frame variables values)
+    (let iter ((variables variables)
+               (values values)
+               (bindings '()))
+      (if (null? variables)
+          `(,bindings)
+          (iter (cdr variables)
+                (cdr values)
+                (cons (make-binding (car variables) (car values))
+                      bindings)))))
+
+  (define (add-binding-to-frame! var val frame)
+    (let ((bindings (get-bindings frame)))
+      (set-car! frame (cons (make-binding var val) bindings))))
+
+  (define (extend-environment vars vals base-env)
+    (if (= (length vars) (length vals))
+        (cons (make-frame vars vals) base-env)
+        (if (< (length vars) (length vals))
+            (error "Too many arguments supplied" vars vals)
+            (error "Too few arguments supplied" vars vals))))
+
+  (define (lookup-variable-value var env)
+    ;; Wrap returned value in list in order to terminate lookup, which requires
+    ;; that we unwrap it at the top.
+    (let ((res
+           (scan-env
+            var #f env
+            (lambda (var -unused- env frame)
+              (scan-bindings
+               var #f env frame
+               (lambda (var -unused- env frame bindings)
+                 (list (cadar bindings)))
+               (lambda (var -unused- env frame bindings) #f)))
+            (lambda (var -unused- env)
+              (error "Unbound variable" var)))))
+      (if (pair? res)
+          (car res)
+          res)))
+
+  (define (set-value-in-bindings! bindings val)
+    (set-car! (cdar bindings) val))
+
+  (define (set-variable-value! var val env)
+    (scan-env
+     var val env
+     (lambda (var val env frame)
+       (scan-bindings
+        var val env frame
+        (lambda (var val env frame bindings)
+          (set-value-in-bindings! bindings val)
+          'ok)
+        (lambda (var val env frame bindings) #f)))
+     (lambda (var val env)
+       (error "Unbound variable -- SET!" var))))
+
+  (define (define-variable! var val env)
+    (scan-env
+     var val env
+     (lambda (var val env frame)
+       (scan-bindings
+        var val env frame
+        (lambda (var val env frame bindings)
+          (set-value-in-bindings! bindings val)
+          'ok)
+        (lambda (var val env frame bindings)
+          (add-binding-to-frame! var val frame)
+          'ok)))
+     (lambda (var val env)
+       (error "Should never get here -- DEFINE!"))))
+
+  (define (scan-env var val env on-frame on-not-found-in-env)
+    (let env-loop ((env env))
+      (if (eq? env the-empty-environment)
+          (on-not-found-in-env var val env)
+          (let ((frame (first-frame env)))
+            (cond ((on-frame var val env frame) => identity)
+                  (else (env-loop (enclosing-environment env))))))))
+
+  (define (scan-bindings var val env frame on-found-in-frame on-not-found-in-frame)
+    (let frame-loop ((bindings (get-bindings frame)))
+      (cond ((null? bindings)
+             (on-not-found-in-frame var val env frame bindings))
+            ((eq? var (caar bindings))
+             (on-found-in-frame var val env frame bindings))
+            (else (frame-loop (cdr bindings))))))
+#+END_SRC
+
+#+BEGIN_SRC scheme :tangle ex-4-12-test.scm
+  (include "ex-4-3")
+  <<ex-4-12-environments>>
+  (use test)
+
+  (test-group "ex-4-12-test"
+              (define env (extend-environment '(x y) '(1 2) the-empty-environment))
+              (test-assert (equal? env '((((y 2) (x 1))))))
+              (define-variable! 'z "zeta" env)
+              (test "zeta"
+                    (lookup-variable-value 'z env))
+              (set-variable-value! 'z "zee" env)
+              (test "zee"
+                    (lookup-variable-value 'z env))
+              (define-variable! 'x 3 env)
+              (test 3
+                    (lookup-variable-value 'x env))
+              (test 2
+                    (lookup-variable-value 'y env)))
+#+END_SRC
+     CLOCK: [2015-05-23 Sat 21:10]--[2015-05-23 Sat 21:41] =>  0:31
+     :PROPERTIES:
+     :Effort:   0:30
+     :END:
+
 **** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-26.html#%_thm_4.13][Exercise 4.13]]
 *** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-26.html#%_sec_4.1.4][4.1.4: Running the Evaluator as a Program]] [/]
 **** Code
