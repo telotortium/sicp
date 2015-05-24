@@ -505,6 +505,7 @@ interpreter:
        <<ex-4-7-let-star-dispatch>>
        <<ex-4-8-let-named-dispatch>>
        <<ex-4-9-while-dispatch>>
+       <<ex-4-13-make-unbound-dispatch>>
      #+END_SRC
 
      :PROPERTIES:
@@ -1375,6 +1376,155 @@ list of two elements to allow for deleting a binding from an environment, see
      :END:
 
 **** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-26.html#%_thm_4.13][Exercise 4.13]]
+     - Note taken on [2015-05-23 Sat 23:51] \\
+       Test 7 continues to fail for some reason.
+
+There are three obvious approaches to allow unbinding a variable from the
+environment:
+
+1. Unbind the variable in the first frame where it is visible (starting from the
+   current frame).
+2. Unbind the variable in all frames.
+3. Hide the variable from the current frame, but don't affect the bindings in
+   higher frames.
+
+Of these approaches, number 3 is the most consistent with the reference
+semantics of lexical scoping implied by the way new bindings shadow bindings in
+higher frames. When a binding to a variable is added in the current frame, the
+value assigned to it shadows the previous value until the current frame is
+popped by returning from the procedure, after which the variable continues to
+have its previous value. Thus, deleting a binding to a variable should have the
+same behavior -- the deletion affects only the current and lower frames and is
+voided upon popping the current frame.
+
+It may be argued that approach 1 or 2 is more reasonable, since mutation
+affects the value of the variable in the first frame where it's visible even
+after the current procedure returns. However, adding a binding to a frame
+creates a reference to a value valid until the current frame is popped, so
+deleting a binding should also unbind that reference for the lifetime of the
+current frame. Mutations, on the other hand, don't affect references, but
+rather the value behind the reference.
+
+In [[Exercise 4.12]], I've used the data structure ~`(,var (,val))~ for each
+binding rather than the simpler ~`(,var ,val)~ to enable deletions to shadow
+earlier bindings by adding a binding of the form
+~`(,var the-unbound-sentinel)~ without causing ambiguity if ~val~ happens to be
+~the-unbound-sentinel~.
+
+#+NAME: ex-4-13-environments
+#+BEGIN_SRC scheme
+  <<ex-4-12-environments>>
+
+  (define (unbound-binding? binding)
+    (eq? (cdr binding) 'the-unbound-sentinel))
+
+  (define (scan-bindings var val env frame on-found-in-frame on-not-found-in-frame)
+    (let frame-loop ((bindings (get-bindings frame)))
+      (cond ((or (null? bindings)
+                 (unbound-binding? (car bindings)))
+             (on-not-found-in-frame var val env frame bindings))
+            ((eq? var (caar bindings))
+             (on-found-in-frame var val env frame bindings))
+            (else (frame-loop (cdr bindings))))))
+
+  (define (lookup-variable-value var env)
+    ;; Wrap returned value in list in order to terminate lookup, which requires
+    ;; that we unwrap it at the top.
+    (let ((res
+           (scan-env
+            var #f env
+            (lambda (var -unused- env frame)
+              (scan-bindings
+               var #f env frame
+               (lambda (var -unused- env frame bindings)
+                 (list (cadar bindings)))
+               (lambda (var -unused- env frame bindings)
+                 (if (and (not (null? bindings))
+                          (unbound-binding? (car bindings)))
+                     (error "Unbound variable (deleted)" var)
+                     #f))))
+            (lambda (var -unused- env)
+              (error "Unbound variable" var)))))
+      (if (pair? res)
+          (car res)
+          res)))
+
+
+  (define (make-unbound-variable! var env)
+    (scan-env
+     var #f env
+     (lambda (var -unused- env frame)
+       (scan-bindings
+        var #f env frame
+        (lambda (var -unused- env frame bindings)
+          (set-cdr! (car bindings) 'the-unbound-sentinel)
+          'ok)
+        (lambda (var -unused- env frame bindings)
+          (add-binding-to-frame! var -unused- frame)
+          'ok)))
+     (lambda (var -unused- env)
+       (error "Should never get here -- DEFINE!" var))))
+
+  (define (get-make-unbound-variable exp) (cadr exp))
+  (define (eval-make-unbound exp env)
+    (make-unbound-variable! (get-make-unbound-variable exp)
+                            env))
+#+END_SRC
+
+#+NAME: ex-4-13-make-unbound-dispatch
+#+BEGIN_SRC scheme
+  (eval-4-1-put 'make-unbound!
+                (lambda (exp env)
+                  (eval-make-unbound exp env)))
+#+END_SRC
+
+#+BEGIN_SRC scheme :tangle ex-4-13-test.scm
+  (include "ex-4-3")
+  <<ex-4-13-environments>>
+  (use test)
+
+  (test-group "ex-4-13-test"
+              (define env (extend-environment '(x y) '(1 2) the-empty-environment))
+              (test-assert (equal? env '((((y 2) (x 1))))))
+              (define-variable! 'z "zeta" env)
+              (test "zeta"
+                    (lookup-variable-value 'z env))
+              (set-variable-value! 'z "zee" env)
+              (test "zee"
+                    (lookup-variable-value 'z env))
+              (define-variable! 'x 3 env)
+              (test 3
+                    (lookup-variable-value 'x env))
+              (test 2
+                    (lookup-variable-value 'y env))
+              ;;; Assert that the effects of make-unbound! disappear once its
+              ;;; frame has been popped.
+              (test 3
+                    (eval-4-1
+                     '(begin
+                        ((lambda ()
+                           (make-unbound! x)))
+                        x)
+                     env))
+              ;;; Assert that make-unbound! actually unbinds the variable.
+              (test-assert
+               (condition-case
+                   (begin
+                     (eval-4-1
+                      '(begin
+                         ((lambda ()
+                            (make-unbound! x)
+                            x)))
+                      env)
+                     #f)
+                 ((exn) #t))))
+#+END_SRC
+
+
+     CLOCK: [2015-05-23 Sat 22:30]--[2015-05-23 Sat 23:51] =>  1:21
+     :PROPERTIES:
+     :Effort:   0:45
+     :END:
 *** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-26.html#%_sec_4.1.4][4.1.4: Running the Evaluator as a Program]] [/]
 **** Code
 
