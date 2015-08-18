@@ -2049,14 +2049,117 @@ The solution is:
 **** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-28.html#%_thm_4.54][Exercise 4.54]]
 
 ** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-29.html#%_sec_4.4][4.4: Logic Programming]] [%]
-*** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-29.html#%_sec_4.4.1][4.4.4: Deductive Information Retrieval]] [/]
-**** TODO Read SICP 4.4.1
-**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-29.html#%_thm_4.55][Exercise 4.55]]
-**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-29.html#%_thm_4.56][Exercise 4.56]]
-**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-29.html#%_thm_4.57][Exercise 4.57]]
-**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-29.html#%_thm_4.58][Exercise 4.58]]
-**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-29.html#%_thm_4.59][Exercise 4.59]]
-**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-29.html#%_thm_4.60][Exercise 4.60]]
+*** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-29.html#%_sec_4.4.1][4.4.4: Deductive Information Retrieval]] [7/10]
+**** DONE Read SICP 4.4.1
+**** DONE [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-29.html#%_thm_4.55][Exercise 4.55]]
+     CLOCK: [2015-08-17 Mon 17:34]--[2015-08-17 Mon 17:35] =>  0:01
+     CLOCK: [2015-08-17 Mon 17:31]--[2015-08-17 Mon 17:34] =>  0:03
+
+#+BEGIN_SRC scheme
+;;; a. all people supervised by Ben Bitdiddle;
+(supervisor ?x (Bitdiddle Ben))
+
+;;; b. the names and jobs of all people in the accounting division;
+(job ?x (accounting . ?type))
+
+;;; c. the names and addresses of all people who live in Slumerville.
+(address ?x (Slumerville . ?addr))
+#+END_SRC
+
+**** DONE [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-29.html#%_thm_4.56][Exercise 4.56]]
+     CLOCK: [2015-08-17 Mon 17:37]--[2015-08-17 Mon 17:45] =>  0:08
+
+#+BEGIN_SRC scheme
+;;; a. the names of all people who are supervised by Ben Bitdiddle, together
+;;;    with their addresses;
+(and (supervisor ?person (Bitdiddle Ben))
+     (address ?person ?where))
+
+;;; b. all people whose salary is less than Ben Bitdiddle's, together with
+;;;    their salary and Ben Bitdiddle's salary;
+(or (salary (Bitdiddle Ben) ?bb-amount)
+    (and (salary ?person ?amount)
+         (lisp-value < ?amount ?bb-amount)))
+
+;;; c. all people who are supervised by someone who is not in the computer
+;;;    division, together with the supervisor's name and job.
+(and (supervisor ?person ?sup)
+     (not (job ?sup (computer . ?type))))
+#+END_SRC
+
+**** DONE [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-29.html#%_thm_4.57][Exercise 4.57]]
+     CLOCK: [2015-08-17 Mon 17:46]--[2015-08-17 Mon 17:56] =>  0:10
+
+Define a rule that says that person 1 can replace person 2 if either person 1
+does the same job as person 2 or someone who does person 1's job can also do
+person 2's job, and if person 1 and person 2 are not the same person.
+
+#+BEGIN_SRC scheme
+(rule (substitute-for ?person-1 ?person-2)
+      (and (not (same ?person-1 ?person-2))
+           (job ?person-1 ?job-1)
+           (job ?person-2 ?job-2)
+           (or (same ?job-1 ?job-2)
+               (can-do-job ?job-1 ?job-2))))
+#+END_SRC
+
+- a. all people who can replace Cy D. Fect;
+
+     #+BEGIN_SRC scheme
+     (substitute-for ?person (Fect Cy D))
+     #+END_SRC
+
+- b. all people who can replace someone who is being paid more than they are,
+     together with the two salaries.
+
+     #+BEGIN_SRC scheme
+     (and (salary ?person-1 ?amount-1)
+          (salary ?person-2 ?amount-2)
+          (lisp-value < ?amount-1 ?amount-2)
+          (substitute-for ?person-1 ?person-2))
+     #+END_SRC
+
+**** DONE [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-29.html#%_thm_4.58][Exercise 4.58]]
+     CLOCK: [2015-08-17 Mon 18:25]--[2015-08-17 Mon 18:28] =>  0:03
+
+#+BEGIN_SRC scheme
+(rule (big-shot ?person)
+      (and (job ?person (?division . ?type))
+           (supervisor ?person ?sup)
+#+END_SRC
+
+**** DONE [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-29.html#%_thm_4.59][Exercise 4.59]]
+     CLOCK: [2015-08-17 Mon 18:46]--[2015-08-17 Mon 18:53] =>  0:07
+
+- a. All meetings on Friday:
+
+     #+BEGIN_SRC scheme
+     (meeting ?division (Friday . $time))
+     #+END_SRC
+
+- b. Alyssa's rule:
+
+     #+BEGIN_SRC scheme
+     (rule (meeting-time ?person ?day-and-time)
+           (or (meeting whole-company ?day-and-time)
+               (and (job ?person (?division . ?type))
+                    (meeting ?division ?day-and-time))))
+     #+END_SRC
+
+- c. Alyssa's meetings on Wednesday:
+
+     #+BEGIN_SRC scheme
+     (meeting-time (Hacker Alyssa P) (Wednesday . ?time))
+     #+END_SRC
+
+**** DONE [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-29.html#%_thm_4.60][Exercise 4.60]]
+     CLOCK: [2015-08-17 Mon 18:56]--[2015-08-17 Mon 19:00] =>  0:04
+
+#+BEGIN_SRC scheme
+(and (lives-near ?person-1 ?person-2)
+     (not (lives-near ?person-2 ?person-1)))
+#+END_SRC
+
 **** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-29.html#%_thm_4.61][Exercise 4.61]]
 **** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-29.html#%_thm_4.62][Exercise 4.62]]
 **** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-29.html#%_thm_4.63][Exercise 4.63]]
