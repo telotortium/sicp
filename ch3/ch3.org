@@ -12,7 +12,7 @@
 
 *** DONE 3.1.1: [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-20.html#%_sec_3.1.1][Local State Variables]]
 
-**** DONE [[view-source:http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-20.html#%_thm_3.1][Exercise 3.1.]]
+**** DONE [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-20.html#%_thm_3.1][Exercise 3.1.]]
 
 #+BEGIN_SRC scheme :tangle ex-3-1.scm
   (define (make-accumulator initial)
@@ -31,7 +31,7 @@
         (A 10))
 #+END_SRC
 
-**** DONE [[view-source:http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-20.html#%_thm_3.2][Exercise 3.2.]]
+**** DONE [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-20.html#%_thm_3.2][Exercise 3.2.]]
 
 #+BEGIN_SRC scheme :tangle ex-3-2.scm
   (define (make-monitored f)
@@ -56,7 +56,7 @@
         (s 'how-many-calls?))
 #+END_SRC
 
-**** DONE [[view-source:http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-20.html#%_thm_3.3][Exercise 3.3.]]
+**** DONE [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-20.html#%_thm_3.3][Exercise 3.3.]]
 
 Modify the ~make-account~ procedure so that it creates password-protected
 accounts. That is, ~make-account~ should take a symbol as an additional
@@ -92,7 +92,7 @@ argument, as in
         ((acc 'some-other-password 'deposit) 50))
 #+END_SRC
 
-**** DONE [[view-source:http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-20.html#%_thm_3.4][Exercise 3.4.]]
+**** DONE [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-20.html#%_thm_3.4][Exercise 3.4.]]
 
 As the prompt states, there's little more work involved than to add
 a ~incorrect-password-attempts~, which we use to ~call-the-cops~ when too many
@@ -144,7 +144,7 @@ decided to do so for ease of testing.
 
 *** DONE 3.1.2: [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-20.html#%_sec_3.1.2][The Benefits of Introducing Assignment]]
 
-**** DONE [[view-source:http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-20.html#%_thm_3.5][Exercise 3.5.]]
+**** DONE [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-20.html#%_thm_3.5][Exercise 3.5.]]
 
 #+BEGIN_SRC scheme :tangle ex-3-5.scm
   (define (estimate-integral P x1 x2 y1 y2 ntrial)
@@ -181,7 +181,7 @@ decided to do so for ease of testing.
                       (estimate-integral (p-circle) -2.0 2.0 -2.0 2.0 100000)))
 #+END_SRC
 
-**** DONE [[view-source:http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-20.html#%_thm_3.6][Exercise 3.6.]]
+**** DONE [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-20.html#%_thm_3.6][Exercise 3.6.]]
 
 This is a fairly simple modification of the ~rand~ command defined in the
 book. The main change is to dispatch on a ~command~ argument to ~rand~. Also,
@@ -206,7 +206,7 @@ the seed is initialized.
 
 *** DONE 3.1.3: [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-20.html#%_sec_3.1.3][The Costs of Introducing Assignment]]
 
-**** DONE [[view-source:http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-20.html#%_thm_3.7][Exercise 3.7.]]
+**** DONE [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-20.html#%_thm_3.7][Exercise 3.7.]]
 
 #+BEGIN_SRC scheme :tangle ex-3-7.scm
   (include "ex-3-3")
@@ -246,7 +246,7 @@ the seed is initialized.
         ((joint-acc 'proxy-password 'withdraw) 20))
 #+END_SRC
 
-**** DONE [[view-source:http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-20.html#%_thm_3.8][Exercise 3.8.]]
+**** DONE [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-20.html#%_thm_3.8][Exercise 3.8.]]
 
 #+BEGIN_SRC scheme :tangle ex-3-8.scm
   (define f
