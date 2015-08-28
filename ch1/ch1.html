@@ -1,0 +1,1459 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<!-- 2015-08-28 Fri 08:19 -->
+<meta  http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta  name="viewport" content="width=device-width, initial-scale=1" />
+<title>Structure and Interpretation of Computer Programs (SICP)</title>
+<meta  name="generator" content="Org-mode" />
+<meta  name="author" content="Robert Irelan" />
+<style type="text/css">
+ <!--/*--><![CDATA[/*><!--*/
+  .title  { text-align: center;
+             margin-bottom: .2em; }
+  .subtitle { text-align: center;
+              font-size: medium;
+              font-weight: bold;
+              margin-top:0; }
+  .todo   { font-family: monospace; color: red; }
+  .done   { font-family: monospace; color: green; }
+  .priority { font-family: monospace; color: orange; }
+  .tag    { background-color: #eee; font-family: monospace;
+            padding: 2px; font-size: 80%; font-weight: normal; }
+  .timestamp { color: #bebebe; }
+  .timestamp-kwd { color: #5f9ea0; }
+  .org-right  { margin-left: auto; margin-right: 0px;  text-align: right; }
+  .org-left   { margin-left: 0px;  margin-right: auto; text-align: left; }
+  .org-center { margin-left: auto; margin-right: auto; text-align: center; }
+  .underline { text-decoration: underline; }
+  #postamble p, #preamble p { font-size: 90%; margin: .2em; }
+  p.verse { margin-left: 3%; }
+  pre {
+    border: 1px solid #ccc;
+    box-shadow: 3px 3px 3px #eee;
+    padding: 8pt;
+    font-family: monospace;
+    overflow: auto;
+    margin: 1.2em;
+  }
+  pre.src {
+    position: relative;
+    overflow: visible;
+    padding-top: 1.2em;
+  }
+  pre.src:before {
+    display: none;
+    position: absolute;
+    background-color: white;
+    top: -10px;
+    right: 10px;
+    padding: 3px;
+    border: 1px solid black;
+  }
+  pre.src:hover:before { display: inline;}
+  pre.src-sh:before    { content: 'sh'; }
+  pre.src-bash:before  { content: 'sh'; }
+  pre.src-emacs-lisp:before { content: 'Emacs Lisp'; }
+  pre.src-R:before     { content: 'R'; }
+  pre.src-perl:before  { content: 'Perl'; }
+  pre.src-java:before  { content: 'Java'; }
+  pre.src-sql:before   { content: 'SQL'; }
+
+  table { border-collapse:collapse; }
+  caption.t-above { caption-side: top; }
+  caption.t-bottom { caption-side: bottom; }
+  td, th { vertical-align:top;  }
+  th.org-right  { text-align: center;  }
+  th.org-left   { text-align: center;   }
+  th.org-center { text-align: center; }
+  td.org-right  { text-align: right;  }
+  td.org-left   { text-align: left;   }
+  td.org-center { text-align: center; }
+  dt { font-weight: bold; }
+  .footpara { display: inline; }
+  .footdef  { margin-bottom: 1em; }
+  .figure { padding: 1em; }
+  .figure p { text-align: center; }
+  .inlinetask {
+    padding: 10px;
+    border: 2px solid gray;
+    margin: 10px;
+    background: #ffffcc;
+  }
+  #org-div-home-and-up
+   { text-align: right; font-size: 70%; white-space: nowrap; }
+  textarea { overflow-x: auto; }
+  .linenr { font-size: smaller }
+  .code-highlighted { background-color: #ffff00; }
+  .org-info-js_info-navigation { border-style: none; }
+  #org-info-js_console-label
+    { font-size: 10px; font-weight: bold; white-space: nowrap; }
+  .org-info-js_search-highlight
+    { background-color: #ffff00; color: #000000; font-weight: bold; }
+  /*]]>*/-->
+</style>
+<script type="text/javascript">
+/*
+@licstart  The following is the entire license notice for the
+JavaScript code in this tag.
+
+Copyright (C) 2012-2013 Free Software Foundation, Inc.
+
+The JavaScript code in this tag is free software: you can
+redistribute it and/or modify it under the terms of the GNU
+General Public License (GNU GPL) as published by the Free Software
+Foundation, either version 3 of the License, or (at your option)
+any later version.  The code is distributed WITHOUT ANY WARRANTY;
+without even the implied warranty of MERCHANTABILITY or FITNESS
+FOR A PARTICULAR PURPOSE.  See the GNU GPL for more details.
+
+As additional permission under GNU GPL version 3 section 7, you
+may distribute non-source (e.g., minimized or compacted) forms of
+that code without the copy of the GNU GPL normally required by
+section 4, provided you include this license notice and a URL
+through which recipients can access the Corresponding Source.
+
+
+@licend  The above is the entire license notice
+for the JavaScript code in this tag.
+*/
+<!--/*--><![CDATA[/*><!--*/
+ function CodeHighlightOn(elem, id)
+ {
+   var target = document.getElementById(id);
+   if(null != target) {
+     elem.cacheClassElem = elem.className;
+     elem.cacheClassTarget = target.className;
+     target.className = "code-highlighted";
+     elem.className   = "code-highlighted";
+   }
+ }
+ function CodeHighlightOff(elem, id)
+ {
+   var target = document.getElementById(id);
+   if(elem.cacheClassElem)
+     elem.className = elem.cacheClassElem;
+   if(elem.cacheClassTarget)
+     target.className = elem.cacheClassTarget;
+ }
+/*]]>*///-->
+</script>
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        displayAlign: "center",
+        displayIndent: "0em",
+
+        "HTML-CSS": { scale: 100,
+                        linebreaks: { automatic: "false" },
+                        webFont: "TeX"
+                       },
+        SVG: {scale: 100,
+              linebreaks: { automatic: "false" },
+              font: "TeX"},
+        NativeMML: {scale: 100},
+        TeX: { equationNumbers: {autoNumber: "AMS"},
+               MultLineWidth: "85%",
+               TagSide: "right",
+               TagIndent: ".8em"
+             }
+});
+</script>
+<script type="text/javascript"
+        src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+</head>
+<body>
+<div id="content">
+<h1 class="title">Structure and Interpretation of Computer Programs (SICP)</h1>
+<div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#orgheadline69"><span class="todo nilTODO">TODO</span> Chapter 1</a>
+<ul>
+<li><a href="#orgheadline17"><span class="done nilDONE">DONE</span> 1.1: Building Abstractions with Procedures</a>
+<ul>
+<li><a href="#orgheadline1"><span class="done nilDONE">DONE</span> 1.1.1: Expressions</a></li>
+<li><a href="#orgheadline2"><span class="done nilDONE">DONE</span> 1.1.2: Naming and the Environment</a></li>
+<li><a href="#orgheadline3"><span class="done nilDONE">DONE</span> 1.1.3: Evaluating Combinations</a></li>
+<li><a href="#orgheadline4"><span class="done nilDONE">DONE</span> 1.1.4: Compound Procedures</a></li>
+<li><a href="#orgheadline5"><span class="done nilDONE">DONE</span> 1.1.5: The Substitution Model for Procedure Application</a></li>
+<li><a href="#orgheadline11"><span class="done nilDONE">DONE</span> 1.1.6: Conditional Expressions and Predicates</a>
+<ul>
+<li><a href="#orgheadline6"><span class="done nilDONE">DONE</span> Exercise 1.1</a></li>
+<li><a href="#orgheadline7"><span class="done nilDONE">DONE</span> Exercise 1.2</a></li>
+<li><a href="#orgheadline8"><span class="done nilDONE">DONE</span> Exercise 1.3</a></li>
+<li><a href="#orgheadline9"><span class="done nilDONE">DONE</span> Exercise 1.4</a></li>
+<li><a href="#orgheadline10"><span class="done nilDONE">DONE</span> Exercise 1.5</a></li>
+</ul>
+</li>
+<li><a href="#orgheadline15"><span class="done nilDONE">DONE</span> 1.1.7: Example: Square Roots by Newton's Method</a>
+<ul>
+<li><a href="#orgheadline12"><span class="done nilDONE">DONE</span> Exercise 1.6</a></li>
+<li><a href="#orgheadline13"><span class="done nilDONE">DONE</span> Exercise 1.7</a></li>
+<li><a href="#orgheadline14"><span class="done nilDONE">DONE</span> Exercise 1.8</a></li>
+</ul>
+</li>
+<li><a href="#orgheadline16"><span class="done nilDONE">DONE</span> 1.1.8: Procedures as Black-Box Abstractions</a></li>
+</ul>
+</li>
+<li><a href="#orgheadline45"><span class="todo nilTODO">TODO</span> 1.2: Procedures and the Processes They Generate</a>
+<ul>
+<li><a href="#orgheadline21"><span class="done nilDONE">DONE</span> 1.2.1: Linear Recursion and Iteration</a>
+<ul>
+<li><a href="#orgheadline18"><span class="done nilDONE">DONE</span> Exercise 1.9</a></li>
+<li><a href="#orgheadline20"><span class="done nilDONE">DONE</span> Exercise 1.10</a></li>
+</ul>
+</li>
+<li><a href="#orgheadline25"><span class="todo nilTODO">TODO</span> 1.2.2: Tree Recursion</a>
+<ul>
+<li><a href="#orgheadline22"><span class="done nilDONE">DONE</span> Exercise 1.11</a></li>
+<li><a href="#orgheadline23"><span class="done nilDONE">DONE</span> Exercise 1.12</a></li>
+<li><a href="#orgheadline24"><span class="todo nilTODO">TODO</span> Exercise 1.13</a></li>
+</ul>
+</li>
+<li><a href="#orgheadline28"><span class="todo nilTODO">TODO</span> 1.2.3: Orders of Growth</a>
+<ul>
+<li><a href="#orgheadline26"><span class="todo nilTODO">TODO</span> Exercise 1.14</a></li>
+<li><a href="#orgheadline27"><span class="done nilDONE">DONE</span> Exercise 1.15</a></li>
+</ul>
+</li>
+<li><a href="#orgheadline33"><span class="done nilDONE">DONE</span> 1.2.4: Exponentiation</a>
+<ul>
+<li><a href="#orgheadline29"><span class="done nilDONE">DONE</span> Exercise 1.16</a></li>
+<li><a href="#orgheadline30"><span class="done nilDONE">DONE</span> Exercise 1.17</a></li>
+<li><a href="#orgheadline31"><span class="done nilDONE">DONE</span> Exercise 1.18</a></li>
+<li><a href="#orgheadline32"><span class="done nilDONE">DONE</span> Exercise 1.19</a></li>
+</ul>
+</li>
+<li><a href="#orgheadline35"><span class="done nilDONE">DONE</span> 1.2.5: Greatest Common Divisors</a>
+<ul>
+<li><a href="#orgheadline34"><span class="done nilDONE">DONE</span> Exercise 1.20</a></li>
+</ul>
+</li>
+<li><a href="#orgheadline44"><span class="todo nilTODO">TODO</span> 1.2.6: Example: Testing for Primality</a>
+<ul>
+<li><a href="#orgheadline36"><span class="done nilDONE">DONE</span> Exercise 1.21</a></li>
+<li><a href="#orgheadline37"><span class="todo nilTODO">TODO</span> Exercise 1.22</a></li>
+<li><a href="#orgheadline38"><span class="todo nilTODO">TODO</span> Exercise 1.23</a></li>
+<li><a href="#orgheadline39"><span class="todo nilTODO">TODO</span> Exercise 1.24</a></li>
+<li><a href="#orgheadline40"><span class="todo nilTODO">TODO</span> Exercise 1.25</a></li>
+<li><a href="#orgheadline41"><span class="todo nilTODO">TODO</span> Exercise 1.26</a></li>
+<li><a href="#orgheadline42"><span class="done nilDONE">DONE</span> Exercise 1.27</a></li>
+<li><a href="#orgheadline43"><span class="todo nilTODO">TODO</span> Exercise 1.28</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#orgheadline68"><span class="todo nilTODO">TODO</span> 1.3: Formulating Abstractions with Higher-Order Procedures</a>
+<ul>
+<li><a href="#orgheadline51"><span class="todo nilTODO">TODO</span> 1.3.1: Procedures as Arguments</a>
+<ul>
+<li><a href="#orgheadline46"><span class="todo nilTODO">TODO</span> Exercise 1.29</a></li>
+<li><a href="#orgheadline47"><span class="todo nilTODO">TODO</span> Exercise 1.30</a></li>
+<li><a href="#orgheadline48"><span class="todo nilTODO">TODO</span> Exercise 1.31</a></li>
+<li><a href="#orgheadline49"><span class="todo nilTODO">TODO</span> Exercise 1.32</a></li>
+<li><a href="#orgheadline50"><span class="todo nilTODO">TODO</span> Exercise 1.33</a></li>
+</ul>
+</li>
+<li><a href="#orgheadline53"><span class="todo nilTODO">TODO</span> 1.3.2: Constructing Procedures Using <code>Lambda</code></a>
+<ul>
+<li><a href="#orgheadline52"><span class="todo nilTODO">TODO</span> Exercise 1.34</a></li>
+</ul>
+</li>
+<li><a href="#orgheadline59"><span class="todo nilTODO">TODO</span> 1.3.3: Procedures as General Methods</a>
+<ul>
+<li><a href="#orgheadline54"><span class="todo nilTODO">TODO</span> Exercise 1.35</a></li>
+<li><a href="#orgheadline55"><span class="todo nilTODO">TODO</span> Exercise 1.36</a></li>
+<li><a href="#orgheadline56"><span class="done nilDONE">DONE</span> Exercise 1.37</a></li>
+<li><a href="#orgheadline57"><span class="todo nilTODO">TODO</span> Exercise 1.38</a></li>
+<li><a href="#orgheadline58"><span class="done nilDONE">DONE</span> Exercise 1.39</a></li>
+</ul>
+</li>
+<li><a href="#orgheadline67"><span class="todo nilTODO">TODO</span> 1.3.4: Procedures as Returned Values</a>
+<ul>
+<li><a href="#orgheadline60"><span class="todo nilTODO">TODO</span> Exercise 1.40</a></li>
+<li><a href="#orgheadline61"><span class="todo nilTODO">TODO</span> Exercise 1.41</a></li>
+<li><a href="#orgheadline62"><span class="todo nilTODO">TODO</span> Exercise 1.42</a></li>
+<li><a href="#orgheadline63"><span class="todo nilTODO">TODO</span> Exercise 1.43</a></li>
+<li><a href="#orgheadline64"><span class="todo nilTODO">TODO</span> Exercise 1.44</a></li>
+<li><a href="#orgheadline65"><span class="todo nilTODO">TODO</span> Exercise 1.45</a></li>
+<li><a href="#orgheadline66"><span class="todo nilTODO">TODO</span> Exercise 1.46</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-orgheadline69" class="outline-2">
+<h2 id="orgheadline69"><span class="todo TODO">TODO</span> <a href="http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-9.html#%_chap_1">Chapter 1</a></h2>
+<div class="outline-text-2" id="text-orgheadline69">
+</div><div id="outline-container-orgheadline17" class="outline-3">
+<h3 id="orgheadline17"><span class="done DONE">DONE</span> <a href="http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-10.html#%_sec_1.1">1.1: Building Abstractions with Procedures</a></h3>
+<div class="outline-text-3" id="text-orgheadline17">
+</div><div id="outline-container-orgheadline1" class="outline-4">
+<h4 id="orgheadline1"><span class="done DONE">DONE</span> <a href="http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-10.html#%_sec_1.1.1">1.1.1: Expressions</a></h4>
+<div class="outline-text-4" id="text-orgheadline1">
+<p>
+No exercises.
+</p>
+</div>
+</div>
+
+<div id="outline-container-orgheadline2" class="outline-4">
+<h4 id="orgheadline2"><span class="done DONE">DONE</span> <a href="http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-10.html#%_sec_1.1.2">1.1.2: Naming and the Environment</a></h4>
+<div class="outline-text-4" id="text-orgheadline2">
+<p>
+No exercises.
+</p>
+</div>
+</div>
+
+<div id="outline-container-orgheadline3" class="outline-4">
+<h4 id="orgheadline3"><span class="done DONE">DONE</span> <a href="http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-10.html#%_sec_1.1.3">1.1.3: Evaluating Combinations</a></h4>
+<div class="outline-text-4" id="text-orgheadline3">
+<p>
+No exercises.
+</p>
+</div>
+</div>
+
+<div id="outline-container-orgheadline4" class="outline-4">
+<h4 id="orgheadline4"><span class="done DONE">DONE</span> <a href="http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-10.html#%_sec_1.1.4">1.1.4: Compound Procedures</a></h4>
+<div class="outline-text-4" id="text-orgheadline4">
+<p>
+No exercises.
+</p>
+</div>
+</div>
+
+<div id="outline-container-orgheadline5" class="outline-4">
+<h4 id="orgheadline5"><span class="done DONE">DONE</span> <a href="http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-10.html#%_sec_1.1.5">1.1.5: The Substitution Model for Procedure Application</a></h4>
+<div class="outline-text-4" id="text-orgheadline5">
+<p>
+No exercises.
+</p>
+</div>
+</div>
+
+<div id="outline-container-orgheadline11" class="outline-4">
+<h4 id="orgheadline11"><span class="done DONE">DONE</span> <a href="http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-10.html#%_sec_1.1.6">1.1.6: Conditional Expressions and Predicates</a></h4>
+<div class="outline-text-4" id="text-orgheadline11">
+</div><div id="outline-container-orgheadline6" class="outline-5">
+<h5 id="orgheadline6"><span class="done DONE">DONE</span> <a href="http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-10.html#%_thm_1.1">Exercise 1.1</a></h5>
+<div class="outline-text-5" id="text-orgheadline6">
+<p>
+This exercise serves purely to familiarize the student with entering statements
+in the REPL. Verify the expected REPL output using tests.
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-scheme"><span style="color: #707183;">(</span><span style="color: #a020f0;">use</span> test<span style="color: #707183;">)</span>
+
+<span style="color: #707183;">(</span>test 10 10<span style="color: #707183;">)</span>
+
+<span style="color: #707183;">(</span>test 12
+      <span style="color: #7388d6;">(</span>+ 5 3 4<span style="color: #7388d6;">)</span><span style="color: #707183;">)</span>
+
+<span style="color: #707183;">(</span>test 8
+      <span style="color: #7388d6;">(</span>- 9 1<span style="color: #7388d6;">)</span><span style="color: #707183;">)</span>
+
+<span style="color: #707183;">(</span>test 3
+      <span style="color: #7388d6;">(</span>/ 6 2<span style="color: #7388d6;">)</span><span style="color: #707183;">)</span>
+
+<span style="color: #707183;">(</span>test 6
+      <span style="color: #7388d6;">(</span>+ <span style="color: #909183;">(</span>* 2 4<span style="color: #909183;">)</span> <span style="color: #909183;">(</span>- 4 6<span style="color: #909183;">)</span><span style="color: #7388d6;">)</span><span style="color: #707183;">)</span>
+
+<span style="color: #707183;">(</span><span style="color: #a020f0;">define</span> <span style="color: #0000ff;">a</span> 3<span style="color: #707183;">)</span>
+<span style="color: #707183;">(</span><span style="color: #a020f0;">define</span> <span style="color: #0000ff;">b</span> <span style="color: #7388d6;">(</span>+ a 1<span style="color: #7388d6;">)</span><span style="color: #707183;">)</span>
+
+<span style="color: #707183;">(</span>test 19
+      <span style="color: #7388d6;">(</span>+ a b <span style="color: #909183;">(</span>* a b<span style="color: #909183;">)</span><span style="color: #7388d6;">)</span><span style="color: #707183;">)</span>
+
+<span style="color: #707183;">(</span>test #f
+      <span style="color: #7388d6;">(</span>= a b<span style="color: #7388d6;">)</span><span style="color: #707183;">)</span>
+
+<span style="color: #707183;">(</span>test 4
+      <span style="color: #7388d6;">(</span><span style="color: #a020f0;">if</span> <span style="color: #909183;">(</span><span style="color: #a020f0;">and</span> <span style="color: #709870;">(</span>&gt; b a<span style="color: #709870;">)</span> <span style="color: #709870;">(</span>&lt; b <span style="color: #907373;">(</span>* a b<span style="color: #907373;">)</span><span style="color: #709870;">)</span><span style="color: #909183;">)</span>
+          b
+          a<span style="color: #7388d6;">)</span><span style="color: #707183;">)</span>
+
+<span style="color: #707183;">(</span>test 16
+      <span style="color: #7388d6;">(</span><span style="color: #a020f0;">cond</span> <span style="color: #909183;">(</span><span style="color: #709870;">(</span>= a 4<span style="color: #709870;">)</span> 6<span style="color: #909183;">)</span>
+            <span style="color: #909183;">(</span><span style="color: #709870;">(</span>= b 4<span style="color: #709870;">)</span> <span style="color: #709870;">(</span>+ 6 7 a<span style="color: #709870;">)</span><span style="color: #909183;">)</span>
+            <span style="color: #909183;">(</span><span style="color: #a020f0;">else</span> 25<span style="color: #909183;">)</span><span style="color: #7388d6;">)</span><span style="color: #707183;">)</span>
+
+<span style="color: #707183;">(</span>test 6
+      <span style="color: #7388d6;">(</span>+ 2 <span style="color: #909183;">(</span><span style="color: #a020f0;">if</span> <span style="color: #709870;">(</span>&gt; b a<span style="color: #709870;">)</span> b a<span style="color: #909183;">)</span><span style="color: #7388d6;">)</span><span style="color: #707183;">)</span>
+
+<span style="color: #707183;">(</span>test 16
+      <span style="color: #7388d6;">(</span>* <span style="color: #909183;">(</span><span style="color: #a020f0;">cond</span> <span style="color: #709870;">(</span><span style="color: #907373;">(</span>&gt; a b<span style="color: #907373;">)</span> a<span style="color: #709870;">)</span>
+               <span style="color: #709870;">(</span><span style="color: #907373;">(</span>&lt; a b<span style="color: #907373;">)</span> b<span style="color: #709870;">)</span>
+               <span style="color: #709870;">(</span><span style="color: #a020f0;">else</span> -1<span style="color: #709870;">)</span><span style="color: #909183;">)</span>
+         <span style="color: #909183;">(</span>+ a 1<span style="color: #909183;">)</span><span style="color: #7388d6;">)</span><span style="color: #707183;">)</span>
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-orgheadline7" class="outline-5">
+<h5 id="orgheadline7"><span class="done DONE">DONE</span> <a href="http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-10.html#%_thm_1.2">Exercise 1.2</a></h5>
+<div class="outline-text-5" id="text-orgheadline7">
+<p>
+The book's expression translated to prefix notation is
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-scheme"><span style="color: #707183;">(</span>/ <span style="color: #7388d6;">(</span>+ 5 4 <span style="color: #909183;">(</span>- 2 <span style="color: #709870;">(</span>- 3 <span style="color: #907373;">(</span>+ 6 <span style="color: #6276ba;">(</span>/ 4 5<span style="color: #6276ba;">)</span><span style="color: #907373;">)</span><span style="color: #709870;">)</span><span style="color: #909183;">)</span><span style="color: #7388d6;">)</span>
+   <span style="color: #7388d6;">(</span>* 3 <span style="color: #909183;">(</span>- 6 2<span style="color: #909183;">)</span> <span style="color: #909183;">(</span>- 2 7<span style="color: #909183;">)</span><span style="color: #7388d6;">)</span><span style="color: #707183;">)</span>
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-orgheadline8" class="outline-5">
+<h5 id="orgheadline8"><span class="done DONE">DONE</span> <a href="http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-10.html#%_thm_1.3">Exercise 1.3</a></h5>
+<div class="outline-text-5" id="text-orgheadline8">
+<div class="org-src-container">
+
+<pre class="src src-scheme"><span style="color: #707183;">(</span><span style="color: #a020f0;">define</span> <span style="color: #7388d6;">(</span><span style="color: #0000ff;">square</span> x<span style="color: #7388d6;">)</span>
+  <span style="color: #7388d6;">(</span>* x x<span style="color: #7388d6;">)</span><span style="color: #707183;">)</span>
+<span style="color: #707183;">(</span><span style="color: #a020f0;">define</span> <span style="color: #7388d6;">(</span><span style="color: #0000ff;">sum-of-squares</span> x y<span style="color: #7388d6;">)</span>
+  <span style="color: #7388d6;">(</span>+ <span style="color: #909183;">(</span>square x<span style="color: #909183;">)</span> <span style="color: #909183;">(</span>square y<span style="color: #909183;">)</span><span style="color: #7388d6;">)</span><span style="color: #707183;">)</span>
+
+<span style="color: #b22222;">;;; </span><span style="color: #b22222;">Return sum of squares of two largest out of three arguments</span>
+<span style="color: #707183;">(</span><span style="color: #a020f0;">define</span> <span style="color: #7388d6;">(</span><span style="color: #0000ff;">f</span> a b c<span style="color: #7388d6;">)</span>
+  <span style="color: #7388d6;">(</span><span style="color: #a020f0;">cond</span>
+    <span style="color: #909183;">(</span><span style="color: #709870;">(</span><span style="color: #a020f0;">and</span> <span style="color: #907373;">(</span>&lt; a b<span style="color: #907373;">)</span> <span style="color: #907373;">(</span>&lt; a c<span style="color: #907373;">)</span><span style="color: #709870;">)</span> <span style="color: #709870;">(</span>sum-of-squares b c<span style="color: #709870;">)</span><span style="color: #909183;">)</span>
+    <span style="color: #909183;">(</span><span style="color: #709870;">(</span><span style="color: #a020f0;">and</span> <span style="color: #907373;">(</span>&lt; b a<span style="color: #907373;">)</span> <span style="color: #907373;">(</span>&lt; b c<span style="color: #907373;">)</span><span style="color: #709870;">)</span> <span style="color: #709870;">(</span>sum-of-squares a c<span style="color: #709870;">)</span><span style="color: #909183;">)</span>
+    <span style="color: #909183;">(</span><span style="color: #a020f0;">else</span> <span style="color: #709870;">(</span>sum-of-squares a b<span style="color: #709870;">)</span><span style="color: #909183;">)</span><span style="color: #7388d6;">)</span><span style="color: #707183;">)</span>
+</pre>
+</div>
+
+<div class="org-src-container">
+
+<pre class="src src-scheme"><span style="color: #707183;">(</span>include <span style="color: #8b2252;">"ex-1-3"</span><span style="color: #707183;">)</span>
+<span style="color: #707183;">(</span><span style="color: #a020f0;">use</span> test<span style="color: #707183;">)</span>
+
+<span style="color: #707183;">(</span>test 13 <span style="color: #7388d6;">(</span>f 1 2 3<span style="color: #7388d6;">)</span><span style="color: #707183;">)</span>
+<span style="color: #707183;">(</span>test 13 <span style="color: #7388d6;">(</span>f 2 1 3<span style="color: #7388d6;">)</span><span style="color: #707183;">)</span>
+<span style="color: #707183;">(</span>test 13 <span style="color: #7388d6;">(</span>f 3 2 1<span style="color: #7388d6;">)</span><span style="color: #707183;">)</span>
+<span style="color: #707183;">(</span>test 18 <span style="color: #7388d6;">(</span>f 3 3 2<span style="color: #7388d6;">)</span><span style="color: #707183;">)</span>
+<span style="color: #707183;">(</span>test 13 <span style="color: #7388d6;">(</span>f 3 2 2<span style="color: #7388d6;">)</span><span style="color: #707183;">)</span>
+<span style="color: #707183;">(</span>test 8 <span style="color: #7388d6;">(</span>f 2 2 2<span style="color: #7388d6;">)</span><span style="color: #707183;">)</span>
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-orgheadline9" class="outline-5">
+<h5 id="orgheadline9"><span class="done DONE">DONE</span> <a href="http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-10.html#%_thm_1.4">Exercise 1.4</a></h5>
+<div class="outline-text-5" id="text-orgheadline9">
+<p>
+In the procedure
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-scheme"><span style="color: #707183;">(</span><span style="color: #a020f0;">define</span> <span style="color: #7388d6;">(</span><span style="color: #0000ff;">a-plus-abs-b</span> a b<span style="color: #7388d6;">)</span>
+  <span style="color: #7388d6;">(</span><span style="color: #909183;">(</span><span style="color: #a020f0;">if</span> <span style="color: #709870;">(</span>&gt; b 0<span style="color: #709870;">)</span> + -<span style="color: #909183;">)</span> a b<span style="color: #7388d6;">)</span><span style="color: #707183;">)</span>
+</pre>
+</div>
+
+<p>
+evaluation does not take place when the procedure is defined, but rather
+only after it is called. When it is called, evaluation proceeds from left to
+right and from inside out. Thus, the forms are evaluated in the following
+order:
+</p>
+
+<ul class="org-ul">
+<li><code>(&gt; b 0)</code></li>
+<li><code>(if ... + -)</code></li>
+<li><code>((if ...) a b)</code></li>
+</ul>
+
+<p>
+Note that <code>+</code> and <code>-</code> are references to functions, which can in general be
+returned from a function.
+</p>
+</div>
+</div>
+
+<div id="outline-container-orgheadline10" class="outline-5">
+<h5 id="orgheadline10"><span class="done DONE">DONE</span> <a href="http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-10.html#%_thm_1.5">Exercise 1.5</a></h5>
+<div class="outline-text-5" id="text-orgheadline10">
+<p>
+The expression under consideration is the following:
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-scheme"><span style="color: #707183;">(</span><span style="color: #a020f0;">define</span> <span style="color: #7388d6;">(</span><span style="color: #0000ff;">p</span><span style="color: #7388d6;">)</span> <span style="color: #7388d6;">(</span>p<span style="color: #7388d6;">)</span><span style="color: #707183;">)</span>
+
+<span style="color: #707183;">(</span><span style="color: #a020f0;">define</span> <span style="color: #7388d6;">(</span><span style="color: #0000ff;">test</span> x y<span style="color: #7388d6;">)</span>
+  <span style="color: #7388d6;">(</span><span style="color: #a020f0;">if</span> <span style="color: #909183;">(</span>= x 0<span style="color: #909183;">)</span>
+      0
+      y<span style="color: #7388d6;">)</span><span style="color: #707183;">)</span>
+
+<span style="color: #707183;">(</span>test 0 <span style="color: #7388d6;">(</span>p<span style="color: #7388d6;">)</span><span style="color: #707183;">)</span>
+</pre>
+</div>
+
+
+<p>
+With applicative order, a procedure is called after evaluating all its
+arguments. Therefore, the last expression in the above is evaluated as follows:
+</p>
+
+<ul class="org-ul">
+<li><code>0 =&gt; 0</code></li>
+<li><code>(p) =&gt; ; Calls itself recursively forever</code></li>
+</ul>
+
+<p>
+In normal form, all expressions are fully expanded and then reduced to
+obtain a value:
+</p>
+
+<ul class="org-ul">
+<li><code>(test 0 (p))</code></li>
+<li><code>(if (= 0 0) 0 (p))</code></li>
+<li><code>0</code></li>
+</ul>
+
+<p>
+Because the procedure <code>p</code> cannot be validly evaluated by substitution (due
+to infinite recursion), normal- and applicative-order evaluation give
+different results here.
+</p>
+</div>
+</div>
+</div>
+
+<div id="outline-container-orgheadline15" class="outline-4">
+<h4 id="orgheadline15"><span class="done DONE">DONE</span> <a href="http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-10.html#%_sec_1.1.7">1.1.7: Example: Square Roots by Newton's Method</a></h4>
+<div class="outline-text-4" id="text-orgheadline15">
+</div><div id="outline-container-orgheadline12" class="outline-5">
+<h5 id="orgheadline12"><span class="done DONE">DONE</span> <a href="http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-10.html#%_thm_1.6">Exercise 1.6</a></h5>
+<div class="outline-text-5" id="text-orgheadline12">
+<p>
+When calling <code>new-if</code>, its arguments are always evaluated. Thus, even if the
+else-branch, which calls <code>sqrt-iter</code>, should not be taken, it is nevertheless
+evaluated due to strict evaluation, so calling <code>sqrt-iter</code> results in infinite
+recursion.
+</p>
+</div>
+</div>
+
+<div id="outline-container-orgheadline13" class="outline-5">
+<h5 id="orgheadline13"><span class="done DONE">DONE</span> <a href="http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-10.html#%_thm_1.7">Exercise 1.7</a></h5>
+<div class="outline-text-5" id="text-orgheadline13">
+<p>
+Here is the <code>good-enough?</code> function defined in the text:
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-scheme"><span style="color: #707183;">(</span><span style="color: #a020f0;">define</span> <span style="color: #7388d6;">(</span><span style="color: #0000ff;">good-enough?</span> guess x<span style="color: #7388d6;">)</span>
+  <span style="color: #7388d6;">(</span>&lt; <span style="color: #909183;">(</span>abs <span style="color: #709870;">(</span>- <span style="color: #907373;">(</span>square guess<span style="color: #907373;">)</span> x<span style="color: #709870;">)</span><span style="color: #909183;">)</span> 0.001<span style="color: #7388d6;">)</span><span style="color: #707183;">)</span>
+</pre>
+</div>
+
+<p>
+Notably, the threshold is an absolute value, no matter the size of the
+guess. For small guesses, this will terminate even if 0.001 is of a
+non-negligible magnitude compared to the guess. For large guesses, if the guess
+doesn't have a precision of at least 0.001 at a certain magnitude, the test may
+not ever terminate because there may be no value of <code>(square guess)</code> that lies
+within 0.001 of x, due to limited precision.
+</p>
+
+<p>
+It is almost always better to define a threshold that is a multiple of the
+order of magnitude of x:
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-scheme"><span style="color: #707183;">(</span><span style="color: #a020f0;">define</span> <span style="color: #7388d6;">(</span><span style="color: #0000ff;">good-enough?</span> guess x<span style="color: #7388d6;">)</span>
+  <span style="color: #7388d6;">(</span>&lt; <span style="color: #909183;">(</span>abs <span style="color: #709870;">(</span>/ <span style="color: #907373;">(</span>- <span style="color: #6276ba;">(</span>square guess<span style="color: #6276ba;">)</span> x<span style="color: #907373;">)</span>
+             <span style="color: #907373;">(</span>square guess<span style="color: #907373;">)</span><span style="color: #709870;">)</span><span style="color: #909183;">)</span>
+     0.001<span style="color: #7388d6;">)</span><span style="color: #707183;">)</span>
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-orgheadline14" class="outline-5">
+<h5 id="orgheadline14"><span class="done DONE">DONE</span> <a href="http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-10.html#%_thm_1.8">Exercise 1.8</a></h5>
+<div class="outline-text-5" id="text-orgheadline14">
+<p>
+Implement a cube root approximation formula based on Newton's method:
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-scheme"><span style="color: #707183;">(</span><span style="color: #a020f0;">define</span> <span style="color: #7388d6;">(</span><span style="color: #0000ff;">square</span> x<span style="color: #7388d6;">)</span>
+  <span style="color: #7388d6;">(</span>* x x<span style="color: #7388d6;">)</span><span style="color: #707183;">)</span>
+<span style="color: #707183;">(</span><span style="color: #a020f0;">define</span> <span style="color: #7388d6;">(</span><span style="color: #0000ff;">cube</span> x<span style="color: #7388d6;">)</span>
+  <span style="color: #7388d6;">(</span>* x x x<span style="color: #7388d6;">)</span><span style="color: #707183;">)</span>
+
+<span style="color: #707183;">(</span><span style="color: #a020f0;">define</span> <span style="color: #7388d6;">(</span><span style="color: #0000ff;">improve</span> guess x<span style="color: #7388d6;">)</span>
+  <span style="color: #7388d6;">(</span>/ <span style="color: #909183;">(</span>+ <span style="color: #709870;">(</span>/ x <span style="color: #907373;">(</span>square guess<span style="color: #907373;">)</span><span style="color: #709870;">)</span>
+        <span style="color: #709870;">(</span>* 2 guess<span style="color: #709870;">)</span><span style="color: #909183;">)</span>
+     3<span style="color: #7388d6;">)</span><span style="color: #707183;">)</span>
+<span style="color: #707183;">(</span><span style="color: #a020f0;">define</span> <span style="color: #7388d6;">(</span><span style="color: #0000ff;">good-enough?</span> guess x<span style="color: #7388d6;">)</span>
+  <span style="color: #7388d6;">(</span>&lt; <span style="color: #909183;">(</span>abs <span style="color: #709870;">(</span>/ <span style="color: #907373;">(</span>- <span style="color: #6276ba;">(</span>cube guess<span style="color: #6276ba;">)</span> x<span style="color: #907373;">)</span>
+             <span style="color: #907373;">(</span>cube guess<span style="color: #907373;">)</span><span style="color: #709870;">)</span><span style="color: #909183;">)</span>
+     0.001<span style="color: #7388d6;">)</span><span style="color: #707183;">)</span>
+
+<span style="color: #707183;">(</span><span style="color: #a020f0;">define</span> <span style="color: #7388d6;">(</span><span style="color: #0000ff;">cbrt-iter</span> guess x<span style="color: #7388d6;">)</span>
+  <span style="color: #7388d6;">(</span><span style="color: #a020f0;">if</span> <span style="color: #909183;">(</span>good-enough? guess x<span style="color: #909183;">)</span>
+      guess
+      <span style="color: #909183;">(</span>cbrt-iter <span style="color: #709870;">(</span>improve guess x<span style="color: #709870;">)</span>
+                 x<span style="color: #909183;">)</span><span style="color: #7388d6;">)</span><span style="color: #707183;">)</span>
+<span style="color: #707183;">(</span><span style="color: #a020f0;">define</span> <span style="color: #7388d6;">(</span><span style="color: #0000ff;">cbrt</span> x<span style="color: #7388d6;">)</span>
+  <span style="color: #7388d6;">(</span>cbrt-iter 1.0 x<span style="color: #7388d6;">)</span><span style="color: #707183;">)</span>
+</pre>
+</div>
+
+<div class="org-src-container">
+
+<pre class="src src-scheme"><span style="color: #707183;">(</span>include <span style="color: #8b2252;">"ex-1-8"</span><span style="color: #707183;">)</span>
+<span style="color: #707183;">(</span><span style="color: #a020f0;">use</span> test<span style="color: #707183;">)</span>
+
+<span style="color: #707183;">(</span><span style="color: #a020f0;">parameterize</span> <span style="color: #7388d6;">(</span><span style="color: #909183;">(</span>current-test-epsilon 0.01<span style="color: #909183;">)</span><span style="color: #7388d6;">)</span>
+  <span style="color: #7388d6;">(</span>test 3.00 <span style="color: #909183;">(</span>cbrt 27<span style="color: #909183;">)</span><span style="color: #7388d6;">)</span>
+  <span style="color: #7388d6;">(</span>test 6.52 <span style="color: #909183;">(</span>cbrt 278<span style="color: #909183;">)</span><span style="color: #7388d6;">)</span><span style="color: #707183;">)</span>
+</pre>
+</div>
+</div>
+</div>
+</div>
+
+<div id="outline-container-orgheadline16" class="outline-4">
+<h4 id="orgheadline16"><span class="done DONE">DONE</span> <a href="http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-10.html#%_sec_1.1.8">1.1.8: Procedures as Black-Box Abstractions</a></h4>
+<div class="outline-text-4" id="text-orgheadline16">
+<p>
+No exercises.
+</p>
+</div>
+</div>
+</div>
+
+<div id="outline-container-orgheadline45" class="outline-3">
+<h3 id="orgheadline45"><span class="todo TODO">TODO</span> <a href="http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-11.html#%_sec_1.2">1.2: Procedures and the Processes They Generate</a></h3>
+<div class="outline-text-3" id="text-orgheadline45">
+</div><div id="outline-container-orgheadline21" class="outline-4">
+<h4 id="orgheadline21"><span class="done DONE">DONE</span> <a href="http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-11.html#%_sec_1.2.1">1.2.1: Linear Recursion and Iteration</a></h4>
+<div class="outline-text-4" id="text-orgheadline21">
+</div><div id="outline-container-orgheadline18" class="outline-5">
+<h5 id="orgheadline18"><span class="done DONE">DONE</span> <a href="http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-11.html#%_thm_1.9">Exercise 1.9</a></h5>
+<div class="outline-text-5" id="text-orgheadline18">
+<p>
+Evaluate the following procedures using the substitution model:
+</p>
+
+<ul class="org-ul">
+<li><p>
+<code>new+-rec</code>
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name">ex-1-9-rec</label>
+<pre class="src src-scheme" id="orgsrcblock1"><span style="color: #707183;">(</span><span style="color: #a020f0;">define</span> <span style="color: #7388d6;">(</span><span style="color: #0000ff;">new+-rec</span> a b<span style="color: #7388d6;">)</span>
+  <span style="color: #7388d6;">(</span><span style="color: #a020f0;">if</span> <span style="color: #909183;">(</span>= a 0<span style="color: #909183;">)</span>
+    b
+    <span style="color: #909183;">(</span>inc <span style="color: #709870;">(</span>new+-rec <span style="color: #907373;">(</span>dec a<span style="color: #907373;">)</span> b<span style="color: #709870;">)</span><span style="color: #909183;">)</span><span style="color: #7388d6;">)</span><span style="color: #707183;">)</span>
+</pre>
+</div>
+
+<p>
+This procedure is fundamentally recursive because it defers the evaluation of
+<code>inc</code> until <code>new+-rec</code> has reached its base case, resulting in a stack of
+deferred operations:
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name">ex-1-9-rec-test</label>
+<pre class="src src-scheme" id="orgsrcblock2"><span style="color: #707183;">(</span>test-chain <span style="color: #8b2252;">"ex-1-9-rec"</span>
+            '<span style="color: #7388d6;">(</span><span style="color: #909183;">(</span>new+-rec 4 5<span style="color: #909183;">)</span>
+              <span style="color: #909183;">(</span>inc <span style="color: #709870;">(</span>new+-rec 3 5<span style="color: #709870;">)</span><span style="color: #909183;">)</span>
+              <span style="color: #909183;">(</span>inc <span style="color: #709870;">(</span>inc <span style="color: #907373;">(</span>new+-rec 2 5<span style="color: #907373;">)</span><span style="color: #709870;">)</span><span style="color: #909183;">)</span>
+              <span style="color: #909183;">(</span>inc <span style="color: #709870;">(</span>inc <span style="color: #907373;">(</span>inc <span style="color: #6276ba;">(</span>new+-rec 1 5<span style="color: #6276ba;">)</span><span style="color: #907373;">)</span><span style="color: #709870;">)</span><span style="color: #909183;">)</span>
+              <span style="color: #909183;">(</span>inc <span style="color: #709870;">(</span>inc <span style="color: #907373;">(</span>inc <span style="color: #6276ba;">(</span>inc <span style="color: #858580;">(</span>new+-rec 0 5<span style="color: #858580;">)</span><span style="color: #6276ba;">)</span><span style="color: #907373;">)</span><span style="color: #709870;">)</span><span style="color: #909183;">)</span>
+              <span style="color: #909183;">(</span>inc <span style="color: #709870;">(</span>inc <span style="color: #907373;">(</span>inc <span style="color: #6276ba;">(</span>inc 5<span style="color: #6276ba;">)</span><span style="color: #907373;">)</span><span style="color: #709870;">)</span><span style="color: #909183;">)</span>
+              <span style="color: #909183;">(</span>inc <span style="color: #709870;">(</span>inc <span style="color: #907373;">(</span>inc 6<span style="color: #907373;">)</span><span style="color: #709870;">)</span><span style="color: #909183;">)</span>
+              <span style="color: #909183;">(</span>inc <span style="color: #709870;">(</span>inc 7<span style="color: #709870;">)</span><span style="color: #909183;">)</span>
+              <span style="color: #909183;">(</span>inc 8<span style="color: #909183;">)</span>
+              9<span style="color: #7388d6;">)</span><span style="color: #707183;">)</span>
+</pre>
+</div></li>
+
+<li><p>
+<code>new+-iter</code>
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name">ex-1-9-iter</label>
+<pre class="src src-scheme" id="orgsrcblock3"><span style="color: #707183;">(</span><span style="color: #a020f0;">define</span> <span style="color: #7388d6;">(</span><span style="color: #0000ff;">new+-iter</span> a b<span style="color: #7388d6;">)</span>
+  <span style="color: #7388d6;">(</span><span style="color: #a020f0;">if</span> <span style="color: #909183;">(</span>= a 0<span style="color: #909183;">)</span>
+      b
+      <span style="color: #909183;">(</span>new+-iter <span style="color: #709870;">(</span>dec a<span style="color: #709870;">)</span> <span style="color: #709870;">(</span>inc b<span style="color: #709870;">)</span><span style="color: #909183;">)</span><span style="color: #7388d6;">)</span><span style="color: #707183;">)</span>
+</pre>
+</div>
+
+<p>
+This procedure is fundamentally iterative because <code>new+-iter</code> is in a
+tail-call position. Because of this, each call to <code>new+-iter</code> can be replaced
+with its result:
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name">ex-1-9-iter-test</label>
+<pre class="src src-scheme" id="orgsrcblock4"><span style="color: #707183;">(</span>test-chain <span style="color: #8b2252;">"ex-1-9-iter"</span>
+            '<span style="color: #7388d6;">(</span><span style="color: #909183;">(</span>new+-iter 4 5<span style="color: #909183;">)</span>
+              <span style="color: #909183;">(</span>new+-iter 3 6<span style="color: #909183;">)</span>
+              <span style="color: #909183;">(</span>new+-iter 2 7<span style="color: #909183;">)</span>
+              <span style="color: #909183;">(</span>new+-iter 1 8<span style="color: #909183;">)</span>
+              <span style="color: #909183;">(</span>new+-iter 0 9<span style="color: #909183;">)</span>
+              9<span style="color: #7388d6;">)</span><span style="color: #707183;">)</span>
+</pre>
+</div></li>
+</ul>
+</div>
+
+<ul class="org-ul"><li><a id="orgheadline19"></a>Auxiliary procedures<br  /><div class="outline-text-6" id="text-orgheadline19">
+<div class="org-src-container">
+
+<pre class="src src-scheme"><span style="color: #707183;">(</span><span style="color: #a020f0;">define</span> <span style="color: #7388d6;">(</span><span style="color: #0000ff;">inc</span> x<span style="color: #7388d6;">)</span> <span style="color: #7388d6;">(</span>+ x 1<span style="color: #7388d6;">)</span><span style="color: #707183;">)</span>
+<span style="color: #707183;">(</span><span style="color: #a020f0;">define</span> <span style="color: #7388d6;">(</span><span style="color: #0000ff;">dec</span> x<span style="color: #7388d6;">)</span> <span style="color: #7388d6;">(</span>- x 1<span style="color: #7388d6;">)</span><span style="color: #707183;">)</span>
+
+<span style="color: #228b22;">&lt;&lt;ex-1-9-rec&gt;&gt;</span>
+<span style="color: #228b22;">&lt;&lt;ex-1-9-iter&gt;&gt;</span>
+</pre>
+</div>
+
+<div class="org-src-container">
+
+<pre class="src src-scheme"><span style="color: #707183;">(</span>include <span style="color: #8b2252;">"ex-1-9"</span><span style="color: #707183;">)</span>
+<span style="color: #707183;">(</span><span style="color: #a020f0;">use</span> test<span style="color: #707183;">)</span>
+<span style="color: #707183;">(</span><span style="color: #a020f0;">use</span> srfi-1<span style="color: #707183;">)</span>
+
+<span style="color: #b22222;">;;; </span><span style="color: #b22222;">TEST-CHAIN -- assert that all expressions in a list evaluate to the same</span>
+<span style="color: #b22222;">;;; </span><span style="color: #b22222;">result.</span>
+<span style="color: #707183;">(</span><span style="color: #a020f0;">define</span> <span style="color: #7388d6;">(</span><span style="color: #0000ff;">test-chain</span> name exprs<span style="color: #7388d6;">)</span>
+  <span style="color: #7388d6;">(</span>eval <span style="color: #909183;">(</span>append `<span style="color: #709870;">(</span>test-group ,name<span style="color: #709870;">)</span>
+                <span style="color: #709870;">(</span>unfold <span style="color: #907373;">(</span><span style="color: #a020f0;">lambda</span> <span style="color: #6276ba;">(</span>p<span style="color: #6276ba;">)</span> <span style="color: #6276ba;">(</span>null? <span style="color: #858580;">(</span>cdr p<span style="color: #858580;">)</span><span style="color: #6276ba;">)</span><span style="color: #907373;">)</span>
+                        <span style="color: #907373;">(</span><span style="color: #a020f0;">lambda</span> <span style="color: #6276ba;">(</span>p<span style="color: #6276ba;">)</span> `<span style="color: #6276ba;">(</span>test-assert <span style="color: #858580;">(</span>= ,<span style="color: #80a880;">(</span>car p<span style="color: #80a880;">)</span> ,<span style="color: #80a880;">(</span>cadr p<span style="color: #80a880;">)</span><span style="color: #858580;">)</span><span style="color: #6276ba;">)</span><span style="color: #907373;">)</span>
+                        cdr
+                        exprs<span style="color: #709870;">)</span><span style="color: #909183;">)</span><span style="color: #7388d6;">)</span><span style="color: #707183;">)</span>
+
+<span style="color: #707183;">(</span>test-group <span style="color: #8b2252;">"ex-1-9-test"</span>
+            <span style="color: #228b22;">&lt;&lt;ex-1-9-rec-test&gt;&gt;</span>
+            <span style="color: #228b22;">&lt;&lt;ex-1-9-iter-test&gt;&gt;</span>
+            <span style="color: #707183;">)</span>
+</pre>
+</div>
+</div></li></ul>
+</div>
+
+<div id="outline-container-orgheadline20" class="outline-5">
+<h5 id="orgheadline20"><span class="done DONE">DONE</span> <a href="http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-11.html#%_thm_1.10">Exercise 1.10</a></h5>
+<div class="outline-text-5" id="text-orgheadline20">
+<p>
+Ackermann's function is defined below:
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-scheme"><span style="color: #707183;">(</span><span style="color: #a020f0;">define</span> <span style="color: #7388d6;">(</span><span style="color: #0000ff;">A</span> x y<span style="color: #7388d6;">)</span>
+  <span style="color: #7388d6;">(</span><span style="color: #a020f0;">cond</span> <span style="color: #909183;">(</span><span style="color: #709870;">(</span>= y 0<span style="color: #709870;">)</span> 0<span style="color: #909183;">)</span>
+        <span style="color: #909183;">(</span><span style="color: #709870;">(</span>= x 0<span style="color: #709870;">)</span> <span style="color: #709870;">(</span>* 2 y<span style="color: #709870;">)</span><span style="color: #909183;">)</span>
+        <span style="color: #909183;">(</span><span style="color: #709870;">(</span>= y 1<span style="color: #709870;">)</span> 2<span style="color: #909183;">)</span>
+        <span style="color: #909183;">(</span><span style="color: #a020f0;">else</span> <span style="color: #709870;">(</span>A <span style="color: #907373;">(</span>- x 1<span style="color: #907373;">)</span>
+                 <span style="color: #907373;">(</span>A x <span style="color: #6276ba;">(</span>- y 1<span style="color: #6276ba;">)</span><span style="color: #907373;">)</span><span style="color: #709870;">)</span><span style="color: #909183;">)</span><span style="color: #7388d6;">)</span><span style="color: #707183;">)</span>
+</pre>
+</div>
+
+<div class="org-src-container">
+
+<pre class="src src-scheme"><span style="color: #707183;">(</span>test-group <span style="color: #8b2252;">"ex-1-10"</span>
+        <span style="color: #7388d6;">(</span>test 1024 <span style="color: #909183;">(</span>A 1 10<span style="color: #909183;">)</span><span style="color: #7388d6;">)</span>
+        <span style="color: #7388d6;">(</span>test 65536 <span style="color: #909183;">(</span>A 2 4<span style="color: #909183;">)</span><span style="color: #7388d6;">)</span>
+        <span style="color: #7388d6;">(</span>test 65536 <span style="color: #909183;">(</span>A 3 3<span style="color: #909183;">)</span><span style="color: #7388d6;">)</span><span style="color: #707183;">)</span>
+</pre>
+</div>
+
+<p>
+Here are some other functions defined (mostly) in terms of the Ackermann
+function, along with more concise definitions of what they compute:
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-scheme"><span style="color: #b22222;">;;; </span><span style="color: #b22222;">(* 2 n)</span>
+<span style="color: #707183;">(</span><span style="color: #a020f0;">define</span> <span style="color: #7388d6;">(</span><span style="color: #0000ff;">f</span> n<span style="color: #7388d6;">)</span> <span style="color: #7388d6;">(</span>A 0 n<span style="color: #7388d6;">)</span><span style="color: #707183;">)</span>
+
+<span style="color: #b22222;">;;; </span><span style="color: #b22222;">(expt 2 n)</span>
+<span style="color: #707183;">(</span><span style="color: #a020f0;">define</span> <span style="color: #7388d6;">(</span><span style="color: #0000ff;">g</span> n<span style="color: #7388d6;">)</span> <span style="color: #7388d6;">(</span>A 1 n<span style="color: #7388d6;">)</span><span style="color: #707183;">)</span>
+
+<span style="color: #b22222;">;;; </span><span style="color: #b22222;">=&gt; (expt 2 (A 2 (- n 1)))</span>
+<span style="color: #b22222;">;;; </span><span style="color: #b22222;">=&gt; (expt 2 (expt 2 (A 2 (- n 2))))</span>
+<span style="color: #b22222;">;;; </span><span style="color: #b22222;">=&gt; (expt 2 (expt 2 ( .. n calls to expt .. )))</span>
+<span style="color: #b22222;">;;; </span><span style="color: #b22222;">=&gt; (define (h n)</span>
+<span style="color: #b22222;">;;;      </span><span style="color: #b22222;">(define (h-iter i res)</span>
+<span style="color: #b22222;">;;;        </span><span style="color: #b22222;">(if (= i 0)</span>
+<span style="color: #b22222;">;;;          </span><span style="color: #b22222;">res</span>
+<span style="color: #b22222;">;;;          </span><span style="color: #b22222;">(h-iter (- i 1) (expt 2 res))))</span>
+<span style="color: #b22222;">;;;      </span><span style="color: #b22222;">(h-iter n 1))</span>
+<span style="color: #707183;">(</span><span style="color: #a020f0;">define</span> <span style="color: #7388d6;">(</span><span style="color: #0000ff;">h</span> n<span style="color: #7388d6;">)</span> <span style="color: #7388d6;">(</span>A 2 n<span style="color: #7388d6;">)</span><span style="color: #707183;">)</span>
+
+<span style="color: #b22222;">;;; </span><span style="color: #b22222;">(* 5 (* n n))</span>
+<span style="color: #707183;">(</span><span style="color: #a020f0;">define</span> <span style="color: #7388d6;">(</span><span style="color: #0000ff;">k</span> n<span style="color: #7388d6;">)</span> <span style="color: #7388d6;">(</span>* 5 n n<span style="color: #7388d6;">)</span><span style="color: #707183;">)</span>
+</pre>
+</div>
+</div>
+</div>
+</div>
+
+<div id="outline-container-orgheadline25" class="outline-4">
+<h4 id="orgheadline25"><span class="todo TODO">TODO</span> <a href="http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-11.html#%_sec_1.2.2">1.2.2: Tree Recursion</a></h4>
+<div class="outline-text-4" id="text-orgheadline25">
+</div><div id="outline-container-orgheadline22" class="outline-5">
+<h5 id="orgheadline22"><span class="done DONE">DONE</span> <a href="http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-11.html#%_thm_1.11">Exercise 1.11</a></h5>
+<div class="outline-text-5" id="text-orgheadline22">
+<p>
+Recursive:
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-scheme"><span style="color: #707183;">(</span><span style="color: #a020f0;">define</span> <span style="color: #7388d6;">(</span><span style="color: #0000ff;">f</span> n<span style="color: #7388d6;">)</span>
+  <span style="color: #7388d6;">(</span><span style="color: #a020f0;">if</span> <span style="color: #909183;">(</span>&lt; n 3<span style="color: #909183;">)</span>
+    n
+    <span style="color: #909183;">(</span>+ <span style="color: #709870;">(</span>f <span style="color: #907373;">(</span>- n 1<span style="color: #907373;">)</span><span style="color: #709870;">)</span>
+       <span style="color: #709870;">(</span>* 2 <span style="color: #907373;">(</span>f <span style="color: #6276ba;">(</span>- n 2<span style="color: #6276ba;">)</span><span style="color: #907373;">)</span><span style="color: #709870;">)</span>
+       <span style="color: #709870;">(</span>* 3 <span style="color: #907373;">(</span>f <span style="color: #6276ba;">(</span>- n 3<span style="color: #6276ba;">)</span><span style="color: #907373;">)</span><span style="color: #709870;">)</span><span style="color: #909183;">)</span><span style="color: #7388d6;">)</span><span style="color: #707183;">)</span>
+</pre>
+</div>
+
+<p>
+Iterative:
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-scheme"><span style="color: #707183;">(</span><span style="color: #a020f0;">define</span> <span style="color: #7388d6;">(</span><span style="color: #0000ff;">f</span> n<span style="color: #7388d6;">)</span>
+  <span style="color: #7388d6;">(</span><span style="color: #a020f0;">define</span> <span style="color: #909183;">(</span><span style="color: #0000ff;">f-res</span> a b c<span style="color: #909183;">)</span>
+    <span style="color: #909183;">(</span>+ a <span style="color: #709870;">(</span>* 2 b<span style="color: #709870;">)</span> <span style="color: #709870;">(</span>* 3 c<span style="color: #709870;">)</span><span style="color: #909183;">)</span><span style="color: #7388d6;">)</span>
+  <span style="color: #7388d6;">(</span><span style="color: #a020f0;">define</span> <span style="color: #909183;">(</span><span style="color: #0000ff;">f-iter</span> m a b c<span style="color: #909183;">)</span>
+    <span style="color: #909183;">(</span><span style="color: #a020f0;">cond</span>
+      <span style="color: #709870;">(</span><span style="color: #907373;">(</span>&gt;= m n<span style="color: #907373;">)</span> <span style="color: #907373;">(</span>f-res a b c<span style="color: #907373;">)</span><span style="color: #709870;">)</span>
+      <span style="color: #709870;">(</span><span style="color: #a020f0;">else</span> <span style="color: #907373;">(</span>f-iter <span style="color: #6276ba;">(</span>+ m 1<span style="color: #6276ba;">)</span> <span style="color: #6276ba;">(</span>f-res a b c<span style="color: #6276ba;">)</span> a b<span style="color: #907373;">)</span><span style="color: #709870;">)</span><span style="color: #909183;">)</span><span style="color: #7388d6;">)</span>
+  <span style="color: #7388d6;">(</span><span style="color: #a020f0;">if</span> <span style="color: #909183;">(</span>&lt; n 3<span style="color: #909183;">)</span>
+    n
+    <span style="color: #909183;">(</span>f-iter 3 2 1 0<span style="color: #909183;">)</span><span style="color: #7388d6;">)</span><span style="color: #707183;">)</span>
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-orgheadline23" class="outline-5">
+<h5 id="orgheadline23"><span class="done DONE">DONE</span> <a href="http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-11.html#%_thm_1.12">Exercise 1.12</a></h5>
+<div class="outline-text-5" id="text-orgheadline23">
+<p>
+Pascal's triangle:
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-scheme"><span style="color: #707183;">(</span><span style="color: #a020f0;">define</span> <span style="color: #7388d6;">(</span><span style="color: #0000ff;">choose</span> n k<span style="color: #7388d6;">)</span>
+  <span style="color: #7388d6;">(</span><span style="color: #a020f0;">cond</span>
+    <span style="color: #909183;">(</span><span style="color: #709870;">(</span><span style="color: #a020f0;">or</span> <span style="color: #907373;">(</span>&lt; n 0<span style="color: #907373;">)</span> <span style="color: #907373;">(</span>&lt; k 0<span style="color: #907373;">)</span> <span style="color: #907373;">(</span>&gt; k n<span style="color: #907373;">)</span><span style="color: #709870;">)</span>
+     0<span style="color: #909183;">)</span>
+    <span style="color: #909183;">(</span><span style="color: #709870;">(</span><span style="color: #a020f0;">or</span> <span style="color: #907373;">(</span>= k 0<span style="color: #907373;">)</span> <span style="color: #907373;">(</span>= k n<span style="color: #907373;">)</span><span style="color: #709870;">)</span>
+     1<span style="color: #909183;">)</span>
+    <span style="color: #909183;">(</span><span style="color: #a020f0;">else</span> <span style="color: #709870;">(</span>+ <span style="color: #907373;">(</span>choose <span style="color: #6276ba;">(</span>- n 1<span style="color: #6276ba;">)</span> <span style="color: #6276ba;">(</span>- k 1<span style="color: #6276ba;">)</span><span style="color: #907373;">)</span>
+             <span style="color: #907373;">(</span>choose <span style="color: #6276ba;">(</span>- n 1<span style="color: #6276ba;">)</span> k<span style="color: #907373;">)</span><span style="color: #709870;">)</span><span style="color: #909183;">)</span><span style="color: #7388d6;">)</span><span style="color: #707183;">)</span>
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-orgheadline24" class="outline-5">
+<h5 id="orgheadline24"><span class="todo TODO">TODO</span> <a href="http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-11.html#%_thm_1.13">Exercise 1.13</a></h5>
+<div class="outline-text-5" id="text-orgheadline24">
+<p>
+Prove that Fib(n) is the closest integer to \(\phi^n / \sqrt{5}\), where
+\(\phi = (1 + \sqrt{5}) / 2\).
+</p>
+
+<p>
+Fib(n) = Fib(n - 1) + Fib(n - 2)
+Fib(n) &asymp; &alpha; Fib(n - 1)
+       &asymp; &alpha;<sup>2</sup> Fib(n - 2)
+</p>
+
+<p>
+&alpha; Fib(n - 1) = &alpha; Fib(n - 2) + &alpha; Fib(n - 3) = &alpha;<sup>2</sup> Fib(n - 2)
+&alpha; Fib(n - 2) + &alpha; Fib(n - 3) = &alpha;<sup>2</sup> Fib(n - 2)
+&alpha; + &alpha; * Fib(n - 3) / Fib(n - 2) = &alpha;<sup>2</sup>
+&alpha; + &alpha; * 1/&alpha; = &alpha;<sup>2</sup>
+&alpha; + 1 = &alpha;<sup>2</sup>
+</p>
+
+<p>
+Fib(n) = Fib(n - 1) + Fib(n - 2)
+       = 2 * Fib(n - 1) + Fib(n - 3)
+</p>
+
+<p>
+Fib(1) = &phi; * Fib(0) + &delta; = 1  =&gt; &delta; = 1
+Fib(2) = &phi; * Fib(1) + &delta; = 1  =&gt; &delta; = 1 - &phi;
+Fib(3) = &phi; * Fib(2) + &delta; = 2  =&gt; &delta; = 2 - &phi;
+Fib(4) = &phi; * Fib(3) + &delta; = 3  =&gt; &delta; = 3 - 2 &phi;
+</p>
+</div>
+</div>
+</div>
+
+<div id="outline-container-orgheadline28" class="outline-4">
+<h4 id="orgheadline28"><span class="todo TODO">TODO</span> <a href="http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-11.html#%_sec_1.2.3">1.2.3: Orders of Growth</a></h4>
+<div class="outline-text-4" id="text-orgheadline28">
+</div><div id="outline-container-orgheadline26" class="outline-5">
+<h5 id="orgheadline26"><span class="todo TODO">TODO</span> <a href="http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-11.html#%_thm_1.14">Exercise 1.14</a></h5>
+<div class="outline-text-5" id="text-orgheadline26">
+<div class="org-src-container">
+
+<pre class="src src-scheme"><span style="color: #707183;">(</span><span style="color: #a020f0;">define</span> <span style="color: #7388d6;">(</span><span style="color: #0000ff;">count-change</span> amount<span style="color: #7388d6;">)</span>
+  <span style="color: #7388d6;">(</span>cc amount 5<span style="color: #7388d6;">)</span><span style="color: #707183;">)</span>
+<span style="color: #707183;">(</span><span style="color: #a020f0;">define</span> <span style="color: #7388d6;">(</span><span style="color: #0000ff;">cc</span> amount kinds-of-coins<span style="color: #7388d6;">)</span>
+  <span style="color: #7388d6;">(</span><span style="color: #a020f0;">cond</span> <span style="color: #909183;">(</span><span style="color: #709870;">(</span>= amount 0<span style="color: #709870;">)</span> 1<span style="color: #909183;">)</span>
+        <span style="color: #909183;">(</span><span style="color: #709870;">(</span><span style="color: #a020f0;">or</span> <span style="color: #907373;">(</span>&lt; amount 0<span style="color: #907373;">)</span> <span style="color: #907373;">(</span>= kinds-of-coins 0<span style="color: #907373;">)</span><span style="color: #709870;">)</span> 0<span style="color: #909183;">)</span>
+        <span style="color: #909183;">(</span><span style="color: #a020f0;">else</span> <span style="color: #709870;">(</span>+ <span style="color: #907373;">(</span>cc amount
+                     <span style="color: #6276ba;">(</span>- kinds-of-coins 1<span style="color: #6276ba;">)</span><span style="color: #907373;">)</span>
+                 <span style="color: #907373;">(</span>cc <span style="color: #6276ba;">(</span>- amount
+                        <span style="color: #858580;">(</span>first-denomination kinds-of-coins<span style="color: #858580;">)</span><span style="color: #6276ba;">)</span>
+                     kinds-of-coins<span style="color: #907373;">)</span><span style="color: #709870;">)</span><span style="color: #909183;">)</span><span style="color: #7388d6;">)</span><span style="color: #707183;">)</span>
+<span style="color: #707183;">(</span><span style="color: #a020f0;">define</span> <span style="color: #7388d6;">(</span><span style="color: #0000ff;">first-denomination</span> kinds-of-coins<span style="color: #7388d6;">)</span>
+  <span style="color: #7388d6;">(</span><span style="color: #a020f0;">cond</span> <span style="color: #909183;">(</span><span style="color: #709870;">(</span>= kinds-of-coins 1<span style="color: #709870;">)</span> 1<span style="color: #909183;">)</span>
+        <span style="color: #909183;">(</span><span style="color: #709870;">(</span>= kinds-of-coins 2<span style="color: #709870;">)</span> 5<span style="color: #909183;">)</span>
+        <span style="color: #909183;">(</span><span style="color: #709870;">(</span>= kinds-of-coins 3<span style="color: #709870;">)</span> 10<span style="color: #909183;">)</span>
+        <span style="color: #909183;">(</span><span style="color: #709870;">(</span>= kinds-of-coins 4<span style="color: #709870;">)</span> 25<span style="color: #909183;">)</span>
+        <span style="color: #909183;">(</span><span style="color: #709870;">(</span>= kinds-of-coins 5<span style="color: #709870;">)</span> 50<span style="color: #909183;">)</span><span style="color: #7388d6;">)</span><span style="color: #707183;">)</span>
+</pre>
+</div>
+
+<div class="org-src-container">
+
+<pre class="src src-scheme"><span style="color: #707183;">(</span>count-change 11<span style="color: #707183;">)</span>
+<span style="color: #707183;">(</span>cc 11 5<span style="color: #707183;">)</span>
+<span style="color: #707183;">(</span>+ <span style="color: #7388d6;">(</span>cc 11 4<span style="color: #7388d6;">)</span>
+   <span style="color: #7388d6;">(</span>cc -39 5<span style="color: #7388d6;">)</span><span style="color: #707183;">)</span>
+<span style="color: #707183;">(</span>+ <span style="color: #7388d6;">(</span>+ <span style="color: #909183;">(</span>cc 11 3<span style="color: #909183;">)</span>
+      <span style="color: #909183;">(</span>cc -14 4<span style="color: #909183;">)</span><span style="color: #7388d6;">)</span>
+   <span style="color: #7388d6;">(</span>cc -39 5<span style="color: #7388d6;">)</span><span style="color: #707183;">)</span>
+<span style="color: #707183;">(</span>+ <span style="color: #7388d6;">(</span>+ <span style="color: #909183;">(</span>+ <span style="color: #709870;">(</span>cc 11 2<span style="color: #709870;">)</span>
+         <span style="color: #709870;">(</span>cc 1 3<span style="color: #709870;">)</span><span style="color: #909183;">)</span>
+      <span style="color: #909183;">(</span>cc -14 4<span style="color: #909183;">)</span><span style="color: #7388d6;">)</span>
+   <span style="color: #7388d6;">(</span>cc -39 5<span style="color: #7388d6;">)</span><span style="color: #707183;">)</span>
+<span style="color: #707183;">(</span>+ <span style="color: #7388d6;">(</span>+ <span style="color: #909183;">(</span>+ <span style="color: #709870;">(</span>+ <span style="color: #907373;">(</span>cc 11 1<span style="color: #907373;">)</span>
+            <span style="color: #907373;">(</span>cc 6 2<span style="color: #907373;">)</span><span style="color: #709870;">)</span>
+         <span style="color: #709870;">(</span>cc 1 3<span style="color: #709870;">)</span><span style="color: #909183;">)</span>
+      <span style="color: #909183;">(</span>cc -14 4<span style="color: #909183;">)</span><span style="color: #7388d6;">)</span>
+   <span style="color: #7388d6;">(</span>cc -39 5<span style="color: #7388d6;">)</span><span style="color: #707183;">)</span>
+<span style="color: #707183;">(</span>+ <span style="color: #7388d6;">(</span>+ <span style="color: #909183;">(</span>+ <span style="color: #709870;">(</span>+ <span style="color: #907373;">(</span>+ <span style="color: #6276ba;">(</span>cc 11 0<span style="color: #6276ba;">)</span>
+               <span style="color: #6276ba;">(</span>cc 10 1<span style="color: #6276ba;">)</span><span style="color: #907373;">)</span>
+            <span style="color: #907373;">(</span>cc 6 2<span style="color: #907373;">)</span><span style="color: #709870;">)</span>
+         <span style="color: #709870;">(</span>cc 1 3<span style="color: #709870;">)</span><span style="color: #909183;">)</span>
+      <span style="color: #909183;">(</span>cc -14 4<span style="color: #909183;">)</span><span style="color: #7388d6;">)</span>
+   <span style="color: #7388d6;">(</span>cc -39 5<span style="color: #7388d6;">)</span><span style="color: #707183;">)</span>
+<span style="color: #707183;">(</span>+ <span style="color: #7388d6;">(</span>+ <span style="color: #909183;">(</span>+ <span style="color: #709870;">(</span>+ <span style="color: #907373;">(</span>+ 0
+               <span style="color: #6276ba;">(</span>+ <span style="color: #858580;">(</span>cc 10 0<span style="color: #858580;">)</span>
+                  <span style="color: #858580;">(</span>cc 9 1<span style="color: #858580;">)</span><span style="color: #6276ba;">)</span><span style="color: #907373;">)</span>
+            <span style="color: #907373;">(</span>cc 6 2<span style="color: #907373;">)</span><span style="color: #709870;">)</span>
+         <span style="color: #709870;">(</span>cc 1 3<span style="color: #709870;">)</span><span style="color: #909183;">)</span>
+      <span style="color: #909183;">(</span>cc -14 4<span style="color: #909183;">)</span><span style="color: #7388d6;">)</span>
+   <span style="color: #7388d6;">(</span>cc -39 5<span style="color: #7388d6;">)</span><span style="color: #707183;">)</span>
+<span style="color: #707183;">(</span>+ <span style="color: #7388d6;">(</span>+ <span style="color: #909183;">(</span>+ <span style="color: #709870;">(</span>+ <span style="color: #907373;">(</span>+ 0
+               <span style="color: #6276ba;">(</span>+ 0
+                  <span style="color: #858580;">(</span>+ <span style="color: #80a880;">(</span>cc 9 0<span style="color: #80a880;">)</span>
+                     <span style="color: #80a880;">(</span>cc 8 1<span style="color: #80a880;">)</span><span style="color: #858580;">)</span><span style="color: #6276ba;">)</span><span style="color: #907373;">)</span>
+            <span style="color: #907373;">(</span>cc 6 2<span style="color: #907373;">)</span><span style="color: #709870;">)</span>
+         <span style="color: #709870;">(</span>cc 1 3<span style="color: #709870;">)</span><span style="color: #909183;">)</span>
+      <span style="color: #909183;">(</span>cc -14 4<span style="color: #909183;">)</span><span style="color: #7388d6;">)</span>
+   <span style="color: #7388d6;">(</span>cc -39 5<span style="color: #7388d6;">)</span><span style="color: #707183;">)</span>
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-orgheadline27" class="outline-5">
+<h5 id="orgheadline27"><span class="done DONE">DONE</span> <a href="http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-11.html#%_thm_1.15">Exercise 1.15</a></h5>
+<div class="outline-text-5" id="text-orgheadline27">
+<ul class="org-ul">
+<li>a. <code>p</code> is called once for every reduction of the argument to <code>sin</code>. Since the
+argument to <code>sin</code> is divided by 3 each time until reaching 0.1, we have
+\(12.15 \times 3^{-n} \leq 0.1\), giving \(n \geq 4.37\), or 5 calls to <code>p</code>.</li>
+</ul>
+
+
+<ul class="org-ul">
+<li>b. Since sine is not in a tail-call position when being called within its
+definition, the order of space growth is directly proportional to the
+number of steps to compute the sine, which is
+\(\lceil \log_3{(a / 0.1)} \rceil\).</li>
+</ul>
+</div>
+</div>
+</div>
+
+<div id="outline-container-orgheadline33" class="outline-4">
+<h4 id="orgheadline33"><span class="done DONE">DONE</span> <a href="http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-11.html#%_sec_1.2.4">1.2.4: Exponentiation</a></h4>
+<div class="outline-text-4" id="text-orgheadline33">
+</div><div id="outline-container-orgheadline29" class="outline-5">
+<h5 id="orgheadline29"><span class="done DONE">DONE</span> <a href="http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-11.html#%_thm_1.16">Exercise 1.16</a></h5>
+<div class="outline-text-5" id="text-orgheadline29">
+<div class="org-src-container">
+
+<pre class="src src-scheme"><span style="color: #707183;">(</span><span style="color: #a020f0;">define</span> <span style="color: #7388d6;">(</span><span style="color: #0000ff;">expt-int</span> b n<span style="color: #7388d6;">)</span>
+  <span style="color: #7388d6;">(</span><span style="color: #a020f0;">define</span> <span style="color: #909183;">(</span><span style="color: #0000ff;">expt-iter</span> a b n<span style="color: #909183;">)</span>
+    <span style="color: #909183;">(</span><span style="color: #a020f0;">cond</span>
+      <span style="color: #709870;">(</span><span style="color: #907373;">(</span>= n 0<span style="color: #907373;">)</span> a<span style="color: #709870;">)</span>
+      <span style="color: #709870;">(</span><span style="color: #907373;">(</span>= n 1<span style="color: #907373;">)</span> <span style="color: #907373;">(</span>* a b<span style="color: #907373;">)</span><span style="color: #709870;">)</span>
+      <span style="color: #709870;">(</span><span style="color: #907373;">(</span>even? n<span style="color: #907373;">)</span>
+       <span style="color: #907373;">(</span>expt-iter a
+                  <span style="color: #6276ba;">(</span>* b b<span style="color: #6276ba;">)</span>
+                  <span style="color: #6276ba;">(</span>/ n 2<span style="color: #6276ba;">)</span><span style="color: #907373;">)</span><span style="color: #709870;">)</span>
+      <span style="color: #709870;">(</span><span style="color: #a020f0;">else</span>
+        <span style="color: #907373;">(</span>expt-iter <span style="color: #6276ba;">(</span>* a b<span style="color: #6276ba;">)</span>
+                   <span style="color: #6276ba;">(</span>* b b<span style="color: #6276ba;">)</span>
+                   <span style="color: #6276ba;">(</span>/ <span style="color: #858580;">(</span>- n 1<span style="color: #858580;">)</span> 2<span style="color: #6276ba;">)</span><span style="color: #907373;">)</span><span style="color: #709870;">)</span><span style="color: #909183;">)</span><span style="color: #7388d6;">)</span>
+  <span style="color: #7388d6;">(</span>expt-iter 1 b n<span style="color: #7388d6;">)</span><span style="color: #707183;">)</span>
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-orgheadline30" class="outline-5">
+<h5 id="orgheadline30"><span class="done DONE">DONE</span> <a href="http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-11.html#%_thm_1.17">Exercise 1.17</a></h5>
+<div class="outline-text-5" id="text-orgheadline30">
+<div class="org-src-container">
+
+<pre class="src src-scheme"><span style="color: #707183;">(</span><span style="color: #a020f0;">define</span> <span style="color: #7388d6;">(</span><span style="color: #0000ff;">double</span> n<span style="color: #7388d6;">)</span> <span style="color: #7388d6;">(</span>* n 2<span style="color: #7388d6;">)</span><span style="color: #707183;">)</span>
+<span style="color: #707183;">(</span><span style="color: #a020f0;">define</span> <span style="color: #7388d6;">(</span><span style="color: #0000ff;">halve</span> n<span style="color: #7388d6;">)</span> <span style="color: #7388d6;">(</span>/ n 2<span style="color: #7388d6;">)</span><span style="color: #707183;">)</span>
+<span style="color: #707183;">(</span><span style="color: #a020f0;">define</span> <span style="color: #7388d6;">(</span><span style="color: #0000ff;">fast-*</span> a b<span style="color: #7388d6;">)</span>
+  <span style="color: #7388d6;">(</span><span style="color: #a020f0;">cond</span>
+    <span style="color: #909183;">(</span><span style="color: #709870;">(</span>= b 0<span style="color: #709870;">)</span> 0<span style="color: #909183;">)</span>
+    <span style="color: #909183;">(</span><span style="color: #709870;">(</span>= b 1<span style="color: #709870;">)</span> a<span style="color: #909183;">)</span>
+    <span style="color: #909183;">(</span><span style="color: #709870;">(</span>even? b<span style="color: #709870;">)</span>
+     <span style="color: #709870;">(</span>double <span style="color: #907373;">(</span>fast-* a <span style="color: #6276ba;">(</span>halve b<span style="color: #6276ba;">)</span><span style="color: #907373;">)</span><span style="color: #709870;">)</span><span style="color: #909183;">)</span>
+    <span style="color: #909183;">(</span><span style="color: #a020f0;">else</span>
+      <span style="color: #709870;">(</span>+ a
+         <span style="color: #907373;">(</span>double <span style="color: #6276ba;">(</span>fast-* a <span style="color: #858580;">(</span>halve <span style="color: #80a880;">(</span>- b 1<span style="color: #80a880;">)</span><span style="color: #858580;">)</span><span style="color: #6276ba;">)</span><span style="color: #907373;">)</span><span style="color: #709870;">)</span><span style="color: #909183;">)</span><span style="color: #7388d6;">)</span><span style="color: #707183;">)</span>
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-orgheadline31" class="outline-5">
+<h5 id="orgheadline31"><span class="done DONE">DONE</span> <a href="http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-11.html#%_thm_1.18">Exercise 1.18</a></h5>
+<div class="outline-text-5" id="text-orgheadline31">
+<div class="org-src-container">
+
+<pre class="src src-scheme"><span style="color: #707183;">(</span><span style="color: #a020f0;">define</span> <span style="color: #7388d6;">(</span><span style="color: #0000ff;">double</span> n<span style="color: #7388d6;">)</span> <span style="color: #7388d6;">(</span>* n 2<span style="color: #7388d6;">)</span><span style="color: #707183;">)</span>
+<span style="color: #707183;">(</span><span style="color: #a020f0;">define</span> <span style="color: #7388d6;">(</span><span style="color: #0000ff;">halve</span> n<span style="color: #7388d6;">)</span> <span style="color: #7388d6;">(</span>/ n 2<span style="color: #7388d6;">)</span><span style="color: #707183;">)</span>
+<span style="color: #707183;">(</span><span style="color: #a020f0;">define</span> <span style="color: #7388d6;">(</span><span style="color: #0000ff;">*-int</span> a b<span style="color: #7388d6;">)</span>
+  <span style="color: #7388d6;">(</span><span style="color: #a020f0;">define</span> <span style="color: #909183;">(</span><span style="color: #0000ff;">iter</span> c a b<span style="color: #909183;">)</span>
+    <span style="color: #909183;">(</span><span style="color: #a020f0;">cond</span>
+     <span style="color: #709870;">(</span><span style="color: #907373;">(</span>= b 0<span style="color: #907373;">)</span> 0<span style="color: #709870;">)</span>
+     <span style="color: #709870;">(</span><span style="color: #907373;">(</span>= b 1<span style="color: #907373;">)</span> <span style="color: #907373;">(</span>+ c a<span style="color: #907373;">)</span><span style="color: #709870;">)</span>
+     <span style="color: #709870;">(</span><span style="color: #907373;">(</span>even? b<span style="color: #907373;">)</span>
+      <span style="color: #907373;">(</span>iter c <span style="color: #6276ba;">(</span>double a<span style="color: #6276ba;">)</span> <span style="color: #6276ba;">(</span>halve b<span style="color: #6276ba;">)</span><span style="color: #907373;">)</span><span style="color: #709870;">)</span>
+     <span style="color: #709870;">(</span><span style="color: #a020f0;">else</span>
+      <span style="color: #907373;">(</span>iter <span style="color: #6276ba;">(</span>+ c a<span style="color: #6276ba;">)</span> <span style="color: #6276ba;">(</span>double a<span style="color: #6276ba;">)</span> <span style="color: #6276ba;">(</span>halve <span style="color: #858580;">(</span>- b 1<span style="color: #858580;">)</span><span style="color: #6276ba;">)</span><span style="color: #907373;">)</span><span style="color: #709870;">)</span><span style="color: #909183;">)</span><span style="color: #7388d6;">)</span>
+  <span style="color: #7388d6;">(</span>iter 0 a b<span style="color: #7388d6;">)</span><span style="color: #707183;">)</span>
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-orgheadline32" class="outline-5">
+<h5 id="orgheadline32"><span class="done DONE">DONE</span> <a href="http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-11.html#%_thm_1.19">Exercise 1.19</a></h5>
+<div class="outline-text-5" id="text-orgheadline32">
+<div class="org-src-container">
+
+<pre class="src src-scheme"><span style="color: #707183;">(</span><span style="color: #a020f0;">define</span> <span style="color: #7388d6;">(</span><span style="color: #0000ff;">fib</span> n<span style="color: #7388d6;">)</span>
+  <span style="color: #7388d6;">(</span>fib-iter 1 0 0 1 n<span style="color: #7388d6;">)</span><span style="color: #707183;">)</span>
+<span style="color: #707183;">(</span><span style="color: #a020f0;">define</span> <span style="color: #7388d6;">(</span><span style="color: #0000ff;">fib-iter</span> a b p q count<span style="color: #7388d6;">)</span>
+  <span style="color: #7388d6;">(</span><span style="color: #a020f0;">cond</span> <span style="color: #909183;">(</span><span style="color: #709870;">(</span>= count 0<span style="color: #709870;">)</span> b<span style="color: #909183;">)</span>
+        <span style="color: #909183;">(</span><span style="color: #709870;">(</span>even? count<span style="color: #709870;">)</span>
+         <span style="color: #709870;">(</span>fib-iter a
+                   b
+                   <span style="color: #907373;">(</span>+ <span style="color: #6276ba;">(</span>* p p<span style="color: #6276ba;">)</span>     <span style="color: #b22222;">; </span><span style="color: #b22222;">compute p'</span>
+                      <span style="color: #6276ba;">(</span>* q q<span style="color: #6276ba;">)</span><span style="color: #907373;">)</span>
+                   <span style="color: #907373;">(</span>+ <span style="color: #6276ba;">(</span>* q q<span style="color: #6276ba;">)</span>     <span style="color: #b22222;">; </span><span style="color: #b22222;">compute q'</span>
+                      <span style="color: #6276ba;">(</span>* 2 p q<span style="color: #6276ba;">)</span><span style="color: #907373;">)</span>
+                   <span style="color: #907373;">(</span>/ count 2<span style="color: #907373;">)</span><span style="color: #709870;">)</span><span style="color: #909183;">)</span>
+        <span style="color: #909183;">(</span><span style="color: #a020f0;">else</span> <span style="color: #709870;">(</span>fib-iter <span style="color: #907373;">(</span>+ <span style="color: #6276ba;">(</span>* b q<span style="color: #6276ba;">)</span> <span style="color: #6276ba;">(</span>* a q<span style="color: #6276ba;">)</span> <span style="color: #6276ba;">(</span>* a p<span style="color: #6276ba;">)</span><span style="color: #907373;">)</span>
+                        <span style="color: #907373;">(</span>+ <span style="color: #6276ba;">(</span>* b p<span style="color: #6276ba;">)</span> <span style="color: #6276ba;">(</span>* a q<span style="color: #6276ba;">)</span><span style="color: #907373;">)</span>
+                        p
+                        q
+                        <span style="color: #907373;">(</span>- count 1<span style="color: #907373;">)</span><span style="color: #709870;">)</span><span style="color: #909183;">)</span><span style="color: #7388d6;">)</span><span style="color: #707183;">)</span>
+</pre>
+</div>
+</div>
+</div>
+</div>
+
+<div id="outline-container-orgheadline35" class="outline-4">
+<h4 id="orgheadline35"><span class="done DONE">DONE</span> <a href="http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-11.html#%_sec_1.2.5">1.2.5: Greatest Common Divisors</a></h4>
+<div class="outline-text-4" id="text-orgheadline35">
+</div><div id="outline-container-orgheadline34" class="outline-5">
+<h5 id="orgheadline34"><span class="done DONE">DONE</span> <a href="http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-11.html#%_thm_1.20">Exercise 1.20</a></h5>
+<div class="outline-text-5" id="text-orgheadline34">
+<p>
+Number of remainder operations performed with applicative vs. normal order
+evaluation in <code>(gcd 206 40)</code>, and in general?
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-scheme"><span style="color: #707183;">(</span><span style="color: #a020f0;">define</span> <span style="color: #7388d6;">(</span><span style="color: #0000ff;">gcd</span> a b<span style="color: #7388d6;">)</span>
+  <span style="color: #7388d6;">(</span><span style="color: #a020f0;">if</span> <span style="color: #909183;">(</span>= b 0<span style="color: #909183;">)</span>
+      a
+      <span style="color: #909183;">(</span>gcd b <span style="color: #709870;">(</span>remainder a b<span style="color: #709870;">)</span><span style="color: #909183;">)</span><span style="color: #7388d6;">)</span><span style="color: #707183;">)</span>
+</pre>
+</div>
+
+<p>
+In the applicative-order evaluation, a remainder is taken for each iteration
+of <code>gcd</code>,
+</p>
+
+<p>
+\[
+d(\#rem) / d(\#iter) = 1
+\]
+</p>
+
+<p>
+Since \(\#iter \propto log(a)\), the number of remainders taken is
+\(\Theta(log(a))\).
+</p>
+
+<p>
+In the normal-order evaluation, each expansion of <code>gcd</code> produces a number of
+calls to remainder that is a constant multiple of the calls to remainder in the
+previous iteration.
+</p>
+
+<p>
+\[
+  d(\#rem) / d(\#iter) = k \#rem
+\]
+</p>
+
+<p>
+Thus, \(\#rem \propto e^{\#iter}\), and therefore \(\#rem = \Theta(a)\).
+</p>
+
+<p>
+The normal-order evaluation expansion looks like this:
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-scheme"><span style="color: #707183;">(</span>gcd 206 40<span style="color: #707183;">)</span>
+<span style="color: #707183;">(</span><span style="color: #a020f0;">if</span> <span style="color: #7388d6;">(</span>= 40 0<span style="color: #7388d6;">)</span>
+  206
+  <span style="color: #7388d6;">(</span>gcd 40 <span style="color: #909183;">(</span>remainder 206 40<span style="color: #909183;">)</span><span style="color: #7388d6;">)</span><span style="color: #707183;">)</span>
+<span style="color: #707183;">(</span><span style="color: #a020f0;">if</span> <span style="color: #7388d6;">(</span>= 40 0<span style="color: #7388d6;">)</span>
+  206
+  <span style="color: #7388d6;">(</span><span style="color: #a020f0;">if</span> <span style="color: #909183;">(</span>= <span style="color: #709870;">(</span>remainder 206 40<span style="color: #709870;">)</span> 0<span style="color: #909183;">)</span>
+    40
+    <span style="color: #909183;">(</span>gcd <span style="color: #709870;">(</span>remainder 206 40<span style="color: #709870;">)</span>
+         <span style="color: #709870;">(</span>remainder 40 <span style="color: #907373;">(</span>remainder 206 40<span style="color: #907373;">)</span><span style="color: #709870;">)</span><span style="color: #909183;">)</span><span style="color: #7388d6;">)</span><span style="color: #707183;">)</span>
+<span style="color: #707183;">(</span><span style="color: #a020f0;">if</span> <span style="color: #7388d6;">(</span>= 40 0<span style="color: #7388d6;">)</span>
+  206
+  <span style="color: #7388d6;">(</span><span style="color: #a020f0;">if</span> <span style="color: #909183;">(</span>= <span style="color: #709870;">(</span>remainder 206 40<span style="color: #709870;">)</span> 0<span style="color: #909183;">)</span>
+    40
+    <span style="color: #909183;">(</span><span style="color: #a020f0;">if</span> <span style="color: #709870;">(</span>= <span style="color: #907373;">(</span>remainder 40 <span style="color: #6276ba;">(</span>remainder 206 40<span style="color: #6276ba;">)</span><span style="color: #907373;">)</span> 0<span style="color: #709870;">)</span>
+        <span style="color: #709870;">(</span>remainder 206 40<span style="color: #709870;">)</span>
+        <span style="color: #709870;">(</span>gcd <span style="color: #907373;">(</span>remainder 40 <span style="color: #6276ba;">(</span>remainder 206 40<span style="color: #6276ba;">)</span><span style="color: #907373;">)</span>
+             <span style="color: #907373;">(</span>remainder <span style="color: #6276ba;">(</span>remainder 206 40<span style="color: #6276ba;">)</span> <span style="color: #6276ba;">(</span>remainder 40 <span style="color: #858580;">(</span>remainder 206 40<span style="color: #858580;">)</span><span style="color: #6276ba;">)</span><span style="color: #907373;">)</span><span style="color: #709870;">)</span><span style="color: #909183;">)</span><span style="color: #7388d6;">)</span><span style="color: #707183;">)</span>
+</pre>
+</div>
+</div>
+</div>
+</div>
+
+<div id="outline-container-orgheadline44" class="outline-4">
+<h4 id="orgheadline44"><span class="todo TODO">TODO</span> <a href="http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-11.html#%_sec_1.2.6">1.2.6: Example: Testing for Primality</a></h4>
+<div class="outline-text-4" id="text-orgheadline44">
+</div><div id="outline-container-orgheadline36" class="outline-5">
+<h5 id="orgheadline36"><span class="done DONE">DONE</span> <a href="http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-11.html#%_thm_1.21">Exercise 1.21</a></h5>
+<div class="outline-text-5" id="text-orgheadline36">
+<div class="org-src-container">
+
+<pre class="src src-scheme"><span style="color: #707183;">(</span><span style="color: #a020f0;">define</span> <span style="color: #7388d6;">(</span><span style="color: #0000ff;">square</span> x<span style="color: #7388d6;">)</span> <span style="color: #7388d6;">(</span>* x x<span style="color: #7388d6;">)</span><span style="color: #707183;">)</span>
+<span style="color: #707183;">(</span><span style="color: #a020f0;">define</span> <span style="color: #7388d6;">(</span><span style="color: #0000ff;">smallest-divisor</span> n<span style="color: #7388d6;">)</span>
+  <span style="color: #7388d6;">(</span>find-divisor n 2<span style="color: #7388d6;">)</span><span style="color: #707183;">)</span>
+<span style="color: #707183;">(</span><span style="color: #a020f0;">define</span> <span style="color: #7388d6;">(</span><span style="color: #0000ff;">find-divisor</span> n test-divisor<span style="color: #7388d6;">)</span>
+  <span style="color: #7388d6;">(</span><span style="color: #a020f0;">cond</span> <span style="color: #909183;">(</span><span style="color: #709870;">(</span>&gt; <span style="color: #907373;">(</span>square test-divisor<span style="color: #907373;">)</span> n<span style="color: #709870;">)</span> n<span style="color: #909183;">)</span>
+        <span style="color: #909183;">(</span><span style="color: #709870;">(</span>divides? test-divisor n<span style="color: #709870;">)</span> test-divisor<span style="color: #909183;">)</span>
+        <span style="color: #909183;">(</span><span style="color: #a020f0;">else</span> <span style="color: #709870;">(</span>find-divisor n <span style="color: #907373;">(</span>+ test-divisor 1<span style="color: #907373;">)</span><span style="color: #709870;">)</span><span style="color: #909183;">)</span><span style="color: #7388d6;">)</span><span style="color: #707183;">)</span>
+<span style="color: #707183;">(</span><span style="color: #a020f0;">define</span> <span style="color: #7388d6;">(</span><span style="color: #0000ff;">divides?</span> a b<span style="color: #7388d6;">)</span>
+  <span style="color: #7388d6;">(</span>= <span style="color: #909183;">(</span>remainder b a<span style="color: #909183;">)</span> 0<span style="color: #7388d6;">)</span><span style="color: #707183;">)</span>
+</pre>
+</div>
+
+<div class="org-src-container">
+
+<pre class="src src-scheme"><span style="color: #707183;">(</span>include <span style="color: #8b2252;">"ex-1-21"</span><span style="color: #707183;">)</span>
+<span style="color: #707183;">(</span><span style="color: #a020f0;">use</span> test<span style="color: #707183;">)</span>
+
+<span style="color: #707183;">(</span>test-group <span style="color: #8b2252;">"ex-1-21-test"</span>
+            <span style="color: #7388d6;">(</span>test 199 <span style="color: #909183;">(</span>smallest-divisor 199<span style="color: #909183;">)</span><span style="color: #7388d6;">)</span>
+            <span style="color: #7388d6;">(</span>test 1999 <span style="color: #909183;">(</span>smallest-divisor 1999<span style="color: #909183;">)</span><span style="color: #7388d6;">)</span>
+            <span style="color: #7388d6;">(</span>test 7 <span style="color: #909183;">(</span>smallest-divisor 19999<span style="color: #909183;">)</span><span style="color: #7388d6;">)</span><span style="color: #707183;">)</span>
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-orgheadline37" class="outline-5">
+<h5 id="orgheadline37"><span class="todo TODO">TODO</span> <a href="http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-11.html#%_thm_1.22">Exercise 1.22</a></h5>
+</div>
+<div id="outline-container-orgheadline38" class="outline-5">
+<h5 id="orgheadline38"><span class="todo TODO">TODO</span> <a href="http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-11.html#%_thm_1.23">Exercise 1.23</a></h5>
+</div>
+<div id="outline-container-orgheadline39" class="outline-5">
+<h5 id="orgheadline39"><span class="todo TODO">TODO</span> <a href="http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-11.html#%_thm_1.24">Exercise 1.24</a></h5>
+</div>
+<div id="outline-container-orgheadline40" class="outline-5">
+<h5 id="orgheadline40"><span class="todo TODO">TODO</span> <a href="http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-11.html#%_thm_1.25">Exercise 1.25</a></h5>
+</div>
+<div id="outline-container-orgheadline41" class="outline-5">
+<h5 id="orgheadline41"><span class="todo TODO">TODO</span> <a href="http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-11.html#%_thm_1.26">Exercise 1.26</a></h5>
+</div>
+<div id="outline-container-orgheadline42" class="outline-5">
+<h5 id="orgheadline42"><span class="done DONE">DONE</span> <a href="http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-11.html#%_thm_1.27">Exercise 1.27</a></h5>
+<div class="outline-text-5" id="text-orgheadline42">
+<p>
+Carmichael numbers &#x2013; fool the Fermat primality test
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-scheme"><span style="color: #b22222;">;;; </span><span style="color: #b22222;">Ancillary functions {{{</span>
+<span style="color: #b22222;">;; </span><span style="color: #b22222;">Perfect primality test</span>
+<span style="color: #707183;">(</span><span style="color: #a020f0;">define</span> <span style="color: #7388d6;">(</span><span style="color: #0000ff;">smallest-divisor</span> n<span style="color: #7388d6;">)</span>
+  <span style="color: #7388d6;">(</span>find-divisor n 2<span style="color: #7388d6;">)</span><span style="color: #707183;">)</span>
+<span style="color: #707183;">(</span><span style="color: #a020f0;">define</span> <span style="color: #7388d6;">(</span><span style="color: #0000ff;">find-divisor</span> n test-divisor<span style="color: #7388d6;">)</span>
+  <span style="color: #7388d6;">(</span><span style="color: #a020f0;">cond</span> <span style="color: #909183;">(</span><span style="color: #709870;">(</span>&gt; <span style="color: #907373;">(</span>square test-divisor<span style="color: #907373;">)</span> n<span style="color: #709870;">)</span> n<span style="color: #909183;">)</span>
+        <span style="color: #909183;">(</span><span style="color: #709870;">(</span>divides? test-divisor n<span style="color: #709870;">)</span> test-divisor<span style="color: #909183;">)</span>
+        <span style="color: #909183;">(</span><span style="color: #a020f0;">else</span> <span style="color: #709870;">(</span>find-divisor n <span style="color: #907373;">(</span>+ test-divisor 1<span style="color: #907373;">)</span><span style="color: #709870;">)</span><span style="color: #909183;">)</span><span style="color: #7388d6;">)</span><span style="color: #707183;">)</span>
+<span style="color: #707183;">(</span><span style="color: #a020f0;">define</span> <span style="color: #7388d6;">(</span><span style="color: #0000ff;">divides?</span> a b<span style="color: #7388d6;">)</span>
+  <span style="color: #7388d6;">(</span>= <span style="color: #909183;">(</span>remainder b a<span style="color: #909183;">)</span> 0<span style="color: #7388d6;">)</span><span style="color: #707183;">)</span>
+<span style="color: #707183;">(</span><span style="color: #a020f0;">define</span> <span style="color: #7388d6;">(</span><span style="color: #0000ff;">prime?</span> n<span style="color: #7388d6;">)</span>
+  <span style="color: #7388d6;">(</span>= n <span style="color: #909183;">(</span>smallest-divisor n<span style="color: #909183;">)</span><span style="color: #7388d6;">)</span><span style="color: #707183;">)</span>
+
+<span style="color: #b22222;">;; </span><span style="color: #b22222;">Probabalistic primality test</span>
+<span style="color: #707183;">(</span><span style="color: #a020f0;">define</span> <span style="color: #7388d6;">(</span><span style="color: #0000ff;">expmod</span> base exp m<span style="color: #7388d6;">)</span>
+  <span style="color: #7388d6;">(</span><span style="color: #a020f0;">cond</span> <span style="color: #909183;">(</span><span style="color: #709870;">(</span>= exp 0<span style="color: #709870;">)</span> 1<span style="color: #909183;">)</span>
+        <span style="color: #909183;">(</span><span style="color: #709870;">(</span>even? exp<span style="color: #709870;">)</span>
+         <span style="color: #709870;">(</span>remainder <span style="color: #907373;">(</span>square <span style="color: #6276ba;">(</span>expmod base <span style="color: #858580;">(</span>/ exp 2<span style="color: #858580;">)</span> m<span style="color: #6276ba;">)</span><span style="color: #907373;">)</span>
+                    m<span style="color: #709870;">)</span><span style="color: #909183;">)</span>
+        <span style="color: #909183;">(</span><span style="color: #a020f0;">else</span>
+          <span style="color: #709870;">(</span>remainder <span style="color: #907373;">(</span>* base <span style="color: #6276ba;">(</span>expmod base <span style="color: #858580;">(</span>- exp 1<span style="color: #858580;">)</span> m<span style="color: #6276ba;">)</span><span style="color: #907373;">)</span>
+                     m<span style="color: #709870;">)</span><span style="color: #909183;">)</span><span style="color: #7388d6;">)</span><span style="color: #707183;">)</span>
+<span style="color: #707183;">(</span><span style="color: #a020f0;">define</span> <span style="color: #7388d6;">(</span><span style="color: #0000ff;">fermat-test</span> n<span style="color: #7388d6;">)</span>
+  <span style="color: #7388d6;">(</span><span style="color: #a020f0;">define</span> <span style="color: #909183;">(</span><span style="color: #0000ff;">try-it</span> a<span style="color: #909183;">)</span>
+    <span style="color: #909183;">(</span>= <span style="color: #709870;">(</span>expmod a n n<span style="color: #709870;">)</span> a<span style="color: #909183;">)</span><span style="color: #7388d6;">)</span>
+  <span style="color: #7388d6;">(</span>try-it <span style="color: #909183;">(</span>+ 1 <span style="color: #709870;">(</span>random <span style="color: #907373;">(</span>- n 1<span style="color: #907373;">)</span><span style="color: #709870;">)</span><span style="color: #909183;">)</span><span style="color: #7388d6;">)</span><span style="color: #707183;">)</span>
+
+<span style="color: #707183;">(</span><span style="color: #a020f0;">define</span> <span style="color: #7388d6;">(</span><span style="color: #0000ff;">fast-prime?</span> n times<span style="color: #7388d6;">)</span>
+  <span style="color: #7388d6;">(</span><span style="color: #a020f0;">cond</span> <span style="color: #909183;">(</span><span style="color: #709870;">(</span>= times 0<span style="color: #709870;">)</span> true<span style="color: #909183;">)</span>
+        <span style="color: #909183;">(</span><span style="color: #709870;">(</span>fermat-test n<span style="color: #709870;">)</span> <span style="color: #709870;">(</span>fast-prime? n <span style="color: #907373;">(</span>- times 1<span style="color: #907373;">)</span><span style="color: #709870;">)</span><span style="color: #909183;">)</span>
+        <span style="color: #909183;">(</span><span style="color: #a020f0;">else</span> false<span style="color: #909183;">)</span><span style="color: #7388d6;">)</span><span style="color: #707183;">)</span>
+<span style="color: #b22222;">;;;</span><span style="color: #b22222;">}}}</span>
+
+<span style="color: #707183;">(</span><span style="color: #a020f0;">define</span> <span style="color: #7388d6;">(</span><span style="color: #0000ff;">carmichael?</span> n<span style="color: #7388d6;">)</span>
+  <span style="color: #7388d6;">(</span><span style="color: #a020f0;">define</span> <span style="color: #909183;">(</span><span style="color: #0000ff;">iter</span> a<span style="color: #909183;">)</span>
+    <span style="color: #909183;">(</span><span style="color: #a020f0;">cond</span> <span style="color: #709870;">(</span><span style="color: #907373;">(</span>= a n<span style="color: #907373;">)</span> true<span style="color: #709870;">)</span>
+          <span style="color: #709870;">(</span><span style="color: #907373;">(</span>= a <span style="color: #6276ba;">(</span>expmod a n n<span style="color: #6276ba;">)</span><span style="color: #907373;">)</span>
+           <span style="color: #907373;">(</span>iter <span style="color: #6276ba;">(</span>+ a 1<span style="color: #6276ba;">)</span><span style="color: #907373;">)</span><span style="color: #709870;">)</span>
+          <span style="color: #709870;">(</span><span style="color: #a020f0;">else</span> false<span style="color: #709870;">)</span><span style="color: #909183;">)</span><span style="color: #7388d6;">)</span>
+  <span style="color: #7388d6;">(</span><span style="color: #a020f0;">define</span> <span style="color: #909183;">(</span><span style="color: #0000ff;">try</span><span style="color: #909183;">)</span> <span style="color: #909183;">(</span>iter 0<span style="color: #909183;">)</span><span style="color: #7388d6;">)</span>
+  <span style="color: #7388d6;">(</span><span style="color: #a020f0;">define</span> <span style="color: #0000ff;">fermat-res</span> <span style="color: #909183;">(</span>try<span style="color: #909183;">)</span><span style="color: #7388d6;">)</span>
+  <span style="color: #7388d6;">(</span><span style="color: #a020f0;">define</span> <span style="color: #0000ff;">prime-res</span> <span style="color: #909183;">(</span>prime? n<span style="color: #909183;">)</span><span style="color: #7388d6;">)</span>
+  <span style="color: #7388d6;">(</span><span style="color: #a020f0;">or</span> <span style="color: #909183;">(</span><span style="color: #a020f0;">and</span> <span style="color: #709870;">(</span>not fermat-res<span style="color: #709870;">)</span> prime-res<span style="color: #909183;">)</span>
+      <span style="color: #909183;">(</span><span style="color: #a020f0;">and</span> fermat-res <span style="color: #709870;">(</span>not prime-res<span style="color: #709870;">)</span><span style="color: #909183;">)</span><span style="color: #7388d6;">)</span><span style="color: #707183;">)</span>
+</pre>
+</div>
+
+<div class="org-src-container">
+
+<pre class="src src-scheme"><span style="color: #707183;">(</span>include <span style="color: #8b2252;">"ex-1-27"</span><span style="color: #707183;">)</span>
+<span style="color: #707183;">(</span><span style="color: #a020f0;">use</span> test<span style="color: #707183;">)</span>
+
+<span style="color: #b22222;">;; </span><span style="color: #b22222;">All of these return #t, indicating that they are composite numbers even</span>
+<span style="color: #b22222;">;; </span><span style="color: #b22222;">though the fool the Fermat primality test.</span>
+<span style="color: #707183;">(</span>test-group <span style="color: #8b2252;">"ex-1-27-test"</span>
+            <span style="color: #7388d6;">(</span>test-assert <span style="color: #909183;">(</span>carmichael? 561<span style="color: #909183;">)</span><span style="color: #7388d6;">)</span>
+            <span style="color: #7388d6;">(</span>test-assert <span style="color: #909183;">(</span>carmichael? 1105<span style="color: #909183;">)</span><span style="color: #7388d6;">)</span>
+            <span style="color: #7388d6;">(</span>test-assert <span style="color: #909183;">(</span>carmichael? 1729<span style="color: #909183;">)</span><span style="color: #7388d6;">)</span>
+            <span style="color: #7388d6;">(</span>test-assert <span style="color: #909183;">(</span>carmichael? 2465<span style="color: #909183;">)</span><span style="color: #7388d6;">)</span>
+            <span style="color: #7388d6;">(</span>test-assert <span style="color: #909183;">(</span>carmichael? 2821<span style="color: #909183;">)</span><span style="color: #7388d6;">)</span>
+            <span style="color: #7388d6;">(</span>test-assert <span style="color: #909183;">(</span>carmichael? 6601<span style="color: #909183;">)</span><span style="color: #7388d6;">)</span><span style="color: #707183;">)</span>
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-orgheadline43" class="outline-5">
+<h5 id="orgheadline43"><span class="todo TODO">TODO</span> <a href="http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-11.html#%_thm_1.28">Exercise 1.28</a></h5>
+</div>
+</div>
+</div>
+
+<div id="outline-container-orgheadline68" class="outline-3">
+<h3 id="orgheadline68"><span class="todo TODO">TODO</span> <a href="http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-12.html#%_sec_1.3">1.3: Formulating Abstractions with Higher-Order Procedures</a></h3>
+<div class="outline-text-3" id="text-orgheadline68">
+</div><div id="outline-container-orgheadline51" class="outline-4">
+<h4 id="orgheadline51"><span class="todo TODO">TODO</span> <a href="http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-12.html#%_sec_1.3.1">1.3.1: Procedures as Arguments</a></h4>
+<div class="outline-text-4" id="text-orgheadline51">
+</div><div id="outline-container-orgheadline46" class="outline-5">
+<h5 id="orgheadline46"><span class="todo TODO">TODO</span> <a href="http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-12.html#%_thm_1.29">Exercise 1.29</a></h5>
+</div>
+<div id="outline-container-orgheadline47" class="outline-5">
+<h5 id="orgheadline47"><span class="todo TODO">TODO</span> <a href="http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-12.html#%_thm_1.30">Exercise 1.30</a></h5>
+</div>
+<div id="outline-container-orgheadline48" class="outline-5">
+<h5 id="orgheadline48"><span class="todo TODO">TODO</span> <a href="http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-12.html#%_thm_1.31">Exercise 1.31</a></h5>
+</div>
+<div id="outline-container-orgheadline49" class="outline-5">
+<h5 id="orgheadline49"><span class="todo TODO">TODO</span> <a href="http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-12.html#%_thm_1.32">Exercise 1.32</a></h5>
+</div>
+<div id="outline-container-orgheadline50" class="outline-5">
+<h5 id="orgheadline50"><span class="todo TODO">TODO</span> <a href="http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-12.html#%_thm_1.33">Exercise 1.33</a></h5>
+</div>
+</div>
+<div id="outline-container-orgheadline53" class="outline-4">
+<h4 id="orgheadline53"><span class="todo TODO">TODO</span> <a href="http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-12.html#%_sec_1.3.2">1.3.2: Constructing Procedures Using <code>Lambda</code></a></h4>
+<div class="outline-text-4" id="text-orgheadline53">
+</div><div id="outline-container-orgheadline52" class="outline-5">
+<h5 id="orgheadline52"><span class="todo TODO">TODO</span> <a href="http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-12.html#%_thm_1.34">Exercise 1.34</a></h5>
+</div>
+</div>
+<div id="outline-container-orgheadline59" class="outline-4">
+<h4 id="orgheadline59"><span class="todo TODO">TODO</span> <a href="http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-12.html#%_sec_1.3.3">1.3.3: Procedures as General Methods</a></h4>
+<div class="outline-text-4" id="text-orgheadline59">
+</div><div id="outline-container-orgheadline54" class="outline-5">
+<h5 id="orgheadline54"><span class="todo TODO">TODO</span> <a href="http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-12.html#%_thm_1.35">Exercise 1.35</a></h5>
+</div>
+<div id="outline-container-orgheadline55" class="outline-5">
+<h5 id="orgheadline55"><span class="todo TODO">TODO</span> <a href="http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-12.html#%_thm_1.36">Exercise 1.36</a></h5>
+</div>
+<div id="outline-container-orgheadline56" class="outline-5">
+<h5 id="orgheadline56"><span class="done DONE">DONE</span> <a href="http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-12.html#%_thm_1.37">Exercise 1.37</a></h5>
+<div class="outline-text-5" id="text-orgheadline56">
+<p>
+Iterative:
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-scheme"><span style="color: #707183;">(</span><span style="color: #a020f0;">define</span> <span style="color: #7388d6;">(</span><span style="color: #0000ff;">cont-frac</span> n d k<span style="color: #7388d6;">)</span>
+  <span style="color: #7388d6;">(</span><span style="color: #a020f0;">define</span> <span style="color: #909183;">(</span><span style="color: #0000ff;">iter</span> i acc<span style="color: #909183;">)</span>
+    <span style="color: #909183;">(</span><span style="color: #a020f0;">if</span> <span style="color: #709870;">(</span>= i 0<span style="color: #709870;">)</span>
+        acc
+        <span style="color: #709870;">(</span>iter <span style="color: #907373;">(</span>- i 1<span style="color: #907373;">)</span>
+              <span style="color: #907373;">(</span>/ <span style="color: #6276ba;">(</span>n i<span style="color: #6276ba;">)</span> <span style="color: #6276ba;">(</span>+ <span style="color: #858580;">(</span>d i<span style="color: #858580;">)</span> acc<span style="color: #6276ba;">)</span><span style="color: #907373;">)</span><span style="color: #709870;">)</span><span style="color: #909183;">)</span><span style="color: #7388d6;">)</span>
+  <span style="color: #7388d6;">(</span>iter k 0.0<span style="color: #7388d6;">)</span><span style="color: #707183;">)</span>
+</pre>
+</div>
+
+<p>
+Recursive:
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-scheme"><span style="color: #707183;">(</span><span style="color: #a020f0;">define</span> <span style="color: #7388d6;">(</span><span style="color: #0000ff;">cont-frac</span> n d k<span style="color: #7388d6;">)</span>
+  <span style="color: #7388d6;">(</span><span style="color: #a020f0;">let</span> <span style="color: #0000ff;">recur</span> <span style="color: #909183;">(</span>i 0<span style="color: #909183;">)</span>
+    <span style="color: #909183;">(</span><span style="color: #a020f0;">if</span> <span style="color: #709870;">(</span>= i k<span style="color: #709870;">)</span>
+        <span style="color: #709870;">(</span>/ <span style="color: #907373;">(</span>n k<span style="color: #907373;">)</span> <span style="color: #907373;">(</span>d k<span style="color: #907373;">)</span><span style="color: #709870;">)</span>
+        <span style="color: #709870;">(</span>/ <span style="color: #907373;">(</span>n i<span style="color: #907373;">)</span> <span style="color: #907373;">(</span>+ <span style="color: #6276ba;">(</span>d i<span style="color: #6276ba;">)</span> <span style="color: #6276ba;">(</span>recur <span style="color: #858580;">(</span>+ i 1<span style="color: #858580;">)</span><span style="color: #6276ba;">)</span><span style="color: #907373;">)</span><span style="color: #709870;">)</span><span style="color: #909183;">)</span><span style="color: #7388d6;">)</span><span style="color: #707183;">)</span>
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-orgheadline57" class="outline-5">
+<h5 id="orgheadline57"><span class="todo TODO">TODO</span> <a href="http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-12.html#%_thm_1.38">Exercise 1.38</a></h5>
+</div>
+<div id="outline-container-orgheadline58" class="outline-5">
+<h5 id="orgheadline58"><span class="done DONE">DONE</span> <a href="http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-12.html#%_thm_1.39">Exercise 1.39</a></h5>
+<div class="outline-text-5" id="text-orgheadline58">
+<div class="org-src-container">
+
+<pre class="src src-scheme"><span style="color: #707183;">(</span><span style="color: #a020f0;">define</span> <span style="color: #7388d6;">(</span><span style="color: #0000ff;">tan</span> x k<span style="color: #7388d6;">)</span>
+  <span style="color: #7388d6;">(</span>cont-frac
+   <span style="color: #909183;">(</span><span style="color: #a020f0;">lambda</span> <span style="color: #709870;">(</span>i<span style="color: #709870;">)</span> <span style="color: #709870;">(</span><span style="color: #a020f0;">if</span> <span style="color: #907373;">(</span>= i 1<span style="color: #907373;">)</span>
+                   x
+                   <span style="color: #907373;">(</span>- <span style="color: #6276ba;">(</span>* x x<span style="color: #6276ba;">)</span><span style="color: #907373;">)</span><span style="color: #709870;">)</span><span style="color: #909183;">)</span>
+   <span style="color: #909183;">(</span><span style="color: #a020f0;">lambda</span> <span style="color: #709870;">(</span>i<span style="color: #709870;">)</span> <span style="color: #709870;">(</span>- <span style="color: #907373;">(</span>* 2 i<span style="color: #907373;">)</span> 1<span style="color: #709870;">)</span><span style="color: #909183;">)</span>
+   k<span style="color: #7388d6;">)</span><span style="color: #707183;">)</span>
+</pre>
+</div>
+</div>
+</div>
+</div>
+
+<div id="outline-container-orgheadline67" class="outline-4">
+<h4 id="orgheadline67"><span class="todo TODO">TODO</span> <a href="http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-12.html#%_sec_1.3.4">1.3.4: Procedures as Returned Values</a></h4>
+<div class="outline-text-4" id="text-orgheadline67">
+</div><div id="outline-container-orgheadline60" class="outline-5">
+<h5 id="orgheadline60"><span class="todo TODO">TODO</span> <a href="http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-12.html#%_thm_1.40">Exercise 1.40</a></h5>
+</div>
+<div id="outline-container-orgheadline61" class="outline-5">
+<h5 id="orgheadline61"><span class="todo TODO">TODO</span> <a href="http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-12.html#%_thm_1.41">Exercise 1.41</a></h5>
+</div>
+<div id="outline-container-orgheadline62" class="outline-5">
+<h5 id="orgheadline62"><span class="todo TODO">TODO</span> <a href="http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-12.html#%_thm_1.42">Exercise 1.42</a></h5>
+</div>
+<div id="outline-container-orgheadline63" class="outline-5">
+<h5 id="orgheadline63"><span class="todo TODO">TODO</span> <a href="http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-12.html#%_thm_1.43">Exercise 1.43</a></h5>
+</div>
+<div id="outline-container-orgheadline64" class="outline-5">
+<h5 id="orgheadline64"><span class="todo TODO">TODO</span> <a href="http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-12.html#%_thm_1.44">Exercise 1.44</a></h5>
+</div>
+<div id="outline-container-orgheadline65" class="outline-5">
+<h5 id="orgheadline65"><span class="todo TODO">TODO</span> <a href="http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-12.html#%_thm_1.45">Exercise 1.45</a></h5>
+</div>
+<div id="outline-container-orgheadline66" class="outline-5">
+<h5 id="orgheadline66"><span class="todo TODO">TODO</span> <a href="http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-12.html#%_thm_1.46">Exercise 1.46</a></h5>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<p class="author">Author: Robert Irelan</p>
+<p class="email">Email: <a href="mailto:rirelan@gmail.com">rirelan@gmail.com</a></p>
+<p class="date">Created: 2015-08-28 Fri 08:19</p>
+<p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
+</div>
+</body>
+</html>
