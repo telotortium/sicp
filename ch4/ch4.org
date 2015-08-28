@@ -1244,14 +1244,14 @@ I'm going to try to do this with M-expressions.
      :Effort:   0:15
      :END:
 
-Redundant with [[Exercise 4.12]].
+Redundant with Exercise 4.12.
 
 **** DONE [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-26.html#%_thm_4.12][Exercise 4.12]]
      CLOCK: [2015-05-23 Sat 21:43]--[2015-05-23 Sat 22:30] =>  0:47
 
 Implement environment bindings as a list of name-value pairs (implemented as a
 list of two elements to allow for deleting a binding from an environment, see
-[[Exercise 4.13]]) instead of as a pair of lists:
+Exercise 4.13) instead of as a pair of lists:
 
 #+NAME: ex-4-12-environments
 #+BEGIN_SRC scheme
@@ -1405,7 +1405,7 @@ deleting a binding should also unbind that reference for the lifetime of the
 current frame. Mutations, on the other hand, don't affect references, but
 rather the value behind the reference.
 
-In [[Exercise 4.12]], I've used the data structure ~`(,var (,val))~ for each
+In Exercise 4.12, I've used the data structure ~`(,var (,val))~ for each
 binding rather than the simpler ~`(,var ,val)~ to enable deletions to shadow
 earlier bindings by adding a binding of the form
 ~`(,var the-unbound-sentinel)~ without causing ambiguity if ~val~ happens to be
