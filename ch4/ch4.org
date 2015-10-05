@@ -8,7 +8,7 @@
 
 * TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-25.html#%_chap_4][Chapter 4: Metalinguistic Abstraction]] [%]
 
-** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-26.html#%_sec_4.1][4.1: The Metacircular Evaluator]] [14%]
+** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-26.html#%_sec_4.1][4.1: The Metacircular Evaluator]] [28%]
    CLOCK: [2015-05-22 Fri 19:41]--[2015-05-22 Fri 21:17] =>  1:36
    - Note taken on [2015-02-01 Sun 19:22] \\
      We seem to have a working evaluator now.
@@ -25,89 +25,89 @@
 
 For convenience, put the entire metacircular interpreter here:
 
-#+BEGIN_SRC scheme :tangle interp-sec-4-1.scm
-  <<primitive-expressions>>
-  <<derived-expressions>>
-  <<evaluator-structs>>
-  <<evaluator-running>>
-  <<eval-sec-4-1>>
+#+BEGIN_SRC scheme
+<<primitive-expressions>>
+<<derived-expressions>>
+<<evaluator-structs>>
+<<evaluator-running>>
+<<eval-sec-4-1>>
 #+END_SRC
 
 - Main body of ~eval~:
 
   #+NAME: eval-sec-4-1
   #+BEGIN_SRC scheme
-    <<eval-sec-4-1-aux>>
-    (define (eval-4-1 exp env)
-      (cond ((self-evaluating? exp) exp)
-            ((boolean-object? exp) (make-boolean-object exp))
-            ((variable? exp) (lookup-variable-value exp env))
-            ((quoted? exp) (text-of-quotation exp))
-            ((assignment? exp) (eval-assignment exp env))
-            ((definition? exp) (eval-definition exp env))
-            ((if? exp) (eval-if exp env))
-            ((lambda? exp)
-             (make-procedure (lambda-parameters exp)
-                             (lambda-body exp)
-                             env))
-            ((begin? exp)
-             (eval-sequence (begin-actions exp) env))
-            ((cond? exp) (eval-4-1 (cond->if exp) env))
-            ((application? exp)
-             (apply-4-1 (eval-4-1 (operator exp) env)
-                        (list-of-values (operands exp) env)))
-            (else
-             (error "Unknown expression type -- EVAL" exp))))
+  <<eval-sec-4-1-aux>>
+  (define (eval-4-1 exp env)
+    (cond ((self-evaluating? exp) exp)
+          ((boolean-object? exp) (make-boolean-object exp))
+          ((variable? exp) (lookup-variable-value exp env))
+          ((quoted? exp) (text-of-quotation exp))
+          ((assignment? exp) (eval-assignment exp env))
+          ((definition? exp) (eval-definition exp env))
+          ((if? exp) (eval-if exp env))
+          ((lambda? exp)
+           (make-procedure (lambda-parameters exp)
+                           (lambda-body exp)
+                           env))
+          ((begin? exp)
+           (eval-sequence (begin-actions exp) env))
+          ((cond? exp) (eval-4-1 (cond->if exp) env))
+          ((application? exp)
+           (apply-4-1 (eval-4-1 (operator exp) env)
+                      (list-of-values (operands exp) env)))
+          (else
+           (error "Unknown expression type -- EVAL" exp))))
   #+END_SRC
 
 - Auxiliary procedures:
 
   #+NAME: eval-sec-4-1-aux
   #+BEGIN_SRC scheme
-    (define (apply-4-1 procedure arguments)
-      (cond ((primitive-procedure? procedure)
-             (apply-primitive-procedure procedure arguments))
-            ((compound-procedure? procedure)
-             (eval-sequence
-              (procedure-body procedure)
-              (extend-environment
-               (procedure-parameters procedure)
-               arguments
-               (procedure-environment procedure))))
-            (else
-             (error
-              "Unknown procedure type -- APPLY-4-1" procedure))))
+  (define (apply-4-1 procedure arguments)
+    (cond ((primitive-procedure? procedure)
+           (apply-primitive-procedure procedure arguments))
+          ((compound-procedure? procedure)
+           (eval-sequence
+            (procedure-body procedure)
+            (extend-environment
+             (procedure-parameters procedure)
+             arguments
+             (procedure-environment procedure))))
+          (else
+           (error
+            "Unknown procedure type -- APPLY-4-1" procedure))))
 
-    (define (list-of-values exps env)
-      (if (no-operands? exps)
-          '()
-          (cons (eval-4-1 (first-operand exps) env)
-                (list-of-values (rest-operands exps) env))))
+  (define (list-of-values exps env)
+    (if (no-operands? exps)
+        '()
+        (cons (eval-4-1 (first-operand exps) env)
+              (list-of-values (rest-operands exps) env))))
 
-    (define (eval-if exp env)
-      (if (true? (eval-4-1 (if-predicate exp) env))
-          (eval-4-1 (if-consequent exp) env)
-          (eval-4-1 (if-alternative exp) env)))
+  (define (eval-if exp env)
+    (if (true? (eval-4-1 (if-predicate exp) env))
+        (eval-4-1 (if-consequent exp) env)
+        (eval-4-1 (if-alternative exp) env)))
 
-    (define (eval-sequence exps env)
-      (cond ((last-exp? exps) (eval-4-1 (first-exp exps) env))
-            (else (eval-4-1 (first-exp exps) env)
-                  (eval-sequence (rest-exps exps) env))))
+  (define (eval-sequence exps env)
+    (cond ((last-exp? exps) (eval-4-1 (first-exp exps) env))
+          (else (eval-4-1 (first-exp exps) env)
+                (eval-sequence (rest-exps exps) env))))
 
-    <<ex-4-4-eval-and-or>>
-    <<ex-4-5-cond-recipient>>
+  <<ex-4-4-eval-and-or>>
+  <<ex-4-5-cond-recipient>>
 
-    (define (eval-assignment exp env)
-      (set-variable-value! (assignment-variable exp)
-                           (eval-4-1 (assignment-value exp) env)
-                           env)
-      'ok)
+  (define (eval-assignment exp env)
+    (set-variable-value! (assignment-variable exp)
+                         (eval-4-1 (assignment-value exp) env)
+                         env)
+    'ok)
 
-    (define (eval-definition exp env)
-      (define-variable! (definition-variable exp)
-        (eval-4-1 (definition-value exp) env)
-        env)
-      'ok)
+  (define (eval-definition exp env)
+    (define-variable! (definition-variable exp)
+      (eval-4-1 (definition-value exp) env)
+      env)
+    'ok)
   #+END_SRC
 
 *** DONE [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-26.html#%_sec_4.1.1][4.1.1: The Core of the Evaluator]] [2/2]
@@ -142,7 +142,7 @@ To guarantee the order of execution, one can take advantage of the fact
 that the ~begin~ form is guaranteed to evaluate its arguments in order to
 write both an explicitly left-to-right version
 
-#+BEGIN_SRC scheme :tangle ex-4-1-ltr.scm
+#+BEGIN_SRC scheme
 (define (list-of-values exps env)
 (if (no-operands? exps)
     '()
@@ -156,7 +156,7 @@ write both an explicitly left-to-right version
 
 and a right-to-left version:
 
-#+BEGIN_SRC scheme :tangle ex-4-1-rtl.scm
+#+BEGIN_SRC scheme
 (define (list-of-values exps env)
 (if (no-operands? exps)
     '()
@@ -170,26 +170,26 @@ and a right-to-left version:
 
 Test to confirm:
 
-#+BEGIN_SRC scheme :tangle ex-4-1-test.scm
-  (include "interp-sec-4-1")
-  (use test)
+#+BEGIN_SRC scheme
+(include "interp-sec-4-1")
+(use test)
 
-  ;; Override EVAL for ease of testing
-  (define *test-list* '())
-  (define eval-4-1
-    (lambda (expr env)
-      (set! *test-list* (append *test-list* (list expr)))))
-  (define input-list '(0 1 2 3 4 5))
+;; Override EVAL for ease of testing
+(define *test-list* '())
+(define eval-4-1
+  (lambda (expr env)
+    (set! *test-list* (append *test-list* (list expr)))))
+(define input-list '(0 1 2 3 4 5))
 
-  (include "ex-4-1-ltr")
-  (set! *test-list* '())
-  (list-of-values input-list '())
-  (test '(0 1 2 3 4 5) *test-list*)
+(include "ex-4-1-ltr")
+(set! *test-list* '())
+(list-of-values input-list '())
+(test '(0 1 2 3 4 5) *test-list*)
 
-  (include "ex-4-1-rtl")
-  (set! *test-list* '())
-  (list-of-values input-list '())
-  (test '(5 4 3 2 1 0) *test-list*)
+(include "ex-4-1-rtl")
+(set! *test-list* '())
+(list-of-values input-list '())
+(test '(5 4 3 2 1 0) *test-list*)
 #+END_SRC
 
      :PROPERTIES:
@@ -208,100 +208,100 @@ the text:
 
   #+NAME: primitive-expressions
   #+BEGIN_SRC scheme
-    <<self-evaluating>>
-    <<booleans>>
-    <<variables>>
-    <<quotations>>
-    <<assignments>>
-    <<definitions>>
-    <<lambda-expressions>>
-    <<conditionals>>
-    <<sequences>>
-    <<procedure-application>>
+  <<self-evaluating>>
+  <<booleans>>
+  <<variables>>
+  <<quotations>>
+  <<assignments>>
+  <<definitions>>
+  <<lambda-expressions>>
+  <<conditionals>>
+  <<sequences>>
+  <<procedure-application>>
   #+END_SRC
 
 - Self-evaluating items:
 
   #+NAME: self-evaluating
   #+BEGIN_SRC scheme
-    (define (self-evaluating? exp)
-      (cond ((number? exp) #t)
-            ((string? exp) #t)
-            ((boolean? exp) #t)
-            (else #f)))
+  (define (self-evaluating? exp)
+    (cond ((number? exp) #t)
+          ((string? exp) #t)
+          ((boolean? exp) #t)
+          (else #f)))
   #+END_SRC
 
 - Boolean:
 
   #+NAME: booleans
   #+BEGIN_SRC scheme
-    (define (boolean-object? exp)
-      (or (eq? exp #t) (eq? exp #f)))
-    (define (make-boolean-object exp)
-      (cond ((eq? exp #t) true)
-            ((eq? exp #f) false)
-            (else (error "MAKE-BOOLEAN -- passed non-boolean"))))
+  (define (boolean-object? exp)
+    (or (eq? exp #t) (eq? exp #f)))
+  (define (make-boolean-object exp)
+    (cond ((eq? exp #t) true)
+          ((eq? exp #f) false)
+          (else (error "MAKE-BOOLEAN -- passed non-boolean"))))
   #+END_SRC
 
 - Variables:
 
   #+NAME: variables
   #+BEGIN_SRC scheme
-    (define (variable? exp) (symbol? exp))
+  (define (variable? exp) (symbol? exp))
   #+END_SRC
 
 - Quotations:
 
   #+NAME: quotations
   #+BEGIN_SRC scheme
-    (define (quoted? exp)
-      (tagged-list? exp 'quote))
+  (define (quoted? exp)
+    (tagged-list? exp 'quote))
 
-    (define (text-of-quotation exp) (cadr exp))
+  (define (text-of-quotation exp) (cadr exp))
 
-    (define (tagged-list? exp tag)
-      (if (pair? exp)
-          (eq? (car exp) tag)
-          #f))
+  (define (tagged-list? exp tag)
+    (if (pair? exp)
+        (eq? (car exp) tag)
+        #f))
   #+END_SRC
 
 - Assignments:
 
   #+NAME: assignments
   #+BEGIN_SRC scheme
-    (define (assignment? exp)
-      (tagged-list? exp 'set!))
-    (define (assignment-variable exp) (cadr exp))
-    (define (assignment-value exp) (caddr exp))
+  (define (assignment? exp)
+    (tagged-list? exp 'set!))
+  (define (assignment-variable exp) (cadr exp))
+  (define (assignment-value exp) (caddr exp))
   #+END_SRC
 
   - Definitions:
 
   #+NAME: definitions
   #+BEGIN_SRC scheme
-    (define (definition? exp)
-      (tagged-list? exp 'define))
-    (define (definition-variable exp)
-      (if (symbol? (cadr exp))
-          (cadr exp)
-          (caadr exp)))
-    (define (definition-value exp)
-      (if (symbol? (cadr exp))
-          (caddr exp)
-          (make-lambda (cdadr exp)   ; formal parameters
-                       (cddr exp)))) ; body
+  (define (definition? exp)
+    (tagged-list? exp 'define))
+  (define (definition-variable exp)
+    (if (symbol? (cadr exp))
+        (cadr exp)
+        (caadr exp)))
+  (define (definition-value exp)
+    (if (symbol? (cadr exp))
+        (caddr exp)
+        (make-lambda (cdadr exp)   ; formal parameters
+                     (cddr exp)))) ; body
   #+END_SRC
 
   - Lambda expressions:
 
   #+NAME: lambda-expressions
   #+BEGIN_SRC scheme
-    (define (lambda? exp) (tagged-list? exp 'lambda))
-    (define (lambda-parameters exp) (cadr exp))
-    (define (lambda-body exp) (cddr exp))
+  (define (lambda? exp) (tagged-list? exp 'lambda))
+  (define (lambda-parameters exp) (cadr exp))
+  (define (lambda-body exp) (cddr exp))
 
-    (define (make-lambda parameters body)
-      (cons 'lambda (cons parameters body)))
+  (define (make-lambda parameters body)
+    (cons 'lambda (cons parameters body)))
 
   #+END_SRC
 
@@ -309,97 +309,97 @@ the text:
 
   #+NAME: conditionals
   #+BEGIN_SRC scheme
-    (define (if? exp) (tagged-list? exp 'if))
-    (define (if-predicate exp) (cadr exp))
-    (define (if-consequent exp) (caddr exp))
-    (define (if-alternative exp)
-      (if (not (null? (cdddr exp)))
-          (cadddr exp)
-          'false))
+  (define (if? exp) (tagged-list? exp 'if))
+  (define (if-predicate exp) (cadr exp))
+  (define (if-consequent exp) (caddr exp))
+  (define (if-alternative exp)
+    (if (not (null? (cdddr exp)))
+        (cadddr exp)
+        'false))
 
-    (define (make-if predicate consequent alternative)
-      (list 'if predicate consequent alternative))
+  (define (make-if predicate consequent alternative)
+    (list 'if predicate consequent alternative))
   #+END_SRC
 
 - Sequences:
 
   #+NAME: sequences
   #+BEGIN_SRC scheme
-    (define (begin? exp) (tagged-list? exp 'begin))
-    (define (begin-actions exp) (cdr exp))
-    (define (last-exp? seq) (null? (cdr seq)))
-    (define (first-exp seq) (car seq))
-    (define (rest-exps seq) (cdr seq))
+  (define (begin? exp) (tagged-list? exp 'begin))
+  (define (begin-actions exp) (cdr exp))
+  (define (last-exp? seq) (null? (cdr seq)))
+  (define (first-exp seq) (car seq))
+  (define (rest-exps seq) (cdr seq))
 
-    (define (sequence->exp seq)
-      (cond ((null? seq) seq)
-            ((last-exp? seq) (first-exp seq))
-            (else (make-begin seq))))
-    (define (make-begin seq) (cons 'begin seq))
+  (define (sequence->exp seq)
+    (cond ((null? seq) seq)
+          ((last-exp? seq) (first-exp seq))
+          (else (make-begin seq))))
+  (define (make-begin seq) (cons 'begin seq))
   #+END_SRC
 
 - Procedure application:
 
   #+NAME: procedure-application
   #+BEGIN_SRC scheme
-    (define (application? exp) (pair? exp))
-    (define (operator exp) (car exp))
-    (define (operands exp) (cdr exp))
-    (define (no-operands? ops) (null? ops))
-    (define (first-operand ops) (car ops))
-    (define (rest-operands ops) (cdr ops))
+  (define (application? exp) (pair? exp))
+  (define (operator exp) (car exp))
+  (define (operands exp) (cdr exp))
+  (define (no-operands? ops) (null? ops))
+  (define (first-operand ops) (car ops))
+  (define (rest-operands ops) (cdr ops))
   #+END_SRC
 
   - Derived expressions:
 
   #+NAME: derived-expressions
   #+BEGIN_SRC scheme
-    <<derived-expressions-cond>>
-    <<derived-expressions-let>>
-    <<derived-expressions-while>>
+  <<derived-expressions-cond>>
+  <<derived-expressions-let>>
+  <<derived-expressions-while>>
   #+END_SRC
 
     - ~cond~:
 
     #+NAME: derived-expressions-cond
     #+BEGIN_SRC scheme
-      (define (cond? exp) (tagged-list? exp 'cond))
-      (define (cond-clauses exp) (cdr exp))
-      (define (cond-else-clause? clause)
-        (eq? (cond-predicate clause) 'else))
-      (define (cond-predicate clause) (car clause))
-      (define (cond-actions clause) (cdr clause))
-      (define (cond->if exp)
-        (expand-clauses (cond-clauses exp)))
+    (define (cond? exp) (tagged-list? exp 'cond))
+    (define (cond-clauses exp) (cdr exp))
+    (define (cond-else-clause? clause)
+      (eq? (cond-predicate clause) 'else))
+    (define (cond-predicate clause) (car clause))
+    (define (cond-actions clause) (cdr clause))
+    (define (cond->if exp)
+      (expand-clauses (cond-clauses exp)))
 
-      (define (expand-clauses clauses)
-        (if (null? clauses)
-            'false                          ; no else clause
-            (let ((first (car clauses))
-                  (rest (cdr clauses)))
-              (if (cond-else-clause? first)
-                  (if (null? rest)
-                      (sequence->exp (cond-actions first))
-                      (error "ELSE clause isn't last -- COND->IF"
-                             clauses))
-                  (make-if (cond-predicate first)
-                           (sequence->exp (cond-actions first))
-                           (expand-clauses rest))))))
+    (define (expand-clauses clauses)
+      (if (null? clauses)
+          'false                          ; no else clause
+          (let ((first (car clauses))
+                (rest (cdr clauses)))
+            (if (cond-else-clause? first)
+                (if (null? rest)
+                    (sequence->exp (cond-actions first))
+                    (error "ELSE clause isn't last -- COND->IF"
+                           clauses))
+                (make-if (cond-predicate first)
+                         (sequence->exp (cond-actions first))
+                         (expand-clauses rest))))))
     #+END_SRC
 
     - ~let~:
 
     #+NAME: derived-expressions-let
     #+BEGIN_SRC scheme
-      <<ex-4-7-let-star>>
-      <<ex-4-8-let-named>>
+    <<ex-4-7-let-star>>
+    <<ex-4-8-let-named>>
     #+END_SRC
 
     - ~while~:
 
     #+NAME: derived-expressions-while
     #+BEGIN_SRC scheme
-      <<ex-4-9-while>>
+    <<ex-4-9-while>>
     #+END_SRC
 
 **** DONE Read SICP 4.1.2
@@ -427,11 +427,11 @@ way to do this is to denote procedure application by the special form
 interpreter:
 
   #+BEGIN_SRC scheme
-    (define (application? exp)
-      (and (pair? exp)
-           (tagged-list? exp 'call)))
-    (define (operator exp) (cadr exp))
-    (define (operands exp) (cddr exp))
+  (define (application? exp)
+    (and (pair? exp)
+         (tagged-list? exp 'call)))
+  (define (operator exp) (cadr exp))
+  (define (operands exp) (cddr exp))
   #+END_SRC
 
   :PROPERTIES:
@@ -442,70 +442,70 @@ interpreter:
      CLOCK: [2015-02-01 Sun 16:45]--[2015-02-01 Sun 17:12] =>  0:27
      CLOCK: [2015-01-10 Sat 18:41]--[2015-01-10 Sat 19:18] =>  0:37
 
-     #+BEGIN_SRC scheme :tangle symbol-table.scm
-       (use srfi-69)                           ; Import hash table procs
-       (define (put table op type proc)
-         (hash-table-set! table (cons op type) proc))
-       (define (get table op type)
-         (hash-table-ref/default table (cons op type) '()))
+     #+BEGIN_SRC scheme
+     (use srfi-69)                           ; Import hash table procs
+     (define (put table op type proc)
+       (hash-table-set! table (cons op type) proc))
+     (define (get table op type)
+       (hash-table-ref/default table (cons op type) '()))
      #+END_SRC
 
-     #+BEGIN_SRC scheme :tangle ex-4-3.scm
-       <<primitive-expressions>>
-       <<derived-expressions>>
-       <<evaluator-structs>>
-       <<evaluator-running>>
-       <<eval-sec-4-1-aux>>
+     #+BEGIN_SRC scheme
+     <<primitive-expressions>>
+     <<derived-expressions>>
+     <<evaluator-structs>>
+     <<evaluator-running>>
+     <<eval-sec-4-1-aux>>
 
-       (include "symbol-table")
-       (define *eval-4-1-op-table* (make-parameter (make-hash-table equal?)))
-       (define (eval-4-1-get type)
-         (get (*eval-4-1-op-table*) 'eval type))
-       (define (eval-4-1-put type proc)
-         (put (*eval-4-1-op-table*) 'eval type proc))
+     (include "symbol-table")
+     (define *eval-4-1-op-table* (make-parameter (make-hash-table equal?)))
+     (define (eval-4-1-get type)
+       (get (*eval-4-1-op-table*) 'eval type))
+     (define (eval-4-1-put type proc)
+       (put (*eval-4-1-op-table*) 'eval type proc))
 
-       (define (eval-4-1 exp env)
-         (cond ((self-evaluating? exp) exp)
-               ((variable? exp) (lookup-variable-value exp env))
-               (else (let ((method (eval-4-1-get (car exp))))
-                       (cond ((not (null? method))
-                              (method exp env))
-                             ((application? exp)
-                              (apply-4-1 (eval-4-1 (operator exp) env)
-                                         (list-of-values (operands exp) env)))
-                             (else
-                              (error "Unknown expression type: EVAL" exp)))))))
+     (define (eval-4-1 exp env)
+       (cond ((self-evaluating? exp) exp)
+             ((variable? exp) (lookup-variable-value exp env))
+             (else (let ((method (eval-4-1-get (car exp))))
+                     (cond ((not (null? method))
+                            (method exp env))
+                           ((application? exp)
+                            (apply-4-1 (eval-4-1 (operator exp) env)
+                                       (list-of-values (operands exp) env)))
+                           (else
+                            (error "Unknown expression type: EVAL" exp)))))))
 
-       (eval-4-1-put 'quote
-                     (lambda (exp env)
-                       (text-of-quotation exp)))
-       (eval-4-1-put 'set!
-                     (lambda (exp env)
-                       (eval-assignment exp env)))
-       (eval-4-1-put 'define
-                     (lambda (exp env)
-                       (eval-definition exp env)))
-       (eval-4-1-put 'if
-                     (lambda (exp env)
-                       (eval-if exp env)))
-       (eval-4-1-put 'lambda
-                     (lambda (exp env)
-                       (make-procedure (lambda-parameters exp)
-                                       (lambda-body exp)
-                                       env)))
-       (eval-4-1-put 'begin
-                     (lambda (exp env)
-                       (eval-sequence (begin-actions exp) env)))
-       (eval-4-1-put 'cond
-                     (lambda (exp env)
-                       (eval-4-1 (cond->if exp) env)))
+     (eval-4-1-put 'quote
+                   (lambda (exp env)
+                     (text-of-quotation exp)))
+     (eval-4-1-put 'set!
+                   (lambda (exp env)
+                     (eval-assignment exp env)))
+     (eval-4-1-put 'define
+                   (lambda (exp env)
+                     (eval-definition exp env)))
+     (eval-4-1-put 'if
+                   (lambda (exp env)
+                     (eval-if exp env)))
+     (eval-4-1-put 'lambda
+                   (lambda (exp env)
+                     (make-procedure (lambda-parameters exp)
+                                     (lambda-body exp)
+                                     env)))
+     (eval-4-1-put 'begin
+                   (lambda (exp env)
+                     (eval-sequence (begin-actions exp) env)))
+     (eval-4-1-put 'cond
+                   (lambda (exp env)
+                     (eval-4-1 (cond->if exp) env)))
 
-       <<ex-4-4-eval-and-or-dispatch>>
-       <<ex-4-5-cond-recipient-dispatch>>
-       <<ex-4-7-let-star-dispatch>>
-       <<ex-4-8-let-named-dispatch>>
-       <<ex-4-9-while-dispatch>>
-       <<ex-4-13-make-unbound-dispatch>>
+     <<ex-4-4-eval-and-or-dispatch>>
+     <<ex-4-5-cond-recipient-dispatch>>
+     <<ex-4-7-let-star-dispatch>>
+     <<ex-4-8-let-named-dispatch>>
+     <<ex-4-9-while-dispatch>>
+     <<ex-4-13-make-unbound-dispatch>>
      #+END_SRC
 
      :PROPERTIES:
@@ -519,41 +519,41 @@ We implement these short-circuiting special forms by iterating down the list:
 
 #+NAME: ex-4-4-eval-and-or
 #+BEGIN_SRC scheme
-  (define (eval-and exps env)
-    (if (null? exps)
-        true
-        (let ((first (first-exp exps)))
-             (cond ((last-exp? exps) (eval-4-1 first env))
-                   ((not (true? first)) false)
-                   (else (eval-and (rest-exps exps) env))))))
+(define (eval-and exps env)
+  (if (null? exps)
+      true
+      (let ((first (first-exp exps)))
+           (cond ((last-exp? exps) (eval-4-1 first env))
+                 ((not (true? first)) false)
+                 (else (eval-and (rest-exps exps) env))))))
 
-  (define (eval-or exps env)
-    (if (null? exps)
-        false
-        (let ((first (first-exp exps)))
-             (cond ((true? first) first)
-                   (else (eval-or (rest-exps exps) env))))))
+(define (eval-or exps env)
+  (if (null? exps)
+      false
+      (let ((first (first-exp exps)))
+           (cond ((true? first) first)
+                 (else (eval-or (rest-exps exps) env))))))
 #+END_SRC
 
 Just add them to the data-dispatch interpreter like so:
 
 #+NAME: ex-4-4-eval-and-or-dispatch
 #+BEGIN_SRC scheme
-  (eval-4-1-put 'and
-                (lambda (exp env)
-                  (eval-and exp env)))
-  (eval-4-1-put 'or
-                (lambda (exp env)
-                  (eval-or exp env)))
+(eval-4-1-put 'and
+              (lambda (exp env)
+                (eval-and exp env)))
+(eval-4-1-put 'or
+              (lambda (exp env)
+                (eval-or exp env)))
 #+END_SRC
 
 Here's a short test to ensure that they work:
 
-#+BEGIN_SRC scheme :tangle ex-4-4-test.scm
-  (include "ex-4-3")
-  (use test)
+#+BEGIN_SRC scheme
+(include "ex-4-3")
+(use test)
 
-  (test #t (eval-4-1 '(and) '()))
+(test #t (eval-4-1 '(and) '()))
 #+END_SRC
 
      :PROPERTIES:
@@ -566,9 +566,9 @@ Let's desugar ~cond~ expressions. The ordinary ~cond~ can be desugared to a
 chain of if-elses:
 
 #+BEGIN_SRC scheme
-  (cond (a b) (c d) (else e)
-        ;; Equivalent to (if a b (if c d e))
-        )
+(cond (a b) (c d) (else e)
+      ;; Equivalent to (if a b (if c d e))
+      )
 #+END_SRC
 
 The ~cond~ with recipient is a little more complex. The result of evaluating
@@ -581,10 +581,10 @@ is lexically scoped, the bindings in the lambda will not shadow any bindings
 inside the arguments:
 
 #+BEGIN_SRC scheme
-  (cond (a => proc) (else b)
-        ;; Equivalent to (if a (proc a) b)
-        ;; Equivalent to ((lambda (x y p) (if x (p x) y)) a b proc)
-        )
+(cond (a => proc) (else b)
+      ;; Equivalent to (if a (proc a) b)
+      ;; Equivalent to ((lambda (x y p) (if x (p x) y)) a b proc)
+      )
 #+END_SRC
 
 With this realization, it's possible to transform this extended form of ~cond~
@@ -592,42 +592,42 @@ into a chain of ~if~ statements without using the environment.
 
 #+NAME: ex-4-5-cond-recipient
 #+BEGIN_SRC scheme
-  (define (cond? exp) (tagged-list? exp 'cond))
-  (define (cond-clauses exp) (cdr exp))
-  (define (cond-else-clause? clause)
-    (eq? (cond-predicate clause) 'else))
-  (define (cond-recipient-clause? clause)
-    (eq? (cadr clause) '=>))
-  (define (cond-predicate clause) (car clause))
-  (define (cond-actions clause) (cdr clause))
-  (define (cond->if exp)
-    (expand-clauses (cond-clauses exp)))
+(define (cond? exp) (tagged-list? exp 'cond))
+(define (cond-clauses exp) (cdr exp))
+(define (cond-else-clause? clause)
+  (eq? (cond-predicate clause) 'else))
+(define (cond-recipient-clause? clause)
+  (eq? (cadr clause) '=>))
+(define (cond-predicate clause) (car clause))
+(define (cond-actions clause) (cdr clause))
+(define (cond->if exp)
+  (expand-clauses (cond-clauses exp)))
 
-  (define (expand-clauses clauses)
-    (if (null? clauses)
-        'false                          ; no else clause
-        (let ((first (car clauses))
-              (rest (cdr clauses)))
-          (cond ((cond-else-clause? first)
-                 (if (null? rest)
-                     (sequence->exp (cond-actions first))
-                     (error "ELSE clause isn't last -- COND->IF"
-                            clauses)))
-                ((cond-recipient-clause? first)
-                 `(,(make-lambda
-                     '(test recipient alternate)
-                     `(,(make-if 'test '(recipient test) 'alternate)))
-                   ,(car first) ,(caddr first) ,(expand-clauses rest)))
-                (else (make-if (cond-predicate first)
-                               (sequence->exp (cond-actions first))
-                               (expand-clauses rest)))))))
+(define (expand-clauses clauses)
+  (if (null? clauses)
+      'false                          ; no else clause
+      (let ((first (car clauses))
+            (rest (cdr clauses)))
+        (cond ((cond-else-clause? first)
+               (if (null? rest)
+                   (sequence->exp (cond-actions first))
+                   (error "ELSE clause isn't last -- COND->IF"
+                          clauses)))
+              ((cond-recipient-clause? first)
+               `(,(make-lambda
+                   '(test recipient alternate)
+                   `(,(make-if 'test '(recipient test) 'alternate)))
+                 ,(car first) ,(caddr first) ,(expand-clauses rest)))
+              (else (make-if (cond-predicate first)
+                             (sequence->exp (cond-actions first))
+                             (expand-clauses rest)))))))
 #+END_SRC
 
 #+NAME: ex-4-5-cond-recipient-dispatch
 #+BEGIN_SRC scheme
-  (eval-4-1-put 'cond
-                (lambda (exp env)
-                  (cond->if exp)))
+(eval-4-1-put 'cond
+              (lambda (exp env)
+                (cond->if exp)))
 #+END_SRC
 
      :PROPERTIES:
@@ -638,42 +638,42 @@ into a chain of ~if~ statements without using the environment.
 
 #+NAME: ex-4-6-let
 #+BEGIN_SRC scheme
-  (use srfi-1)
+(use srfi-1)
 
-  (define (let->combination exp)
-    (let* ((clauses (cdr exp))
-           (bindings (car clauses))
-           (body (cdr clauses)))
-      (let* (
-             ;; Partition list of bindings ((a 1) (b 2) ...) into a pair of a
-             ;; parameter list and an argument list ((a b ...) . (1 2 ...)).
-             (res (fold-right
-                   (lambda (e ls)
-                     (cons
-                      (cons (car e) (car ls))
-                      (cons (cadr e) (cdr ls))))
-                   '(() . ())
-                   bindings))
-             (params (car res))
-             (args (cdr res)))
-        `(,(make-lambda params body)
-          ,@args))))
+(define (let->combination exp)
+  (let* ((clauses (cdr exp))
+         (bindings (car clauses))
+         (body (cdr clauses)))
+    (let* (
+           ;; Partition list of bindings ((a 1) (b 2) ...) into a pair of a
+           ;; parameter list and an argument list ((a b ...) . (1 2 ...)).
+           (res (fold-right
+                 (lambda (e ls)
+                   (cons
+                    (cons (car e) (car ls))
+                    (cons (cadr e) (cdr ls))))
+                 '(() . ())
+                 bindings))
+           (params (car res))
+           (args (cdr res)))
+      `(,(make-lambda params body)
+        ,@args))))
 #+END_SRC
 
 #+NAME: ex-4-6-let-dispatch
 #+BEGIN_SRC scheme
-  (eval-4-1-put 'let
-                (lambda (exp env)
-                  (eval-4-1 (let->combination exp) env)))
+(eval-4-1-put 'let
+              (lambda (exp env)
+                (eval-4-1 (let->combination exp) env)))
 #+END_SRC
 
-#+BEGIN_SRC scheme :tangle ex-4-6-test.scm
-  (include "ex-4-3")
-  (use test)
+#+BEGIN_SRC scheme
+(include "ex-4-3")
+(use test)
 
-  (test-group "test-4-6"
-              (test 5
-                    (eval-4-1 '(let ((x 2)) (+ x 3)) (setup-environment))))
+(test-group "test-4-6"
+            (test 5
+                  (eval-4-1 '(let ((x 2)) (+ x 3)) (setup-environment))))
 #+END_SRC
 
      :PROPERTIES:
@@ -684,45 +684,45 @@ into a chain of ~if~ statements without using the environment.
 
 #+NAME: ex-4-7-let-star
 #+BEGIN_SRC scheme
-  (use srfi-1)
+(use srfi-1)
 
-  (define (let*->nested-lets exp)
-    (let* ((clauses (cdr exp))
-           (bindings (car clauses))
-           (body (cdr clauses)))
-      ;; The let expressions must be wrapped in parentheses, while the body must
-      ;; be spliced into the innermost let clause. However, the recursion below
-      ;; doesn't allow the body to be spliced in, since that would require
-      ;; looking ahead past the current binding. So we wrap the generated let
-      ;; expressions in an extra pair of parentheses and splice in all results of
-      ;; ITER, making BODY spliced in but the LET expressions still wrapped in
-      ;; parentheses at the end. Finally, we need to remove the outermost layer
-      ;; of parentheses with the CAR.
-      (car
-       (let iter ((bindings bindings))
-         (if (null? bindings)
-             body
-             `((let ((,(caar bindings) ,(cadar bindings)))
-                 ,@(iter (cdr bindings)))))))))
+(define (let*->nested-lets exp)
+  (let* ((clauses (cdr exp))
+         (bindings (car clauses))
+         (body (cdr clauses)))
+    ;; The let expressions must be wrapped in parentheses, while the body must
+    ;; be spliced into the innermost let clause. However, the recursion below
+    ;; doesn't allow the body to be spliced in, since that would require
+    ;; looking ahead past the current binding. So we wrap the generated let
+    ;; expressions in an extra pair of parentheses and splice in all results of
+    ;; ITER, making BODY spliced in but the LET expressions still wrapped in
+    ;; parentheses at the end. Finally, we need to remove the outermost layer
+    ;; of parentheses with the CAR.
+    (car
+     (let iter ((bindings bindings))
+       (if (null? bindings)
+           body
+           `((let ((,(caar bindings) ,(cadar bindings)))
+               ,@(iter (cdr bindings)))))))))
 #+END_SRC
 
 #+NAME: ex-4-7-let-star-dispatch
 #+BEGIN_SRC scheme
-  (eval-4-1-put 'let*
-                (lambda (exp env)
-                  (eval-4-1 (let*->nested-lets exp) env)))
+(eval-4-1-put 'let*
+              (lambda (exp env)
+                (eval-4-1 (let*->nested-lets exp) env)))
 #+END_SRC
 
-#+BEGIN_SRC scheme :tangle ex-4-7-test.scm
-  (include "ex-4-3")
-  (use test)
+#+BEGIN_SRC scheme
+(include "ex-4-3")
+(use test)
 
-  (test-group "test-4-7"
-              (test 9
-                    (eval-4-1 '(let* ((x 2)
-                                      (y (+ x 3)))
-                                 (+ y 4))
-                              (setup-environment))))
+(test-group "test-4-7"
+            (test 9
+                  (eval-4-1 '(let* ((x 2)
+                                    (y (+ x 3)))
+                               (+ y 4))
+                            (setup-environment))))
 #+END_SRC
      :PROPERTIES:
      :Effort:   0:15
@@ -732,9 +732,9 @@ into a chain of ~if~ statements without using the environment.
 Let's try an example transformation:
 
 #+BEGIN_SRC scheme
-  (let f ((a b) (c d)) e
-       ;; Equivalent to (lambda () (define (f a c) e) (f b d))
-       )
+(let f ((a b) (c d)) e
+     ;; Equivalent to (lambda () (define (f a c) e) (f b d))
+     )
 #+END_SRC
 
 However, that uses ~define~, which has to manipulate the symbol table. It would
@@ -744,102 +744,102 @@ the recursing function. First we do an implementation for a function of one
 argument:
 
 #+BEGIN_SRC scheme
-  (use test)
+(use test)
 
-  ;;; With names to illustrate what's going on.
-  (define (fix f)
-    (lambda (x)
-      (f (fix f) x)))
-  (define (factabs fact x)
-    (if (= x 0)
-        1
-        (* x (fact (- x 1)))))
-  (test 120 ((fix factabs) 5))
+;;; With names to illustrate what's going on.
+(define (fix f)
+  (lambda (x)
+    (f (fix f) x)))
+(define (factabs fact x)
+  (if (= x 0)
+      1
+      (* x (fact (- x 1)))))
+(test 120 ((fix factabs) 5))
 
-  ;;; Now purely with lambdas
-  ;; Y-combinator
+;;; Now purely with lambdas
+;; Y-combinator
+(lambda (f)
+  ((lambda (x)
+     (f (x x)))
+   (lambda (x)
+     (f (x x)))))
+
+(test
+ 120
+ (
+  ;; FIX
   (lambda (f)
-    ((lambda (x)
-       (f (x x)))
-     (lambda (x)
-       (f (x x)))))
-
-  (test
-   120
-   (
-    ;; FIX
-    (lambda (f)
-      (lambda (x)
-        (f ())))
-    5))
+    (lambda (x)
+      (f ())))
+  5))
 #+END_SRC
 
 #+NAME: ex-4-8-let-named
 #+BEGIN_SRC scheme
-  (use srfi-1)
+(use srfi-1)
 
-  (define (let->combination exp)
-    (let* ((proc (if (symbol? (cadr exp))
-                     (cadr exp)
-                     #f))
-           (clauses (if (symbol? (cadr exp))
-                        (cddr exp)
-                        (cdr exp)))
-           (bindings (car clauses))
-           (body (cdr clauses)))
-      (let* (
-             ;; Partition list of bindings ((a 1) (b 2) ...) into a pair of a
-             ;; parameter list and an argument list ((a b ...) . (1 2 ...)).
-             (res (fold-right
-                   (lambda (e ls)
-                     (cons
-                      (cons (car e) (car ls))
-                      (cons (cadr e) (cdr ls))))
-                   '(() . ())
-                   bindings))
-             (params (car res))
-             (args (cdr res)))
-        (if proc
-            `((lambda ()
-                (define (,proc ,@params) ,@body)
-                (,proc ,@args)))
-            `((lambda ,params ,@body)
-              ,@args)))))
+(define (let->combination exp)
+  (let* ((proc (if (symbol? (cadr exp))
+                   (cadr exp)
+                   #f))
+         (clauses (if (symbol? (cadr exp))
+                      (cddr exp)
+                      (cdr exp)))
+         (bindings (car clauses))
+         (body (cdr clauses)))
+    (let* (
+           ;; Partition list of bindings ((a 1) (b 2) ...) into a pair of a
+           ;; parameter list and an argument list ((a b ...) . (1 2 ...)).
+           (res (fold-right
+                 (lambda (e ls)
+                   (cons
+                    (cons (car e) (car ls))
+                    (cons (cadr e) (cdr ls))))
+                 '(() . ())
+                 bindings))
+           (params (car res))
+           (args (cdr res)))
+      (if proc
+          `((lambda ()
+              (define (,proc ,@params) ,@body)
+              (,proc ,@args)))
+          `((lambda ,params ,@body)
+            ,@args)))))
 #+END_SRC
 
 #+NAME: ex-4-8-let-named-dispatch
 #+BEGIN_SRC scheme
-  (eval-4-1-put 'let
-                (lambda (exp env)
-                  (eval-4-1 (let->combination exp) env)))
+(eval-4-1-put 'let
+              (lambda (exp env)
+                (eval-4-1 (let->combination exp) env)))
 #+END_SRC
 
-#+BEGIN_SRC scheme :tangle ex-4-8-test.scm
-  (include "ex-4-3")
-  (use test)
+#+BEGIN_SRC scheme
+(include "ex-4-3")
+(use test)
 
-  (test-group "test-4-8"
-              (test 5
-                    (eval-4-1 '(let ((x 2)) (+ x 3)) (setup-environment)))
-              (test 21
-                    (eval-4-1
-                     '(let fib-iter ((a 1)
+(test-group "test-4-8"
+            (test 5
+                  (eval-4-1 '(let ((x 2)) (+ x 3)) (setup-environment)))
+            (test 21
+                  (eval-4-1
+                   '(let fib-iter ((a 1)
+                                   (b 0)
+                                   (count 8))
+                      (if (= count 0)
+                          b
+                          (fib-iter (+ a b) a (- count 1))))
+                   (setup-environment)))
+            (test 21
+                  (eval-4-1
+                   '(let ((n 8))
+                      (let fib-iter ((a 1)
                                      (b 0)
-                                     (count 8))
+                                     (count n))
                         (if (= count 0)
                             b
-                            (fib-iter (+ a b) a (- count 1))))
-                     (setup-environment)))
-              (test 21
-                    (eval-4-1
-                     '(let ((n 8))
-                        (let fib-iter ((a 1)
-                                       (b 0)
-                                       (count n))
-                          (if (= count 0)
-                              b
-                              (fib-iter (+ a b) a (- count 1)))))
-                     (setup-environment))))
+                            (fib-iter (+ a b) a (- count 1)))))
+                   (setup-environment))))
 #+END_SRC
 
      CLOCK: [2015-05-23 Sat 16:47]--[2015-05-23 Sat 18:05] =>  1:18
@@ -856,46 +856,46 @@ argument:
      CLOCK: [2015-05-23 Sat 18:05]--[2015-05-23 Sat 18:11] =>  0:06
 
 #+BEGIN_SRC scheme
-  (while p b
-         ;; Equivalent to (let foo ((p (lambda () p)) (b (lambda () b)) (if (not
-         ;; (p)) #f (b) (foo p b)))
-         )
+(while p b
+       ;; Equivalent to (let foo ((p (lambda () p)) (b (lambda () b)) (if (not
+       ;; (p)) #f (b) (foo p b)))
+       )
 #+END_SRC
 
 #+NAME: ex-4-9-while
 #+BEGIN_SRC scheme
-  (define (expand-while exp)
-    (let* ((pred (cadr exp))
-           (body (cddr exp)))
-      `(let iter ((pred (lambda () ,pred))
-                  (body (lambda () ,@body)))
-         (if (not (pred))
-             #f
-             (begin
-               (body)
-               (iter pred body))))))
+(define (expand-while exp)
+  (let* ((pred (cadr exp))
+         (body (cddr exp)))
+    `(let iter ((pred (lambda () ,pred))
+                (body (lambda () ,@body)))
+       (if (not (pred))
+           #f
+           (begin
+             (body)
+             (iter pred body))))))
 #+END_SRC
 
 #+NAME: ex-4-9-while-dispatch
 #+BEGIN_SRC scheme
-  (eval-4-1-put 'while
-                (lambda (exp env)
-                  (eval-4-1 (expand-while exp) env)))
+(eval-4-1-put 'while
+              (lambda (exp env)
+                (eval-4-1 (expand-while exp) env)))
 #+END_SRC
 
-#+BEGIN_SRC scheme :tangle ex-4-9-test.scm
-  (include "ex-4-3")
-  (use test)
+#+BEGIN_SRC scheme
+(include "ex-4-3")
+(use test)
 
-  (test-group "ex-4-9"
-              (test 1
-                    (eval-4-1
-                     '(begin
-                        (define x 0)
-                        (while (= x 0)
-                          (set! x 1))
-                        x)
-                     (setup-environment))))
+(test-group "ex-4-9"
+            (test 1
+                  (eval-4-1
+                   '(begin
+                      (define x 0)
+                      (while (= x 0)
+                        (set! x 1))
+                      x)
+                   (setup-environment))))
 #+END_SRC
      :PROPERTIES:
      :Effort:   0:30
@@ -934,204 +934,204 @@ I'm going to try to do this with M-expressions.
 
 #+END_EXAMPLE
 
-#+BEGIN_SRC scheme :tangle ex-4-10.scm
-  <<mexpr-lexer>>
-  <<mexpr-parser>>
+#+BEGIN_SRC scheme
+<<mexpr-lexer>>
+<<mexpr-parser>>
 #+END_SRC
 
 #+NAME: mexpr-lexer
 #+BEGIN_SRC scheme
-  (use srfi-1)
+(use srfi-1)
 
-  (define (scan-terminal port start? continue? string->result)
-    (let ((in (peek-char port)))
-      (if (or (eof-object? in) (not (start? in)))
-          #f
-          (let iter ((chars (list (read-char port))))
-            (let ((in (peek-char port)))
-              (if (or (eof-object? in) (not (continue? in)))
-                  (string->result
-                   ((compose list->string reverse) chars))
-                  (iter (cons (read-char port) chars))))))))
-
-  (define (atomize atom) `(atom . ,atom))
-  (define (atom-token? token) (and (pair? token) (eq? (car token) 'atom)))
-  (define (atom-value token) (cdr token))
-  (define (scan-symbol port)
-    (define (symbol-start? c)
-      (or (char-alphabetic? c)
-          (char-numeric? c)
-          (find (lambda (x) (char=? c x)) '(#\+ #\- #\* #\/ #\= #\< #\> #\? #\_))))
-    (define (symbol-continue? c)
-      (or (symbol-start? c) (char-numeric? c)))
-    (scan-terminal port symbol-start? symbol-continue? (compose atomize string->symbol)))
-
-  (define (scan-num port)
-    (scan-terminal port char-numeric? char-numeric? (compose atomize string->number)))
-
-  (define true #t)
-  (define false #f)
-  (define (scan-bool port)
-    (scan-terminal port
-                   (lambda (c) (char=? c #\#))
-                   (lambda (c) (or (char-ci=? c #\t) (char-ci=? c #\f)))
-                   (lambda (s) (cond ((string-ci=? s "#t") (atomize true))
-                                     (else (atomize false))))))
-
-  (define (consume-whitespace port)
-    (scan-terminal port char-whitespace? char-whitespace? (constant 'whitespace)))
-  (define (consume-line-comment port)
-    (scan-terminal port
-                   (lambda (c) (char=? #\; c))
-                   (lambda (c) (not (char=? #\newline c)))
-                   (constant 'line-comment)))
-  (define (consume-space port)
-    (if (not (and (consume-whitespace port)
-                  (consume-line-comment port)))
+(define (scan-terminal port start? continue? string->result)
+  (let ((in (peek-char port)))
+    (if (or (eof-object? in) (not (start? in)))
         #f
-        (consume-space port)))
+        (let iter ((chars (list (read-char port))))
+          (let ((in (peek-char port)))
+            (if (or (eof-object? in) (not (continue? in)))
+                (string->result
+                 ((compose list->string reverse) chars))
+                (iter (cons (read-char port) chars))))))))
 
-  ;; Single-character tokens
-  (define (constant value) (lambda (x) value))
-  (define (make-scan-literal-char c)
-    (lambda (port)
-      (scan-terminal port
-                     (lambda (inc) (char=? c inc))
-                     (lambda (inc) #f)
-                     (constant c))))
+(define (atomize atom) `(atom . ,atom))
+(define (atom-token? token) (and (pair? token) (eq? (car token) 'atom)))
+(define (atom-value token) (cdr token))
+(define (scan-symbol port)
+  (define (symbol-start? c)
+    (or (char-alphabetic? c)
+        (char-numeric? c)
+        (find (lambda (x) (char=? c x)) '(#\+ #\- #\* #\/ #\= #\< #\> #\? #\_))))
+  (define (symbol-continue? c)
+    (or (symbol-start? c) (char-numeric? c)))
+  (scan-terminal port symbol-start? symbol-continue? (compose atomize string->symbol)))
 
-  (define lparen #\()
-  (define scan-lparen (make-scan-literal-char lparen))
-  (define rparen #\))
-  (define scan-rparen (make-scan-literal-char rparen))
+(define (scan-num port)
+  (scan-terminal port char-numeric? char-numeric? (compose atomize string->number)))
 
-  (define lbracket #\()
-  (define scan-lbracket (make-scan-literal-char lbracket))
-  (define rbracket #\))
-  (define scan-rbracket (make-scan-literal-char rbracket))
+(define true #t)
+(define false #f)
+(define (scan-bool port)
+  (scan-terminal port
+                 (lambda (c) (char=? c #\#))
+                 (lambda (c) (or (char-ci=? c #\t) (char-ci=? c #\f)))
+                 (lambda (s) (cond ((string-ci=? s "#t") (atomize true))
+                                   (else (atomize false))))))
 
-  (define dot #\.)
-  (define scan-dot (make-scan-literal-char dot))
+(define (consume-whitespace port)
+  (scan-terminal port char-whitespace? char-whitespace? (constant 'whitespace)))
+(define (consume-line-comment port)
+  (scan-terminal port
+                 (lambda (c) (char=? #\; c))
+                 (lambda (c) (not (char=? #\newline c)))
+                 (constant 'line-comment)))
+(define (consume-space port)
+  (if (not (and (consume-whitespace port)
+                (consume-line-comment port)))
+      #f
+      (consume-space port)))
 
-  (define semicolon #\;)
-  (define scan-semicolon (make-scan-literal-char semicolon))
+;; Single-character tokens
+(define (constant value) (lambda (x) value))
+(define (make-scan-literal-char c)
+  (lambda (port)
+    (scan-terminal port
+                   (lambda (inc) (char=? c inc))
+                   (lambda (inc) #f)
+                   (constant c))))
 
-  (define quote-sym #\')
-  (define scan-quote-sym (make-scan-literal-char quote-sym))
-  (define quasiquote-sym #\`)
-  (define scan-quasiquote-sym (make-scan-literal-char quasiquote-sym))
+(define lparen #\()
+(define scan-lparen (make-scan-literal-char lparen))
+(define rparen #\))
+(define scan-rparen (make-scan-literal-char rparen))
 
-  ;;; Parse both unquote operators here, since we need the lookahead to
-  ;;; distinguish between unquote (",") and unquote-splicing (",@").
-  (define unquote-sym #\,)
-  (define unquote-splicing-sym '(#\, #\@))
-  (define (scan-unquotes port)
-    (let ((in (peek-char port)))
-      (if (or (eof-object? in)
-              (not (char=? in #\,)))
-          #f
-          (begin
-            (read-char port)
-            (let ((in (peek-char port)))
-              (if (or (eof-object? in)
-                      (not (char=? in #\@)))
-                  unquote-sym
-                  (begin
-                    (read-char port)
-                    unquote-splicing-sym)))))))
+(define lbracket #\()
+(define scan-lbracket (make-scan-literal-char lbracket))
+(define rbracket #\))
+(define scan-rbracket (make-scan-literal-char rbracket))
 
-  (define (identity x) x)
-  (define (nonnull? x) (not (null? x)))
-  (define (atom? x)
-    (or (number? x) (symbol? x) (boolean? x)))
-  (define (scan-next-token port)
-    (consume-space port)
-    (cond ((scan-lparen port) => identity)
-          ((scan-rparen port) => identity)
-          ((scan-lbracket port) => identity)
-          ((scan-rbracket port) => identity)
-          ((scan-dot port) => identity)
+(define dot #\.)
+(define scan-dot (make-scan-literal-char dot))
 
-          ((scan-unquotes port) => identity)
-          ((scan-quasiquote-sym port) => identity)
-          ((scan-quote-sym port) => identity)
+(define semicolon #\;)
+(define scan-semicolon (make-scan-literal-char semicolon))
 
-          ((scan-symbol port) => identity)
-          ((scan-num port) => identity)
-          ((scan-bool port) => identity)
+(define quote-sym #\')
+(define scan-quote-sym (make-scan-literal-char quote-sym))
+(define quasiquote-sym #\`)
+(define scan-quasiquote-sym (make-scan-literal-char quasiquote-sym))
 
-          ((eof-object? (peek-char port)) (peek-char port))
-          (else (error "SCAN-NEXT-TOKEN: Next token not found")))
-    )
+;;; Parse both unquote operators here, since we need the lookahead to
+;;; distinguish between unquote (",") and unquote-splicing (",@").
+(define unquote-sym #\,)
+(define unquote-splicing-sym '(#\, #\@))
+(define (scan-unquotes port)
+  (let ((in (peek-char port)))
+    (if (or (eof-object? in)
+            (not (char=? in #\,)))
+        #f
+        (begin
+          (read-char port)
+          (let ((in (peek-char port)))
+            (if (or (eof-object? in)
+                    (not (char=? in #\@)))
+                unquote-sym
+                (begin
+                  (read-char port)
+                  unquote-splicing-sym)))))))
+
+(define (identity x) x)
+(define (nonnull? x) (not (null? x)))
+(define (atom? x)
+  (or (number? x) (symbol? x) (boolean? x)))
+(define (scan-next-token port)
+  (consume-space port)
+  (cond ((scan-lparen port) => identity)
+        ((scan-rparen port) => identity)
+        ((scan-lbracket port) => identity)
+        ((scan-rbracket port) => identity)
+        ((scan-dot port) => identity)
+
+        ((scan-unquotes port) => identity)
+        ((scan-quasiquote-sym port) => identity)
+        ((scan-quote-sym port) => identity)
+
+        ((scan-symbol port) => identity)
+        ((scan-num port) => identity)
+        ((scan-bool port) => identity)
+
+        ((eof-object? (peek-char port)) (peek-char port))
+        (else (error "SCAN-NEXT-TOKEN: Next token not found")))
+  )
 #+END_SRC
 
 #+NAME: mexpr-parser
 #+BEGIN_SRC scheme
-  (define (make-next-token port)
-    (define lookahead '())
-    (define (get)
-      (if (nonnull? lookahead)
-          (let ((token lookahead))
-            (set! lookahead '())
-            token)
-          (scan-next-token port)))
-    (define (unget token)
-      (set! lookahead token))
-    (define (dispatch msg)
-      (cond ((eq? msg 'get) get)
-            ((eq? msg 'unget) unget)
-            (else (error "NEXT-TOKEN -- unrecognized message"))))
-    dispatch)
+(define (make-next-token port)
+  (define lookahead '())
+  (define (get)
+    (if (nonnull? lookahead)
+        (let ((token lookahead))
+          (set! lookahead '())
+          token)
+        (scan-next-token port)))
+  (define (unget token)
+    (set! lookahead token))
+  (define (dispatch msg)
+    (cond ((eq? msg 'get) get)
+          ((eq? msg 'unget) unget)
+          (else (error "NEXT-TOKEN -- unrecognized message"))))
+  dispatch)
 
-  (define (read-sexpr next-token)
-    (let ((token ((next-token 'get))))
-                                          ; (display token) (newline)
-      (cond
-       ;; TODO: Why doesn't `(quasiquote ,expr) work?
-       ((eq? token quote-sym)
-        (list 'quote (read-sexpr next-token)))
-       ((eq? token quasiquote-sym)
-        (list 'quasiquote (read-sexpr next-token)))
-       ((eq? token unquote-sym)
-        (list 'unquote (read-sexpr next-token)))
-       ((eq? token unquote-splicing-sym)
-        (list 'unquote-splicing (read-sexpr next-token)))
+(define (read-sexpr next-token)
+  (let ((token ((next-token 'get))))
+                                        ; (display token) (newline)
+    (cond
+     ;; TODO: Why doesn't `(quasiquote ,expr) work?
+     ((eq? token quote-sym)
+      (list 'quote (read-sexpr next-token)))
+     ((eq? token quasiquote-sym)
+      (list 'quasiquote (read-sexpr next-token)))
+     ((eq? token unquote-sym)
+      (list 'unquote (read-sexpr next-token)))
+     ((eq? token unquote-splicing-sym)
+      (list 'unquote-splicing (read-sexpr next-token)))
 
-       ((atom-token? token)
-        (atom-value token))
-       ((eq? token lparen)
-        (read-sexpr-body next-token))
-       (else "READ-SEXPR: No parse"))))
+     ((atom-token? token)
+      (atom-value token))
+     ((eq? token lparen)
+      (read-sexpr-body next-token))
+     (else "READ-SEXPR: No parse"))))
 
-  (define (read-sexpr-body next-token)
-    (let ((token ((next-token 'get))))
-      (cond ((eq? token rparen) '())
-            (else
-             ((next-token 'unget) token)
-             (let* ((sexpr (read-sexpr next-token))
-                    (sexpr-end (read-sexpr-end next-token)))
-               (cons sexpr sexpr-end))))))
+(define (read-sexpr-body next-token)
+  (let ((token ((next-token 'get))))
+    (cond ((eq? token rparen) '())
+          (else
+           ((next-token 'unget) token)
+           (let* ((sexpr (read-sexpr next-token))
+                  (sexpr-end (read-sexpr-end next-token)))
+             (cons sexpr sexpr-end))))))
 
-  (define (read-sexpr-end next-token)
-    (let ((token ((next-token 'get))))
-      (cond ((eq? token dot)
-             (let* ((sexpr (read-sexpr next-token))
-                    (end ((next-token 'get))))
-               (if (eq? end rparen)
-                   sexpr
-                   (error "READ-SEXPR-END: Failed parse of dotted pair"))))
-            (else
-             ((next-token 'unget) token)
-             (read-sexprs-rest next-token)))))
+(define (read-sexpr-end next-token)
+  (let ((token ((next-token 'get))))
+    (cond ((eq? token dot)
+           (let* ((sexpr (read-sexpr next-token))
+                  (end ((next-token 'get))))
+             (if (eq? end rparen)
+                 sexpr
+                 (error "READ-SEXPR-END: Failed parse of dotted pair"))))
+          (else
+           ((next-token 'unget) token)
+           (read-sexprs-rest next-token)))))
 
-  (define (read-sexprs-rest next-token)
-    (let ((token ((next-token 'get))))
-      (cond ((eq? token rparen) '())
-            (else
-             ((next-token 'unget) token)
-             (let* ((sexpr (read-sexpr next-token))
-                    (sexprs-rest (read-sexprs-rest next-token)))
-               (cons sexpr sexprs-rest))))))
+(define (read-sexprs-rest next-token)
+  (let ((token ((next-token 'get))))
+    (cond ((eq? token rparen) '())
+          (else
+           ((next-token 'unget) token)
+           (let* ((sexpr (read-sexpr next-token))
+                  (sexprs-rest (read-sexprs-rest next-token)))
+             (cons sexpr sexprs-rest))))))
 #+END_SRC
 
      :PROPERTIES:
@@ -1142,96 +1142,96 @@ I'm going to try to do this with M-expressions.
 
 #+NAME: evaluator-structs
 #+BEGIN_SRC scheme
-  <<evaluator-structs-predicates>>
-  <<evaluator-structs-procedures>>
-  <<ex-4-12-environments>>
+<<evaluator-structs-predicates>>
+<<evaluator-structs-procedures>>
+<<ex-4-12-environments>>
 #+END_SRC
 
 #+NAME: evaluator-structs-predicates
 #+BEGIN_SRC scheme
-  ;;; Define true and false inside the interpreter, to show that it's not
-  ;;; necessary to conflate the representation of booleans in the interpreter
-  ;;; with the implementing language's representation.
-  (define true 'sec-4-1-true)
-  (define false 'sec-4-1-false)
-  (define (true? x)
-    (not (eq? x false)))
-  (define (false? x)
-    (eq? x false))
+;;; Define true and false inside the interpreter, to show that it's not
+;;; necessary to conflate the representation of booleans in the interpreter
+;;; with the implementing language's representation.
+(define true 'sec-4-1-true)
+(define false 'sec-4-1-false)
+(define (true? x)
+  (not (eq? x false)))
+(define (false? x)
+  (eq? x false))
 #+END_SRC
 
 #+NAME: evaluator-structs-procedures
 #+BEGIN_SRC scheme
-  (define (make-procedure parameters body env)
-    (list 'procedure parameters body env))
-  (define (compound-procedure? p)
-    (tagged-list? p 'procedure))
-  (define (procedure-parameters p) (cadr p))
-  (define (procedure-body p) (caddr p))
-  (define (procedure-environment p) (cadddr p))
+(define (make-procedure parameters body env)
+  (list 'procedure parameters body env))
+(define (compound-procedure? p)
+  (tagged-list? p 'procedure))
+(define (procedure-parameters p) (cadr p))
+(define (procedure-body p) (caddr p))
+(define (procedure-environment p) (cadddr p))
 #+END_SRC
 
 #+NAME: evaluator-structs-environments
 #+BEGIN_SRC scheme
-  (define (enclosing-environment env) (cdr env))
-  (define (first-frame env) (car env))
-  (define the-empty-environment '())
+(define (enclosing-environment env) (cdr env))
+(define (first-frame env) (car env))
+(define the-empty-environment '())
 
-  (define (make-frame variables values)
-    (cons variables values))
-  (define (frame-variables frame) (car frame))
-  (define (frame-values frame) (cdr frame))
-  (define (add-binding-to-frame! var val frame)
-    (set-car! frame (cons var (car frame)))
-    (set-cdr! frame (cons val (cdr frame))))
+(define (make-frame variables values)
+  (cons variables values))
+(define (frame-variables frame) (car frame))
+(define (frame-values frame) (cdr frame))
+(define (add-binding-to-frame! var val frame)
+  (set-car! frame (cons var (car frame)))
+  (set-cdr! frame (cons val (cdr frame))))
 
-  (define (extend-environment vars vals base-env)
-    (if (= (length vars) (length vals))
-        (cons (make-frame vars vals) base-env)
-        (if (< (length vars) (length vals))
-            (error "Too many arguments supplied" vars vals)
-            (error "Too few arguments supplied" vars vals))))
+(define (extend-environment vars vals base-env)
+  (if (= (length vars) (length vals))
+      (cons (make-frame vars vals) base-env)
+      (if (< (length vars) (length vals))
+          (error "Too many arguments supplied" vars vals)
+          (error "Too few arguments supplied" vars vals))))
 
-  (define (lookup-variable-value var env)
-    (define (env-loop env)
-      (define (scan vars vals)
-        (cond ((null? vars)
-               (env-loop (enclosing-environment env)))
-              ((eq? var (car vars))
-               (car vals))
-              (else (scan (cdr vars) (cdr vals)))))
-      (if (eq? env the-empty-environment)
-          (error "Unbound variable" var)
-          (let ((frame (first-frame env)))
-            (scan (frame-variables frame)
-                  (frame-values frame)))))
-    (env-loop env))
+(define (lookup-variable-value var env)
+  (define (env-loop env)
+    (define (scan vars vals)
+      (cond ((null? vars)
+             (env-loop (enclosing-environment env)))
+            ((eq? var (car vars))
+             (car vals))
+            (else (scan (cdr vars) (cdr vals)))))
+    (if (eq? env the-empty-environment)
+        (error "Unbound variable" var)
+        (let ((frame (first-frame env)))
+          (scan (frame-variables frame)
+                (frame-values frame)))))
+  (env-loop env))
 
-  (define (set-variable-value! var val env)
-    (define (env-loop env)
-      (define (scan vars vals)
-        (cond ((null? vars)
-               (env-loop (enclosing-environment env)))
-              ((eq? var (car vars))
-               (set-car! vals val))
-              (else (scan (cdr vars) (cdr vals)))))
-      (if (eq? env the-empty-environment)
-          (error "Unbound variable -- SET!" var)
-          (let ((frame (first-frame env)))
-            (scan (frame-variables frame)
-                  (frame-values frame)))))
-    (env-loop env))
+(define (set-variable-value! var val env)
+  (define (env-loop env)
+    (define (scan vars vals)
+      (cond ((null? vars)
+             (env-loop (enclosing-environment env)))
+            ((eq? var (car vars))
+             (set-car! vals val))
+            (else (scan (cdr vars) (cdr vals)))))
+    (if (eq? env the-empty-environment)
+        (error "Unbound variable -- SET!" var)
+        (let ((frame (first-frame env)))
+          (scan (frame-variables frame)
+                (frame-values frame)))))
+  (env-loop env))
 
-  (define (define-variable! var val env)
-    (let ((frame (first-frame env)))
-      (define (scan vars vals)
-        (cond ((null? vars)
-               (add-binding-to-frame! var val frame))
-              ((eq? var (car vars))
-               (set-car! vals val))
-              (else (scan (cdr vars) (cdr vals)))))
-      (scan (frame-variables frame)
-            (frame-values frame))))
+(define (define-variable! var val env)
+  (let ((frame (first-frame env)))
+    (define (scan vars vals)
+      (cond ((null? vars)
+             (add-binding-to-frame! var val frame))
+            ((eq? var (car vars))
+             (set-car! vals val))
+            (else (scan (cdr vars) (cdr vals)))))
+    (scan (frame-variables frame)
+          (frame-values frame))))
 #+END_SRC
 
 **** DONE Read SICP 4.1.3
@@ -1255,120 +1255,120 @@ Exercise 4.13) instead of as a pair of lists:
 
 #+NAME: ex-4-12-environments
 #+BEGIN_SRC scheme
-  (define (enclosing-environment env) (cdr env))
-  (define (first-frame env) (car env))
-  (define the-empty-environment '())
+(define (enclosing-environment env) (cdr env))
+(define (first-frame env) (car env))
+(define the-empty-environment '())
 
-  (define (get-bindings frame) (car frame))
-  (define (make-binding var val) (list var val))
+(define (get-bindings frame) (car frame))
+(define (make-binding var val) (list var val))
 
-  (define (make-frame variables values)
-    (let iter ((variables variables)
-               (values values)
-               (bindings '()))
-      (if (null? variables)
-          `(,bindings)
-          (iter (cdr variables)
-                (cdr values)
-                (cons (make-binding (car variables) (car values))
-                      bindings)))))
+(define (make-frame variables values)
+  (let iter ((variables variables)
+             (values values)
+             (bindings '()))
+    (if (null? variables)
+        `(,bindings)
+        (iter (cdr variables)
+              (cdr values)
+              (cons (make-binding (car variables) (car values))
+                    bindings)))))
 
-  (define (add-binding-to-frame! var val frame)
-    (let ((bindings (get-bindings frame)))
-      (set-car! frame (cons (make-binding var val) bindings))))
+(define (add-binding-to-frame! var val frame)
+  (let ((bindings (get-bindings frame)))
+    (set-car! frame (cons (make-binding var val) bindings))))
 
-  (define (extend-environment vars vals base-env)
-    (if (= (length vars) (length vals))
-        (cons (make-frame vars vals) base-env)
-        (if (< (length vars) (length vals))
-            (error "Too many arguments supplied" vars vals)
-            (error "Too few arguments supplied" vars vals))))
+(define (extend-environment vars vals base-env)
+  (if (= (length vars) (length vals))
+      (cons (make-frame vars vals) base-env)
+      (if (< (length vars) (length vals))
+          (error "Too many arguments supplied" vars vals)
+          (error "Too few arguments supplied" vars vals))))
 
-  (define (lookup-variable-value var env)
-    ;; Wrap returned value in list in order to terminate lookup, which requires
-    ;; that we unwrap it at the top.
-    (let ((res
-           (scan-env
-            var #f env
-            (lambda (var -unused- env frame)
-              (scan-bindings
-               var #f env frame
-               (lambda (var -unused- env frame bindings)
-                 (list (cadar bindings)))
-               (lambda (var -unused- env frame bindings) #f)))
-            (lambda (var -unused- env)
-              (error "Unbound variable" var)))))
-      (if (pair? res)
-          (car res)
-          res)))
+(define (lookup-variable-value var env)
+  ;; Wrap returned value in list in order to terminate lookup, which requires
+  ;; that we unwrap it at the top.
+  (let ((res
+         (scan-env
+          var #f env
+          (lambda (var -unused- env frame)
+            (scan-bindings
+             var #f env frame
+             (lambda (var -unused- env frame bindings)
+               (list (cadar bindings)))
+             (lambda (var -unused- env frame bindings) #f)))
+          (lambda (var -unused- env)
+            (error "Unbound variable" var)))))
+    (if (pair? res)
+        (car res)
+        res)))
 
-  (define (set-value-in-bindings! bindings val)
-    (set-car! (cdar bindings) val))
+(define (set-value-in-bindings! bindings val)
+  (set-car! (cdar bindings) val))
 
-  (define (set-variable-value! var val env)
-    (scan-env
-     var val env
-     (lambda (var val env frame)
-       (scan-bindings
-        var val env frame
-        (lambda (var val env frame bindings)
-          (set-value-in-bindings! bindings val)
-          'ok)
-        (lambda (var val env frame bindings) #f)))
-     (lambda (var val env)
-       (error "Unbound variable -- SET!" var))))
+(define (set-variable-value! var val env)
+  (scan-env
+   var val env
+   (lambda (var val env frame)
+     (scan-bindings
+      var val env frame
+      (lambda (var val env frame bindings)
+        (set-value-in-bindings! bindings val)
+        'ok)
+      (lambda (var val env frame bindings) #f)))
+   (lambda (var val env)
+     (error "Unbound variable -- SET!" var))))
 
-  (define (define-variable! var val env)
-    (scan-env
-     var val env
-     (lambda (var val env frame)
-       (scan-bindings
-        var val env frame
-        (lambda (var val env frame bindings)
-          (set-value-in-bindings! bindings val)
-          'ok)
-        (lambda (var val env frame bindings)
-          (add-binding-to-frame! var val frame)
-          'ok)))
-     (lambda (var val env)
-       (error "Should never get here -- DEFINE!"))))
+(define (define-variable! var val env)
+  (scan-env
+   var val env
+   (lambda (var val env frame)
+     (scan-bindings
+      var val env frame
+      (lambda (var val env frame bindings)
+        (set-value-in-bindings! bindings val)
+        'ok)
+      (lambda (var val env frame bindings)
+        (add-binding-to-frame! var val frame)
+        'ok)))
+   (lambda (var val env)
+     (error "Should never get here -- DEFINE!"))))
 
-  (define (scan-env var val env on-frame on-not-found-in-env)
-    (let env-loop ((env env))
-      (if (eq? env the-empty-environment)
-          (on-not-found-in-env var val env)
-          (let ((frame (first-frame env)))
-            (cond ((on-frame var val env frame) => identity)
-                  (else (env-loop (enclosing-environment env))))))))
+(define (scan-env var val env on-frame on-not-found-in-env)
+  (let env-loop ((env env))
+    (if (eq? env the-empty-environment)
+        (on-not-found-in-env var val env)
+        (let ((frame (first-frame env)))
+          (cond ((on-frame var val env frame) => identity)
+                (else (env-loop (enclosing-environment env))))))))
 
-  (define (scan-bindings var val env frame on-found-in-frame on-not-found-in-frame)
-    (let frame-loop ((bindings (get-bindings frame)))
-      (cond ((null? bindings)
-             (on-not-found-in-frame var val env frame bindings))
-            ((eq? var (caar bindings))
-             (on-found-in-frame var val env frame bindings))
-            (else (frame-loop (cdr bindings))))))
+(define (scan-bindings var val env frame on-found-in-frame on-not-found-in-frame)
+  (let frame-loop ((bindings (get-bindings frame)))
+    (cond ((null? bindings)
+           (on-not-found-in-frame var val env frame bindings))
+          ((eq? var (caar bindings))
+           (on-found-in-frame var val env frame bindings))
+          (else (frame-loop (cdr bindings))))))
 #+END_SRC
 
-#+BEGIN_SRC scheme :tangle ex-4-12-test.scm
-  (include "ex-4-3")
-  <<ex-4-12-environments>>
-  (use test)
+#+BEGIN_SRC scheme
+(include "ex-4-3")
+<<ex-4-12-environments>>
+(use test)
 
-  (test-group "ex-4-12-test"
-              (define env (extend-environment '(x y) '(1 2) the-empty-environment))
-              (test-assert (equal? env '((((y 2) (x 1))))))
-              (define-variable! 'z "zeta" env)
-              (test "zeta"
-                    (lookup-variable-value 'z env))
-              (set-variable-value! 'z "zee" env)
-              (test "zee"
-                    (lookup-variable-value 'z env))
-              (define-variable! 'x 3 env)
-              (test 3
-                    (lookup-variable-value 'x env))
-              (test 2
-                    (lookup-variable-value 'y env)))
+(test-group "ex-4-12-test"
+            (define env (extend-environment '(x y) '(1 2) the-empty-environment))
+            (test-assert (equal? env '((((y 2) (x 1))))))
+            (define-variable! 'z "zeta" env)
+            (test "zeta"
+                  (lookup-variable-value 'z env))
+            (set-variable-value! 'z "zee" env)
+            (test "zee"
+                  (lookup-variable-value 'z env))
+            (define-variable! 'x 3 env)
+            (test 3
+                  (lookup-variable-value 'x env))
+            (test 2
+                  (lookup-variable-value 'y env)))
 #+END_SRC
      CLOCK: [2015-05-23 Sat 21:10]--[2015-05-23 Sat 21:41] =>  0:31
      :PROPERTIES:
@@ -1413,111 +1413,111 @@ earlier bindings by adding a binding of the form
 
 #+NAME: ex-4-13-environments
 #+BEGIN_SRC scheme
-  <<ex-4-12-environments>>
+<<ex-4-12-environments>>
 
-  (define (unbound-binding? binding)
-    (eq? (cdr binding) 'the-unbound-sentinel))
+(define (unbound-binding? binding)
+  (eq? (cdr binding) 'the-unbound-sentinel))
 
-  (define (scan-bindings var val env frame on-found-in-frame on-not-found-in-frame)
-    (let frame-loop ((bindings (get-bindings frame)))
-      (cond ((or (null? bindings)
-                 (unbound-binding? (car bindings)))
-             (on-not-found-in-frame var val env frame bindings))
-            ((eq? var (caar bindings))
-             (on-found-in-frame var val env frame bindings))
-            (else (frame-loop (cdr bindings))))))
+(define (scan-bindings var val env frame on-found-in-frame on-not-found-in-frame)
+  (let frame-loop ((bindings (get-bindings frame)))
+    (cond ((or (null? bindings)
+               (unbound-binding? (car bindings)))
+           (on-not-found-in-frame var val env frame bindings))
+          ((eq? var (caar bindings))
+           (on-found-in-frame var val env frame bindings))
+          (else (frame-loop (cdr bindings))))))
 
-  (define (lookup-variable-value var env)
-    ;; Wrap returned value in list in order to terminate lookup, which requires
-    ;; that we unwrap it at the top.
-    (let ((res
-           (scan-env
-            var #f env
-            (lambda (var -unused- env frame)
-              (scan-bindings
-               var #f env frame
-               (lambda (var -unused- env frame bindings)
-                 (list (cadar bindings)))
-               (lambda (var -unused- env frame bindings)
-                 (if (and (not (null? bindings))
-                          (unbound-binding? (car bindings)))
-                     (error "Unbound variable (deleted)" var)
-                     #f))))
-            (lambda (var -unused- env)
-              (error "Unbound variable" var)))))
-      (if (pair? res)
-          (car res)
-          res)))
+(define (lookup-variable-value var env)
+  ;; Wrap returned value in list in order to terminate lookup, which requires
+  ;; that we unwrap it at the top.
+  (let ((res
+         (scan-env
+          var #f env
+          (lambda (var -unused- env frame)
+            (scan-bindings
+             var #f env frame
+             (lambda (var -unused- env frame bindings)
+               (list (cadar bindings)))
+             (lambda (var -unused- env frame bindings)
+               (if (and (not (null? bindings))
+                        (unbound-binding? (car bindings)))
+                   (error "Unbound variable (deleted)" var)
+                   #f))))
+          (lambda (var -unused- env)
+            (error "Unbound variable" var)))))
+    (if (pair? res)
+        (car res)
+        res)))
 
 
-  (define (make-unbound-variable! var env)
-    (scan-env
-     var #f env
-     (lambda (var -unused- env frame)
-       (scan-bindings
-        var #f env frame
-        (lambda (var -unused- env frame bindings)
-          (set-cdr! (car bindings) 'the-unbound-sentinel)
-          'ok)
-        (lambda (var -unused- env frame bindings)
-          (add-binding-to-frame! var -unused- frame)
-          'ok)))
-     (lambda (var -unused- env)
-       (error "Should never get here -- DEFINE!" var))))
+(define (make-unbound-variable! var env)
+  (scan-env
+   var #f env
+   (lambda (var -unused- env frame)
+     (scan-bindings
+      var #f env frame
+      (lambda (var -unused- env frame bindings)
+        (set-cdr! (car bindings) 'the-unbound-sentinel)
+        'ok)
+      (lambda (var -unused- env frame bindings)
+        (add-binding-to-frame! var -unused- frame)
+        'ok)))
+   (lambda (var -unused- env)
+     (error "Should never get here -- DEFINE!" var))))
 
-  (define (get-make-unbound-variable exp) (cadr exp))
-  (define (eval-make-unbound exp env)
-    (make-unbound-variable! (get-make-unbound-variable exp)
-                            env))
+(define (get-make-unbound-variable exp) (cadr exp))
+(define (eval-make-unbound exp env)
+  (make-unbound-variable! (get-make-unbound-variable exp)
+                          env))
 #+END_SRC
 
 #+NAME: ex-4-13-make-unbound-dispatch
 #+BEGIN_SRC scheme
-  (eval-4-1-put 'make-unbound!
-                (lambda (exp env)
-                  (eval-make-unbound exp env)))
+(eval-4-1-put 'make-unbound!
+              (lambda (exp env)
+                (eval-make-unbound exp env)))
 #+END_SRC
 
-#+BEGIN_SRC scheme :tangle ex-4-13-test.scm
-  (include "ex-4-3")
-  <<ex-4-13-environments>>
-  (use test)
+#+BEGIN_SRC scheme
+(include "ex-4-3")
+<<ex-4-13-environments>>
+(use test)
 
-  (test-group "ex-4-13-test"
-              (define env (extend-environment '(x y) '(1 2) the-empty-environment))
-              (test-assert (equal? env '((((y 2) (x 1))))))
-              (define-variable! 'z "zeta" env)
-              (test "zeta"
-                    (lookup-variable-value 'z env))
-              (set-variable-value! 'z "zee" env)
-              (test "zee"
-                    (lookup-variable-value 'z env))
-              (define-variable! 'x 3 env)
-              (test 3
-                    (lookup-variable-value 'x env))
-              (test 2
-                    (lookup-variable-value 'y env))
-              ;;; Assert that the effects of make-unbound! disappear once its
-              ;;; frame has been popped.
-              (test 3
-                    (eval-4-1
-                     '(begin
-                        ((lambda ()
-                           (make-unbound! x)))
-                        x)
-                     env))
-              ;;; Assert that make-unbound! actually unbinds the variable.
-              (test-assert
-               (condition-case
-                   (begin
-                     (eval-4-1
-                      '(begin
-                         ((lambda ()
-                            (make-unbound! x)
-                            x)))
-                      env)
-                     #f)
-                 ((exn) #t))))
+(test-group "ex-4-13-test"
+            (define env (extend-environment '(x y) '(1 2) the-empty-environment))
+            (test-assert (equal? env '((((y 2) (x 1))))))
+            (define-variable! 'z "zeta" env)
+            (test "zeta"
+                  (lookup-variable-value 'z env))
+            (set-variable-value! 'z "zee" env)
+            (test "zee"
+                  (lookup-variable-value 'z env))
+            (define-variable! 'x 3 env)
+            (test 3
+                  (lookup-variable-value 'x env))
+            (test 2
+                  (lookup-variable-value 'y env))
+            ;;; Assert that the effects of make-unbound! disappear once its
+            ;;; frame has been popped.
+            (test 3
+                  (eval-4-1
+                   '(begin
+                      ((lambda ()
+                         (make-unbound! x)))
+                      x)
+                   env))
+            ;;; Assert that make-unbound! actually unbinds the variable.
+            (test-assert
+             (condition-case
+                 (begin
+                   (eval-4-1
+                    '(begin
+                       ((lambda ()
+                          (make-unbound! x)
+                          x)))
+                    env)
+                   #f)
+               ((exn) #t))))
 #+END_SRC
 
 
@@ -1525,110 +1525,123 @@ earlier bindings by adding a binding of the form
      :PROPERTIES:
      :Effort:   0:45
      :END:
-*** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-26.html#%_sec_4.1.4][4.1.4: Running the Evaluator as a Program]] [/]
+*** DONE [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-26.html#%_sec_4.1.4][4.1.4: Running the Evaluator as a Program]] [2/2]
 **** Code
 
 #+NAME: evaluator-running
 #+BEGIN_SRC scheme
-  <<evaluator-running-primitives>>
-  <<evaluator-running-setup>>
-  <<evaluator-running-driver>>
+<<evaluator-running-primitives>>
+<<evaluator-running-setup>>
+<<evaluator-running-driver>>
 #+END_SRC
 
 - Set up the environment:
 
   #+NAME: evaluator-running-setup
   #+BEGIN_SRC scheme
-    (define (setup-environment)
-      (let ((initial-env
-             (extend-environment (primitive-procedure-names)
-                                 (primitive-procedure-objects)
-                                 the-empty-environment)))
-        (define-variable! 'true true initial-env)
-        (define-variable! 'false false initial-env)
-        initial-env))
-    (define the-global-environment (setup-environment))
+  (define (setup-environment)
+    (let ((initial-env
+           (extend-environment (primitive-procedure-names)
+                               (primitive-procedure-objects)
+                               the-empty-environment)))
+      (define-variable! 'true true initial-env)
+      (define-variable! 'false false initial-env)
+      initial-env))
+  (define the-global-environment (setup-environment))
   #+END_SRC
 
 - Implement primitive procedures:
 
   #+NAME: evaluator-running-primitives
   #+BEGIN_SRC scheme
-    (define (primitive-procedure? proc)
-      (tagged-list? proc 'primitive))
+  (define (primitive-procedure? proc)
+    (tagged-list? proc 'primitive))
 
-    (define (primitive-implementation proc) (cadr proc))
+  (define (primitive-implementation proc) (cadr proc))
 
-    (define primitive-procedures
-      (list (list 'car car)
-            (list 'cdr cdr)
-            (list 'cons cons)
-            (list 'null? null?)
-            (list 'not not)
-            (list '+ +)
-            (list '- -)
-            (list '* *)
-            (list '/ /)
-            (list '= =)
-            ;; <more primitives>
-            ))
-    (define (primitive-procedure-names)
-      (map car
-           primitive-procedures))
+  (define primitive-procedures
+    (list (list 'car car)
+          (list 'cdr cdr)
+          (list 'cons cons)
+          (list 'null? null?)
+          (list 'not not)
+          (list '+ +)
+          (list '- -)
+          (list '* *)
+          (list '/ /)
+          (list '= =)
+          ;; <more primitives>
+          ))
+  (define (primitive-procedure-names)
+    (map car
+         primitive-procedures))
 
-    (define (primitive-procedure-objects)
-      (map (lambda (proc) (list 'primitive (cadr proc)))
-           primitive-procedures))
+  (define (primitive-procedure-objects)
+    (map (lambda (proc) (list 'primitive (cadr proc)))
+         primitive-procedures))
 
-    ;;; Save the APPLY procedure from the underlying Scheme. This separates out the
-    ;;; APPLY procedure in the interpreter from that of the underlying Scheme. (I
-    ;;; have renamed the interpreter's version APPLY-4-1 as well, instead of just
-    ;;; APPLY, as used in the original text.)
-    (define apply-in-underlying-scheme apply)
-    (define (apply-primitive-procedure proc args)
-      (apply-in-underlying-scheme
-       (primitive-implementation proc) args))
+  ;;; Save the APPLY procedure from the underlying Scheme. This separates out the
+  ;;; APPLY procedure in the interpreter from that of the underlying Scheme. (I
+  ;;; have renamed the interpreter's version APPLY-4-1 as well, instead of just
+  ;;; APPLY, as used in the original text.)
+  (define apply-in-underlying-scheme apply)
+  (define (apply-primitive-procedure proc args)
+    (apply-in-underlying-scheme
+     (primitive-implementation proc) args))
   #+END_SRC
 
 - Driver loop:
 
   #+NAME: evaluator-running-driver
   #+BEGIN_SRC scheme
-    (use posix)
-    (define input-prompt ";;; M-Eval input:")
-    (define output-prompt ";;; M-Eval value:")
-    (define (driver-loop)
-      ;;; Define a temporary port duplicated from standard input in order to allow
-      ;;; exiting the driver loop on EOF without exiting the interpreter as well.
-      (with-input-from-port (open-input-file* (duplicate-fileno fileno/stdin))
-          (lambda ()
-            (let iter ()
-              (prompt-for-input input-prompt)
-              (let ((input (read)))
-                (when (not (eof-object? input))
-                      (let ((output (eval-4-1 input the-global-environment)))
-                        (announce-output output-prompt)
-                        (user-print output))
-                      (iter)))))))
-    (define (prompt-for-input string)
-      (newline) (newline) (display string) (newline))
+  (use posix)
+  (define input-prompt ";;; M-Eval input:")
+  (define output-prompt ";;; M-Eval value:")
+  (define (driver-loop)
+    ;;; Define a temporary port duplicated from standard input in order to allow
+    ;;; exiting the driver loop on EOF without exiting the interpreter as well.
+    (with-input-from-port (open-input-file* (duplicate-fileno fileno/stdin))
+        (lambda ()
+          (let iter ()
+            (prompt-for-input input-prompt)
+            (let ((input (read)))
+              (when (not (eof-object? input))
+                    (let ((output (eval-4-1 input the-global-environment)))
+                      (announce-output output-prompt)
+                      (user-print output))
+                    (iter)))))))
+  (define (prompt-for-input string)
+    (newline) (newline) (display string) (newline))
 
-    (define (announce-output string)
-      (newline) (display string) (newline))
+  (define (announce-output string)
+    (newline) (display string) (newline))
 
-    (define (user-print object)
-      (if (compound-procedure? object)
-          (display (list 'compound-procedure
-                         (procedure-parameters object)
-                         (procedure-body object)
-                         '<procedure-env>))
-          (display object)))
+  (define (user-print object)
+    (if (compound-procedure? object)
+        (display (list 'compound-procedure
+                       (procedure-parameters object)
+                       (procedure-body object)
+                       '<procedure-env>))
+        (display object)))
   #+END_SRC
 
-**** TODO Read SICP 4.1.4
-**** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-26.html#%_thm_4.14][Exercise 4.14]]
-*** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-26.html#%_sec_4.1.5][4.1.5: Data as Programs]] [/]
-**** TODO Read SICP 4.1.5
+**** DONE Read SICP 4.1.4
+**** DONE [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-26.html#%_thm_4.14][Exercise 4.14]]
+
+When Louis installs ~map~ from the underlying Scheme as a primitive procedure
+of the interpreter, the function passed to ~map~ is unable to access the
+environment of the interpreter, so any reference to a binding in the
+environment won't get resolved to the binding in the interpreter, but rather to
+a binding in the underlying Scheme. Eva's typing of the definition of ~map~
+into the interpreter allows the function argument to ~map~ to access the
+interpreter environment, so it works.
+
+     CLOCK: [2015-05-24 Sun 00:20]--[2015-05-24 Sun 00:24] =>  0:04
+     :PROPERTIES:
+     :Effort:   0:30
+     :END:
+*** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-26.html#%_sec_4.1.5][4.1.5: Data as Programs]] [1/2]
+**** DONE Read SICP 4.1.5
 **** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-26.html#%_thm_4.15][Exercise 4.15]]
 *** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-26.html#%_sec_4.1.6][4.1.6: Internal Definitions]] [/]
 **** TODO Read SICP 4.1.6
