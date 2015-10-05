@@ -2049,83 +2049,194 @@ The solution is:
 **** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-28.html#%_thm_4.54][Exercise 4.54]]
 
 ** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-29.html#%_sec_4.4][4.4: Logic Programming]] [%]
-*** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-29.html#%_sec_4.4.1][4.4.4: Deductive Information Retrieval]] [7/10]
+*** TODO [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-29.html#%_sec_4.4.1][4.4.1: Deductive Information Retrieval]] [7/10]
+    - Note taken on [2015-08-24 Mon 16:18] \\
+      Trying to figure out how to use evaluator from the SICP egg.
+    :LOGBOOK:
+    CLOCK: [2015-08-24 Mon 16:18]--[2015-08-24 Mon 16:25] =>  0:07
+    CLOCK: [2015-08-24 Mon 16:12]--[2015-08-24 Mon 16:18] =>  0:06
+    :END:
 **** DONE Read SICP 4.4.1
 **** DONE [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-29.html#%_thm_4.55][Exercise 4.55]]
+     CLOCK: [2015-08-24 Mon 16:57]--[2015-08-24 Mon 17:07] =>  0:10
      CLOCK: [2015-08-17 Mon 17:34]--[2015-08-17 Mon 17:35] =>  0:01
      CLOCK: [2015-08-17 Mon 17:31]--[2015-08-17 Mon 17:34] =>  0:03
 
 #+BEGIN_SRC scheme
-;;; a. all people supervised by Ben Bitdiddle;
-(supervisor ?x (Bitdiddle Ben))
+  (use sicp-eval-logic test)
 
-;;; b. the names and jobs of all people in the accounting division;
-(job ?x (accounting . ?type))
+  (with-microshaft-database
+   (lambda ()
+     (test-group
+      "Exercise 4.55"
+      (test "a. all people supervised by Ben Bitdiddle;"
+            '((supervisor (Tweakit Lem E) (Bitdiddle Ben))
+              (supervisor (Fect Cy D) (Bitdiddle Ben))
+              (supervisor (Hacker Alyssa P) (Bitdiddle Ben)))
+            (qeval* '(supervisor ?x (Bitdiddle Ben)))))
 
-;;; c. the names and addresses of all people who live in Slumerville.
-(address ?x (Slumerville . ?addr))
+     (test "b. the names and jobs of all people in the accounting division;"
+           '((job (Cratchet Robert) (accounting scrivener))
+             (job (Scrooge Eben) (accounting chief accountant)))
+           (qeval* '(job ?x (accounting . ?type))))
+
+
+     (test "c. the names and addresses of all people who live in Slumerville."
+           '((address (Aull DeWitt) (Slumerville (Onion Square) 5))
+             (address (Reasoner Louis) (Slumerville (Pine Tree Road) 80))
+             (address (Bitdiddle Ben) (Slumerville (Ridge Road) 10)))
+           (qeval* '(address ?x (Slumerville . ?addr))))))
 #+END_SRC
 
 **** DONE [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-29.html#%_thm_4.56][Exercise 4.56]]
+     :PROPERTIES:
+     :ORDERED:  t
+     :END:
+     CLOCK: [2015-08-24 Mon 17:10]--[2015-08-24 Mon 17:20] =>  0:10
+     CLOCK: [2015-08-24 Mon 17:07]--[2015-08-24 Mon 17:10] =>  0:00
      CLOCK: [2015-08-17 Mon 17:37]--[2015-08-17 Mon 17:45] =>  0:08
 
 #+BEGIN_SRC scheme
-;;; a. the names of all people who are supervised by Ben Bitdiddle, together
-;;;    with their addresses;
-(and (supervisor ?person (Bitdiddle Ben))
-     (address ?person ?where))
+  (use sicp-eval-logic test)
 
-;;; b. all people whose salary is less than Ben Bitdiddle's, together with
-;;;    their salary and Ben Bitdiddle's salary;
-(or (salary (Bitdiddle Ben) ?bb-amount)
-    (and (salary ?person ?amount)
-         (lisp-value < ?amount ?bb-amount)))
+  (with-microshaft-database
+   (lambda ()
+     (test-group
+      "Exercise 4.56"
+      (test "a. the names of all people who are supervised by Ben Bitdiddle, together with their addresses;"
+            '((and (supervisor (Tweakit Lem E) (Bitdiddle Ben))
+                   (address (Tweakit Lem E) (Boston (Bay State Road) 22)))
+              (and (supervisor (Fect Cy D) (Bitdiddle Ben))
+                   (address (Fect Cy D) (Cambridge (Ames Street) 3)))
+              (and (supervisor (Hacker Alyssa P) (Bitdiddle Ben))
+                   (address (Hacker Alyssa P) (Cambridge (Mass Ave) 78))))
+            (qeval* '(and (supervisor ?person (Bitdiddle Ben))
+                          (address ?person ?where))))
 
-;;; c. all people who are supervised by someone who is not in the computer
-;;;    division, together with the supervisor's name and job.
-(and (supervisor ?person ?sup)
-     (not (job ?sup (computer . ?type))))
+      (test "b. all people whose salary is less than Ben Bitdiddle's, together with their salary and Ben Bitdiddle's salary;"
+            '((and (salary (Bitdiddle Ben) 60000)
+                   (salary (Aull DeWitt) 25000)
+                   (lisp-value < 25000 60000))
+              (and (salary (Bitdiddle Ben) 60000)
+                   (salary (Cratchet Robert) 18000)
+                   (lisp-value < 18000 60000))
+              (and (salary (Bitdiddle Ben) 60000)
+                   (salary (Reasoner Louis) 30000)
+                   (lisp-value < 30000 60000))
+              (and (salary (Bitdiddle Ben) 60000)
+                   (salary (Tweakit Lem E) 25000)
+                   (lisp-value < 25000 60000))
+              (and (salary (Bitdiddle Ben) 60000)
+                   (salary (Fect Cy D) 35000)
+                   (lisp-value < 35000 60000))
+              (and (salary (Bitdiddle Ben) 60000)
+                   (salary (Hacker Alyssa P) 40000)
+                   (lisp-value < 40000 60000)))
+            (qeval* '(and (salary (Bitdiddle Ben) ?bb-amount)
+                          (salary ?person ?amount)
+                          (lisp-value < ?amount ?bb-amount))))
+
+      (test "c. all people who are supervised by someone who is not in the computer division, together with the supervisor's name and job."
+            '((and (supervisor (Aull DeWitt) (Warbucks Oliver))
+                   (not (job (Warbucks Oliver) (computer . ?type))))
+              (and (supervisor (Cratchet Robert) (Scrooge Eben))
+                   (not (job (Scrooge Eben) (computer . ?type))))
+              (and (supervisor (Scrooge Eben) (Warbucks Oliver))
+                   (not (job (Warbucks Oliver) (computer . ?type))))
+              (and (supervisor (Bitdiddle Ben) (Warbucks Oliver))
+                   (not (job (Warbucks Oliver) (computer . ?type)))))
+            (qeval* '(and (supervisor ?person ?sup)
+                          (not (job ?sup (computer . ?type)))))))))
 #+END_SRC
 
 **** DONE [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-29.html#%_thm_4.57][Exercise 4.57]]
+     CLOCK: [2015-08-24 Mon 17:20]--[2015-08-24 Mon 17:47] =>  0:27
      CLOCK: [2015-08-17 Mon 17:46]--[2015-08-17 Mon 17:56] =>  0:10
 
 Define a rule that says that person 1 can replace person 2 if either person 1
 does the same job as person 2 or someone who does person 1's job can also do
 person 2's job, and if person 1 and person 2 are not the same person.
 
+#+NAME: rule-same
 #+BEGIN_SRC scheme
-(rule (substitute-for ?person-1 ?person-2)
-      (and (not (same ?person-1 ?person-2))
-           (job ?person-1 ?job-1)
-           (job ?person-2 ?job-2)
-           (or (same ?job-1 ?job-2)
-               (can-do-job ?job-1 ?job-2))))
+  (qeval* '(assert! (rule (same ?x ?x))))
 #+END_SRC
 
-- a. all people who can replace Cy D. Fect;
+#+NAME: rule-substitute-for
+#+BEGIN_SRC scheme
+  <<rule-same>>
+  (qeval* '(assert! (can-do-job (computer wizard)
+                                (computer programmer))))
+  (qeval* '(assert! (can-do-job (computer wizard)
+                                (computer technician))))
+  (qeval* '(assert! (can-do-job (computer programmer)
+                                (computer programmer trainee))))
+  (qeval* '(assert! (can-do-job (administration secretary)
+                                (administration big wheel))))
+  (qeval* '(assert! (rule (substitute-for ?person-1 ?person-2)
+                          (and (job ?person-1 ?job-1)
+                               (job ?person-2 ?job-2)
+                               (or (same ?job-1 ?job-2)
+                                   (can-do-job ?job-1 ?job-2))
+                               (not (same ?person-1 ?person-2))))))
+#+END_SRC
 
-     #+BEGIN_SRC scheme
-     (substitute-for ?person (Fect Cy D))
-     #+END_SRC
+Queries:
 
-- b. all people who can replace someone who is being paid more than they are,
-     together with the two salaries.
+#+BEGIN_SRC scheme :tangle ex-4-57-test.scm
+  (use sicp-eval-logic test)
 
-     #+BEGIN_SRC scheme
-     (and (salary ?person-1 ?amount-1)
-          (salary ?person-2 ?amount-2)
-          (lisp-value < ?amount-1 ?amount-2)
-          (substitute-for ?person-1 ?person-2))
-     #+END_SRC
+  (with-microshaft-database
+   (lambda ()
+    <<rule-substitute-for>>
+
+     (test-group
+      "Exercise 4.57"
+      (test "a. all people who can replace Cy D. Fect;"
+            '((substitute-for (Bitdiddle Ben) (Fect Cy D))
+              (substitute-for (Hacker Alyssa P) (Fect Cy D))
+              (substitute-for (Hacker Alyssa P) (Fect Cy D)))
+            (qeval* '(substitute-for ?person (Fect Cy D))))
+
+      (test "b. all people who can replace someone who is being paid more than they are, together with the two salaries."
+            '((and (salary (Aull DeWitt) 25000)
+                   (salary (Warbucks Oliver) 150000)
+                   (lisp-value < 25000 150000)
+                   (substitute-for (Aull DeWitt) (Warbucks Oliver)))
+              (and (salary (Fect Cy D) 35000)
+                   (salary (Hacker Alyssa P) 40000)
+                   (lisp-value < 35000 40000)
+                   (substitute-for (Fect Cy D) (Hacker Alyssa P)))
+              (and (salary (Fect Cy D) 35000)
+                   (salary (Hacker Alyssa P) 40000)
+                   (lisp-value < 35000 40000)
+                   (substitute-for (Fect Cy D) (Hacker Alyssa P))))
+            (qeval* '(and (salary ?person-1 ?amount-1)
+                          (salary ?person-2 ?amount-2)
+                          (lisp-value < ?amount-1 ?amount-2)
+                          (substitute-for ?person-1 ?person-2)))))))
+#+END_SRC
 
 **** DONE [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-29.html#%_thm_4.58][Exercise 4.58]]
+     CLOCK: [2015-08-24 Mon 19:00]--[2015-08-24 Mon 19:11] =>  0:11
      CLOCK: [2015-08-17 Mon 18:25]--[2015-08-17 Mon 18:28] =>  0:03
 
 #+BEGIN_SRC scheme
-(rule (big-shot ?person)
-      (and (job ?person (?division . ?type))
-           (supervisor ?person ?sup)
+  (use sicp-eval-logic test)
+
+  (with-microshaft-database
+   (lambda ()
+     (qeval* '(assert!
+               (rule (big-shot ?shot)
+                     (and (job ?shot (?shot-division . ?shot-type))
+                          (or (not (supervisor ?shot ?sup))
+                              (and (supervisor ?shot ?sup)
+                                   (not (job ?sup (?shot-division . ?sup-type)))))))))
+     (test "Foo"
+           '((big-shot (Warbucks Oliver))
+             (big-shot (Scrooge Eben))
+             (big-shot (Bitdiddle Ben)))
+           (qeval* '(big-shot ?person)))))
 #+END_SRC
 
 **** DONE [[http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-29.html#%_thm_4.59][Exercise 4.59]]
